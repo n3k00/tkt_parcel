@@ -6,9 +6,18 @@ class SettingsRepository {
 
   static const _defaultCityCode = 'TGI';
   static const _defaultAccountCode = 'A1';
-  static const _defaultBusinessName = 'TKT Parcel';
-  static const _defaultBusinessSubtitle = 'Parcel Voucher Service';
-  static const _defaultBusinessPhone = '09-000-000000';
+  static const _defaultBusinessName = 'သိင်္ခသူ';
+  static const _defaultBusinessSubtitle = 'ခရီးသည် နှင့် ကုန်စည် ပို့ဆောင်ရေး';
+  static const _defaultBusinessPhone = '09250787547,09253003004';
+  static const _defaultBusinessNameFontSize = 60.0;
+  static const _defaultBusinessSubtitleFontSize = 26.0;
+  static const _defaultBusinessPhoneFontSize = 20.0;
+  static const _defaultReceiptLabelFontSize = 28.0;
+  static const _defaultReceiptValueFontSize = 30.0;
+  static const _defaultReceiptPaddingTop = 20.0;
+  static const _defaultReceiptPaddingLeft = 24.0;
+  static const _defaultReceiptPaddingRight = 24.0;
+  static const _defaultReceiptPaddingBottom = 40.0;
   static const _defaultFooterMessage = '';
   static const _defaultTownList = [
     'Taunggyi',
@@ -32,6 +41,25 @@ class SettingsRepository {
       businessSubtitle:
           _preferences.getBusinessSubtitle() ?? _defaultBusinessSubtitle,
       businessPhone: _preferences.getBusinessPhone() ?? _defaultBusinessPhone,
+      businessNameFontSize:
+          _preferences.getBusinessNameFontSize() ?? _defaultBusinessNameFontSize,
+      businessSubtitleFontSize:
+          _preferences.getBusinessSubtitleFontSize() ??
+          _defaultBusinessSubtitleFontSize,
+      businessPhoneFontSize:
+          _preferences.getBusinessPhoneFontSize() ?? _defaultBusinessPhoneFontSize,
+      receiptLabelFontSize:
+          _preferences.getReceiptLabelFontSize() ?? _defaultReceiptLabelFontSize,
+      receiptValueFontSize:
+          _preferences.getReceiptValueFontSize() ?? _defaultReceiptValueFontSize,
+      receiptPaddingTop:
+          _preferences.getReceiptPaddingTop() ?? _defaultReceiptPaddingTop,
+      receiptPaddingLeft:
+          _preferences.getReceiptPaddingLeft() ?? _defaultReceiptPaddingLeft,
+      receiptPaddingRight:
+          _preferences.getReceiptPaddingRight() ?? _defaultReceiptPaddingRight,
+      receiptPaddingBottom:
+          _preferences.getReceiptPaddingBottom() ?? _defaultReceiptPaddingBottom,
       footerMessage: _preferences.getFooterMessage() ?? _defaultFooterMessage,
     );
   }
@@ -42,6 +70,17 @@ class SettingsRepository {
     await _preferences.setBusinessName(config.businessName.trim());
     await _preferences.setBusinessSubtitle(config.businessSubtitle.trim());
     await _preferences.setBusinessPhone(config.businessPhone.trim());
+    await _preferences.setBusinessNameFontSize(config.businessNameFontSize);
+    await _preferences.setBusinessSubtitleFontSize(
+      config.businessSubtitleFontSize,
+    );
+    await _preferences.setBusinessPhoneFontSize(config.businessPhoneFontSize);
+    await _preferences.setReceiptLabelFontSize(config.receiptLabelFontSize);
+    await _preferences.setReceiptValueFontSize(config.receiptValueFontSize);
+    await _preferences.setReceiptPaddingTop(config.receiptPaddingTop);
+    await _preferences.setReceiptPaddingLeft(config.receiptPaddingLeft);
+    await _preferences.setReceiptPaddingRight(config.receiptPaddingRight);
+    await _preferences.setReceiptPaddingBottom(config.receiptPaddingBottom);
     await _preferences.setFooterMessage((config.footerMessage ?? '').trim());
   }
 

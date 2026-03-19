@@ -15,7 +15,7 @@
         android:maxSdkVersion="30" />
 
     <application
-        android:label="tkt_parcel"
+        android:label="${appName}"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -6,10 +6,12 @@ import '../../features/parcel/presentation/screens/parcel_list_screen.dart';
 import '../../features/printer/presentation/screens/printer_settings_screen.dart';
 import '../../features/printing/presentation/screens/printer_connect_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/settings/presentation/screens/receipt_settings_screen.dart';
 import '../../features/settings/presentation/screens/staff_account_info_screen.dart';
 import '../../features/voucher/presentation/models/voucher_preview_args.dart';
 import '../../features/voucher/presentation/screens/voucher_preview_screen.dart';
 import '../../features/voucher/presentation/screens/voucher_reprint_preview_screen.dart';
+import '../../shared/widgets/app_error_view.dart';
 
 class AppRouter {
   const AppRouter._();
@@ -27,13 +29,25 @@ class AppRouter {
           settings: settings,
         );
       case VoucherPreviewScreen.routeName:
-        final args = settings.arguments as VoucherPreviewArgs;
+        final args = settings.arguments;
+        if (args is! VoucherPreviewArgs) {
+          return _invalidRoute(
+            settings: settings,
+            message: 'Voucher preview requires valid preview arguments.',
+          );
+        }
         return MaterialPageRoute(
           builder: (_) => VoucherPreviewScreen(args: args),
           settings: settings,
         );
       case VoucherReprintPreviewScreen.routeName:
-        final parcelId = settings.arguments as int? ?? 0;
+        final parcelId = settings.arguments;
+        if (parcelId is! int || parcelId <= 0) {
+          return _invalidRoute(
+            settings: settings,
+            message: 'Voucher reprint requires a valid parcel ID.',
+          );
+        }
         return MaterialPageRoute(
           builder: (_) => VoucherReprintPreviewScreen(parcelId: parcelId),
           settings: settings,
@@ -58,6 +72,11 @@ class AppRouter {
           builder: (_) => const StaffAccountInfoScreen(),
           settings: settings,
         );
+      case ReceiptSettingsScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const ReceiptSettingsScreen(),
+          settings: settings,
+        );
       case ParcelListScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ParcelListScreen(),
@@ -69,5 +88,18 @@ class AppRouter {
           settings: settings,
         );
     }
+  }
+
+  static Route<dynamic> _invalidRoute({
+    required RouteSettings settings,
+    required String message,
+  }) {
+    return MaterialPageRoute(
+      settings: settings,
+      builder: (_) => Scaffold(
+        appBar: AppBar(title: const Text('Navigation Error')),
+        body: AppErrorView(message: message),
+      ),
+    );
   }
 }

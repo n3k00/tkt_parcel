@@ -7,9 +7,9 @@ import 'package:tkt_parcel/features/voucher/presentation/widgets/voucher_card.da
 import 'package:tkt_parcel/shared/models/app_setup_config.dart';
 
 void main() {
-  testWidgets(
-    'renders voucher preview with tracking ID, QR section, and footer',
-    (tester) async {
+  testWidgets('renders receipt preview with key voucher details', (
+    tester,
+  ) async {
       final parcel = ParcelModel.create(
         trackingId: 'TGI-A1-250317-0001',
         fromTown: 'Taunggyi',
@@ -33,6 +33,15 @@ void main() {
         businessName: 'TKT Parcel',
         businessSubtitle: 'Parcel Voucher Service',
         businessPhone: '09-000-000000',
+        businessNameFontSize: 26,
+        businessSubtitleFontSize: 18,
+        businessPhoneFontSize: 15,
+        receiptLabelFontSize: 21,
+        receiptValueFontSize: 22,
+        receiptPaddingTop: 18,
+        receiptPaddingLeft: 2,
+        receiptPaddingRight: 2,
+        receiptPaddingBottom: 24,
         footerMessage: 'Handle with care',
       );
 
@@ -53,9 +62,11 @@ void main() {
       await tester.pump();
 
       expect(find.text('TKT Parcel'), findsOneWidget);
-      expect(find.text('Tracking ID: TGI-A1-250317-0001'), findsOneWidget);
-      expect(find.text('Remark: Fragile'), findsOneWidget);
-      expect(find.text('Thank you for choosing TKT Parcel.'), findsOneWidget);
+      expect(find.text('ဘောင်ချာနံပါတ်'), findsOneWidget);
+      expect(find.text('TGI-A1-250317-0001'), findsOneWidget);
+      expect(find.text('မှတ်ချက်'), findsOneWidget);
+      expect(find.text('Fragile'), findsOneWidget);
+      expect(find.text('ပို့ဆောင်ခ'), findsOneWidget);
       expect(find.text('Handle with care'), findsOneWidget);
     },
   );

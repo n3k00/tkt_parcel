@@ -11,6 +11,7 @@ import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../printer/presentation/screens/printer_settings_screen.dart';
 import '../providers/settings_provider.dart';
+import 'receipt_settings_screen.dart';
 import 'staff_account_info_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -63,7 +64,20 @@ class SettingsScreen extends ConsumerWidget {
                             ).pushNamed(StaffAccountInfoScreen.routeName);
                           },
                           icon: const Icon(Icons.badge_outlined),
-                          label: const Text('View Staff Account Info'),
+                          label: const Text('Edit Staff Account Info'),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.of(
+                              context,
+                            ).pushNamed(ReceiptSettingsScreen.routeName);
+                          },
+                          icon: const Icon(Icons.receipt_long_outlined),
+                          label: const Text('Open Receipt Settings'),
                         ),
                       ),
                     ],

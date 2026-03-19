@@ -9,6 +9,15 @@ class AppPreferences {
   static const _businessNameKey = 'business_name';
   static const _businessSubtitleKey = 'business_subtitle';
   static const _businessPhoneKey = 'business_phone';
+  static const _businessNameFontSizeKey = 'business_name_font_size';
+  static const _businessSubtitleFontSizeKey = 'business_subtitle_font_size';
+  static const _businessPhoneFontSizeKey = 'business_phone_font_size';
+  static const _receiptLabelFontSizeKey = 'receipt_label_font_size';
+  static const _receiptValueFontSizeKey = 'receipt_value_font_size';
+  static const _receiptPaddingTopKey = 'receipt_padding_top';
+  static const _receiptPaddingLeftKey = 'receipt_padding_left';
+  static const _receiptPaddingRightKey = 'receipt_padding_right';
+  static const _receiptPaddingBottomKey = 'receipt_padding_bottom';
   static const _footerMessageKey = 'voucher_footer_message';
 
   final SharedPreferences _preferences;
@@ -42,6 +51,42 @@ class AppPreferences {
 
   String? getBusinessPhone() => _preferences.getString(_businessPhoneKey);
 
+  double? getBusinessNameFontSize() {
+    return _preferences.getDouble(_businessNameFontSizeKey);
+  }
+
+  double? getBusinessSubtitleFontSize() {
+    return _preferences.getDouble(_businessSubtitleFontSizeKey);
+  }
+
+  double? getBusinessPhoneFontSize() {
+    return _preferences.getDouble(_businessPhoneFontSizeKey);
+  }
+
+  double? getReceiptLabelFontSize() {
+    return _preferences.getDouble(_receiptLabelFontSizeKey);
+  }
+
+  double? getReceiptValueFontSize() {
+    return _preferences.getDouble(_receiptValueFontSizeKey);
+  }
+
+  double? getReceiptPaddingTop() {
+    return _preferences.getDouble(_receiptPaddingTopKey);
+  }
+
+  double? getReceiptPaddingLeft() {
+    return _preferences.getDouble(_receiptPaddingLeftKey);
+  }
+
+  double? getReceiptPaddingRight() {
+    return _preferences.getDouble(_receiptPaddingRightKey);
+  }
+
+  double? getReceiptPaddingBottom() {
+    return _preferences.getDouble(_receiptPaddingBottomKey);
+  }
+
   String? getFooterMessage() => _preferences.getString(_footerMessageKey);
 
   Future<bool> setBusinessName(String value) {
@@ -54,6 +99,42 @@ class AppPreferences {
 
   Future<bool> setBusinessPhone(String value) {
     return _preferences.setString(_businessPhoneKey, value);
+  }
+
+  Future<bool> setBusinessNameFontSize(double value) {
+    return _preferences.setDouble(_businessNameFontSizeKey, value);
+  }
+
+  Future<bool> setBusinessSubtitleFontSize(double value) {
+    return _preferences.setDouble(_businessSubtitleFontSizeKey, value);
+  }
+
+  Future<bool> setBusinessPhoneFontSize(double value) {
+    return _preferences.setDouble(_businessPhoneFontSizeKey, value);
+  }
+
+  Future<bool> setReceiptLabelFontSize(double value) {
+    return _preferences.setDouble(_receiptLabelFontSizeKey, value);
+  }
+
+  Future<bool> setReceiptValueFontSize(double value) {
+    return _preferences.setDouble(_receiptValueFontSizeKey, value);
+  }
+
+  Future<bool> setReceiptPaddingTop(double value) {
+    return _preferences.setDouble(_receiptPaddingTopKey, value);
+  }
+
+  Future<bool> setReceiptPaddingLeft(double value) {
+    return _preferences.setDouble(_receiptPaddingLeftKey, value);
+  }
+
+  Future<bool> setReceiptPaddingRight(double value) {
+    return _preferences.setDouble(_receiptPaddingRightKey, value);
+  }
+
+  Future<bool> setReceiptPaddingBottom(double value) {
+    return _preferences.setDouble(_receiptPaddingBottomKey, value);
   }
 
   Future<bool> setFooterMessage(String value) {

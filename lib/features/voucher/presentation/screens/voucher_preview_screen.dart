@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/voucher_layout.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../providers/parcel_repository_provider.dart';
 import '../../../../providers/printer_provider.dart';
@@ -27,23 +30,8 @@ class VoucherPreviewScreen extends ConsumerStatefulWidget {
 
 class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
   final GlobalKey _printBoundaryKey = GlobalKey();
-  int? _savedParcelId;
 
-  Future<int> _ensureParcelSaved(VoucherPreviewData preview) async {
-    if (_savedParcelId != null) {
-      return _savedParcelId!;
-    }
-
-    final parcelId = await ref
-        .read(parcelRepositoryProvider)
-        .createParcel(preview.parcel);
-    setState(() {
-      _savedParcelId = parcelId;
-    });
-    return parcelId;
-  }
-
-  Future<void> _handleConfirmAndPrint(VoucherPreviewData preview) async {
+  Future<void> _handlePrintAndSave(VoucherPreviewData preview) async {
     final printerNotifier = ref.read(printerStateProvider.notifier);
     final printerState = ref.read(printerStateProvider);
 
@@ -54,12 +42,30 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
       }
     }
 
-    final parcelId = await _ensureParcelSaved(preview);
     final imageBytes = await ref
         .read(printServiceProvider)
         .captureWidgetAsPng(_printBoundaryKey);
     final success = await printerNotifier.printImageBytes(imageBytes);
 
+    if (!mounted) {
+      return;
+    }
+
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            ref.read(printerStateProvider).errorMessage ??
+                'Voucher print failed. Parcel was not saved.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final parcelId = await ref
+        .read(parcelRepositoryProvider)
+        .createParcel(preview.parcel);
     if (!mounted) {
       return;
     }
@@ -70,31 +76,8 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? 'Parcel #$parcelId printed successfully.'
-              : ref.read(printerStateProvider).errorMessage ??
-                    'Parcel #$parcelId was saved locally, but voucher print failed.',
-        ),
-      ),
+      SnackBar(content: Text('Parcel #$parcelId printed and saved.')),
     );
-  }
-
-  Future<void> _handleConfirmOnly(VoucherPreviewData preview) async {
-    final parcelId = await _ensureParcelSaved(preview);
-    if (!mounted) {
-      return;
-    }
-
-    await ref.read(parcelFormProvider.notifier).reset();
-    if (!mounted) {
-      return;
-    }
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Parcel #$parcelId saved.')));
   }
 
   @override
@@ -104,80 +87,64 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
 
     return AppScaffold(
       title: 'Voucher Preview',
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: SizedBox(
+        width: math.max(
+          0.0,
+          MediaQuery.sizeOf(context).width - (AppSpacing.lg * 2),
+        ),
+        child: FilledButton(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(58),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(14)),
+            ),
+          ),
+          onPressed: previewAsync.isLoading || printerState.isBusy
+              ? null
+              : () {
+                  final preview = previewAsync.asData?.value;
+                  if (preview != null) {
+                    _handlePrintAndSave(preview);
+                  }
+                },
+          child: const Text('Print and Save'),
+        ),
+      ),
       body: previewAsync.when(
-        data: (preview) => ListView(
-          padding: AppSpacing.screenPadding,
-          children: [
-            Offstage(
-              offstage: true,
-              child: RepaintBoundary(
-                key: _printBoundaryKey,
-                child: VoucherCard(
-                  parcel: preview.parcel,
-                  qrPayload: preview.qrPayload,
-                  setup: preview.setup,
-                  isPrintable: true,
+        data: (preview) => LayoutBuilder(
+          builder: (context, constraints) {
+            final previewWidth = math.min(
+              constraints.maxWidth,
+              VoucherLayout.previewPaperWidth,
+            );
+            return ListView(
+              padding: AppSpacing.screenPadding,
+              children: [
+                Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: previewWidth,
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.contain,
+                      alignment: Alignment.topCenter,
+                      child: RepaintBoundary(
+                        key: _printBoundaryKey,
+                        child: VoucherCard(
+                          parcel: preview.parcel,
+                          qrPayload: preview.qrPayload,
+                          setup: preview.setup,
+                          isPrintable: true,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            VoucherCard(
-              parcel: preview.parcel,
-              qrPayload: preview.qrPayload,
-              setup: preview.setup,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              printerState.isConnected
-                  ? 'Printer: ${printerState.connectedPrinterName}'
-                  : 'No printer connected.',
-            ),
-            const SizedBox(height: AppSpacing.md),
-            FilledButton(
-              onPressed: printerState.isBusy
-                  ? null
-                  : () => _handleConfirmAndPrint(preview),
-              child: Text(
-                printerState.isConnected
-                    ? 'Confirm and Print'
-                    : 'Connect and Print',
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            OutlinedButton(
-              onPressed: _savedParcelId == null
-                  ? () => _handleConfirmOnly(preview)
-                  : null,
-              child: Text(
-                _savedParcelId == null
-                    ? 'Confirm Without Print'
-                    : 'Parcel Saved',
-              ),
-            ),
-            if (printerState.errorMessage != null &&
-                printerState.lastPrintableImageBytes != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              OutlinedButton(
-                onPressed: printerState.isBusy
-                    ? null
-                    : () => ref
-                          .read(printerStateProvider.notifier)
-                          .retryLastPrint(),
-                child: const Text('Retry Print'),
-              ),
-            ],
-            if (printerState.lastPrintableImageBytes != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              TextButton(
-                onPressed: printerState.isBusy
-                    ? null
-                    : () => ref
-                          .read(printerStateProvider.notifier)
-                          .reprintLastVoucher(),
-                child: const Text('Reprint Last Voucher'),
-              ),
-            ],
-          ],
+                const SizedBox(height: 104),
+              ],
+            );
+          },
         ),
         loading: () => const Padding(
           padding: AppSpacing.screenPadding,

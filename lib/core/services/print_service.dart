@@ -5,17 +5,16 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 import 'package:pos_printer_kit/pos_printer_kit.dart';
 
+import '../constants/voucher_layout.dart';
+
 class PrintService {
   const PrintService();
 
   PrinterPrintConfig defaultVoucherConfig({
     int copies = 1,
-    int width = 384,
+    int width = VoucherLayout.printableWidth,
   }) {
-    return PrinterPrintConfig.label(
-      width: width,
-      copies: copies,
-    );
+    return PrinterPrintConfig.label(width: width, copies: copies);
   }
 
   Future<Uint8List> captureWidgetAsPng(
