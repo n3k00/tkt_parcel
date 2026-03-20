@@ -5,11 +5,11 @@ import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../providers/printer_provider.dart';
-import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/section_card.dart';
+import '../../../parcel/presentation/screens/home_screen.dart';
 import '../../../printer/presentation/screens/printer_settings_screen.dart';
 import '../providers/settings_provider.dart';
 import 'receipt_settings_screen.dart';
@@ -27,7 +27,16 @@ class SettingsScreen extends ConsumerWidget {
 
     return AppScaffold(
       title: 'Settings',
-      drawer: const AppDrawer(currentRoute: routeName),
+      canPop: false,
+      onBackNavigation: () {
+        Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+      },
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back_rounded),
+        onPressed: () {
+          Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
+        },
+      ),
       body: settingsData.when(
         data: (data) {
           final setup = data.setup;

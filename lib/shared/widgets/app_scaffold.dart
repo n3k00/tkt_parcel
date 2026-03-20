@@ -13,6 +13,9 @@ class AppScaffold extends StatelessWidget {
     this.appBarForegroundColor,
     this.isBlocking = false,
     this.blockingOverlay,
+    this.leading,
+    this.canPop = true,
+    this.onBackNavigation,
   });
 
   final String title;
@@ -25,6 +28,9 @@ class AppScaffold extends StatelessWidget {
   final Color? appBarForegroundColor;
   final bool isBlocking;
   final Widget? blockingOverlay;
+  final Widget? leading;
+  final bool canPop;
+  final VoidCallback? onBackNavigation;
 
   @override
   Widget build(BuildContext context) {
@@ -32,6 +38,7 @@ class AppScaffold extends StatelessWidget {
       drawer: drawer,
       appBar: AppBar(
         automaticallyImplyLeading: !isBlocking,
+        leading: leading,
         title: Text(title),
         actions: isBlocking ? const [] : actions,
         backgroundColor: appBarBackgroundColor,
@@ -43,7 +50,12 @@ class AppScaffold extends StatelessWidget {
     );
 
     return PopScope(
-      canPop: !isBlocking,
+      canPop: !isBlocking && canPop,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && !isBlocking && onBackNavigation != null) {
+          onBackNavigation!();
+        }
+      },
       child: Stack(
         children: [
           scaffold,
