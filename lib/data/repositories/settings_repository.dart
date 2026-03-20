@@ -23,14 +23,6 @@ class SettingsRepository {
   static const _defaultReceiptPaddingBottom = 40.0;
   static const _defaultFooterMessage = ReceiptStrings.defaultFooter;
   static const _defaultPrinterPreset = 'balanced';
-  static const _defaultTownList = [
-    'Taunggyi',
-    'Aungban',
-    'Kalaw',
-    'Hopong',
-    'Heho',
-    'Nyaungshwe',
-  ];
 
   final AppPreferences _preferences;
 
@@ -118,25 +110,5 @@ class SettingsRepository {
 
   Future<void> savePrinterPreset(String preset) async {
     await _preferences.setPrinterPreset(preset.trim().toLowerCase());
-  }
-
-  Future<List<String>> getTownList() async {
-    final towns = _preferences.getTownList();
-    if (towns == null || towns.isEmpty) {
-      await _preferences.setTownList(_defaultTownList);
-      return _defaultTownList;
-    }
-
-    return towns;
-  }
-
-  Future<void> saveTownList(List<String> towns) async {
-    final normalized = towns
-        .map((town) => town.trim())
-        .where((town) => town.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
-    await _preferences.setTownList(normalized);
   }
 }

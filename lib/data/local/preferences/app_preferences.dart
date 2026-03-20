@@ -6,7 +6,6 @@ class AppPreferences {
   static const _cityCodeKey = 'setup_city_code';
   static const _accountCodeKey = 'setup_account_code';
   static const _defaultSourceTownNameKey = 'default_source_town_name';
-  static const _townListKey = 'setup_town_list';
   static const _businessNameKey = 'business_name';
   static const _businessSubtitleKey = 'business_subtitle';
   static const _businessAddressKey = 'business_address';
@@ -48,12 +47,6 @@ class AppPreferences {
 
   Future<bool> setDefaultSourceTownName(String value) {
     return _preferences.setString(_defaultSourceTownNameKey, value);
-  }
-
-  List<String>? getTownList() => _preferences.getStringList(_townListKey);
-
-  Future<bool> setTownList(List<String> values) {
-    return _preferences.setStringList(_townListKey, values);
   }
 
   String? getBusinessName() => _preferences.getString(_businessNameKey);
