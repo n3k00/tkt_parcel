@@ -12,6 +12,7 @@ class SettingsRepository {
   static const _defaultBusinessPhone = '09250787547,09253003004';
   static const _defaultBusinessNameFontSize = 60.0;
   static const _defaultBusinessSubtitleFontSize = 26.0;
+  static const _defaultBusinessAddressFontSize = 22.0;
   static const _defaultBusinessPhoneFontSize = 20.0;
   static const _defaultReceiptLabelFontSize = 28.0;
   static const _defaultReceiptValueFontSize = 30.0;
@@ -20,6 +21,7 @@ class SettingsRepository {
   static const _defaultReceiptPaddingRight = 24.0;
   static const _defaultReceiptPaddingBottom = 40.0;
   static const _defaultFooterMessage = '';
+  static const _defaultPrinterPreset = 'balanced';
   static const _defaultTownList = [
     'Taunggyi',
     'Aungban',
@@ -49,6 +51,9 @@ class SettingsRepository {
       businessSubtitleFontSize:
           _preferences.getBusinessSubtitleFontSize() ??
           _defaultBusinessSubtitleFontSize,
+      businessAddressFontSize:
+          _preferences.getBusinessAddressFontSize() ??
+          _defaultBusinessAddressFontSize,
       businessPhoneFontSize:
           _preferences.getBusinessPhoneFontSize() ??
           _defaultBusinessPhoneFontSize,
@@ -79,6 +84,7 @@ class SettingsRepository {
     await _preferences.setBusinessSubtitleFontSize(
       config.businessSubtitleFontSize,
     );
+    await _preferences.setBusinessAddressFontSize(config.businessAddressFontSize);
     await _preferences.setBusinessPhoneFontSize(config.businessPhoneFontSize);
     await _preferences.setReceiptLabelFontSize(config.receiptLabelFontSize);
     await _preferences.setReceiptValueFontSize(config.receiptValueFontSize);
@@ -87,6 +93,30 @@ class SettingsRepository {
     await _preferences.setReceiptPaddingRight(config.receiptPaddingRight);
     await _preferences.setReceiptPaddingBottom(config.receiptPaddingBottom);
     await _preferences.setFooterMessage((config.footerMessage ?? '').trim());
+  }
+
+  Future<String?> getDefaultSourceTownName() async {
+    final townName = _preferences.getDefaultSourceTownName();
+    if (townName == null || townName.trim().isEmpty) {
+      return null;
+    }
+    return townName.trim();
+  }
+
+  Future<void> saveDefaultSourceTownName(String townName) async {
+    await _preferences.setDefaultSourceTownName(townName.trim());
+  }
+
+  Future<String> getPrinterPreset() async {
+    final preset = _preferences.getPrinterPreset();
+    if (preset == null || preset.trim().isEmpty) {
+      return _defaultPrinterPreset;
+    }
+    return preset.trim().toLowerCase();
+  }
+
+  Future<void> savePrinterPreset(String preset) async {
+    await _preferences.setPrinterPreset(preset.trim().toLowerCase());
   }
 
   Future<List<String>> getTownList() async {

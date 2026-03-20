@@ -8,6 +8,7 @@ class AppSetupConfig {
     required this.businessPhone,
     required this.businessNameFontSize,
     required this.businessSubtitleFontSize,
+    required double businessAddressFontSize,
     required this.businessPhoneFontSize,
     required this.receiptLabelFontSize,
     required this.receiptValueFontSize,
@@ -16,7 +17,7 @@ class AppSetupConfig {
     required this.receiptPaddingRight,
     required this.receiptPaddingBottom,
     this.footerMessage,
-  });
+  }) : _businessAddressFontSize = businessAddressFontSize;
 
   final String cityCode;
   final String accountCode;
@@ -26,6 +27,7 @@ class AppSetupConfig {
   final String businessPhone;
   final double businessNameFontSize;
   final double businessSubtitleFontSize;
+  final double? _businessAddressFontSize;
   final double businessPhoneFontSize;
   final double receiptLabelFontSize;
   final double receiptValueFontSize;
@@ -34,6 +36,9 @@ class AppSetupConfig {
   final double receiptPaddingRight;
   final double receiptPaddingBottom;
   final String? footerMessage;
+
+  double get businessAddressFontSize =>
+      _businessAddressFontSize ?? businessSubtitleFontSize;
 
   AppSetupConfig copyWith({
     String? cityCode,
@@ -44,6 +49,7 @@ class AppSetupConfig {
     String? businessPhone,
     double? businessNameFontSize,
     double? businessSubtitleFontSize,
+    double? businessAddressFontSize,
     double? businessPhoneFontSize,
     double? receiptLabelFontSize,
     double? receiptValueFontSize,
@@ -61,16 +67,15 @@ class AppSetupConfig {
       businessSubtitle: businessSubtitle ?? this.businessSubtitle,
       businessAddress: businessAddress ?? this.businessAddress,
       businessPhone: businessPhone ?? this.businessPhone,
-      businessNameFontSize:
-          businessNameFontSize ?? this.businessNameFontSize,
+      businessNameFontSize: businessNameFontSize ?? this.businessNameFontSize,
       businessSubtitleFontSize:
           businessSubtitleFontSize ?? this.businessSubtitleFontSize,
+      businessAddressFontSize:
+          businessAddressFontSize ?? this.businessAddressFontSize,
       businessPhoneFontSize:
           businessPhoneFontSize ?? this.businessPhoneFontSize,
-      receiptLabelFontSize:
-          receiptLabelFontSize ?? this.receiptLabelFontSize,
-      receiptValueFontSize:
-          receiptValueFontSize ?? this.receiptValueFontSize,
+      receiptLabelFontSize: receiptLabelFontSize ?? this.receiptLabelFontSize,
+      receiptValueFontSize: receiptValueFontSize ?? this.receiptValueFontSize,
       receiptPaddingTop: receiptPaddingTop ?? this.receiptPaddingTop,
       receiptPaddingLeft: receiptPaddingLeft ?? this.receiptPaddingLeft,
       receiptPaddingRight: receiptPaddingRight ?? this.receiptPaddingRight,

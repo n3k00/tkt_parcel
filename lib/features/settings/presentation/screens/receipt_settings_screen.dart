@@ -93,6 +93,17 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                         }),
                       ),
                       _SliderField(
+                        label: 'Address',
+                        value: draft.businessAddressFontSize,
+                        min: 10,
+                        max: 36,
+                        onChanged: (value) => setState(() {
+                          _draft = draft.copyWith(
+                            businessAddressFontSize: value,
+                          );
+                        }),
+                      ),
+                      _SliderField(
                         label: 'Phone',
                         value: draft.businessPhoneFontSize,
                         min: 10,

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/app_setup_config.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
@@ -10,28 +9,24 @@ import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../providers/settings_provider.dart';
 
-class StaffAccountInfoScreen extends ConsumerStatefulWidget {
-  const StaffAccountInfoScreen({super.key});
+class ProfileScreen extends ConsumerStatefulWidget {
+  const ProfileScreen({super.key});
 
-  static const routeName = '/settings/staff-account';
+  static const routeName = '/settings/profile';
 
   @override
-  ConsumerState<StaffAccountInfoScreen> createState() =>
-      _StaffAccountInfoScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _StaffAccountInfoScreenState
-    extends ConsumerState<StaffAccountInfoScreen> {
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _businessAddressController = TextEditingController();
-  final _businessPhoneController = TextEditingController();
+  final _accountCodeController = TextEditingController();
 
   bool _didSeedControllers = false;
 
   @override
   void dispose() {
-    _businessAddressController.dispose();
-    _businessPhoneController.dispose();
+    _accountCodeController.dispose();
     super.dispose();
   }
 
@@ -39,9 +34,7 @@ class _StaffAccountInfoScreenState
     if (_didSeedControllers) {
       return;
     }
-
-    _businessAddressController.text = setup.businessAddress;
-    _businessPhoneController.text = setup.businessPhone;
+    _accountCodeController.text = setup.accountCode;
     _didSeedControllers = true;
   }
 
@@ -51,8 +44,7 @@ class _StaffAccountInfoScreenState
     }
 
     final nextSetup = currentSetup.copyWith(
-      businessAddress: _businessAddressController.text.trim(),
-      businessPhone: _businessPhoneController.text.trim(),
+      accountCode: _accountCodeController.text.trim().toUpperCase(),
     );
 
     await ref.read(settingsSetupProvider.notifier).saveSetup(nextSetup);
@@ -61,7 +53,7 @@ class _StaffAccountInfoScreenState
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Voucher header settings saved.')),
+      const SnackBar(content: Text('Profile settings saved.')),
     );
   }
 
@@ -70,7 +62,7 @@ class _StaffAccountInfoScreenState
     final setupAsync = ref.watch(settingsSetupProvider);
 
     return AppScaffold(
-      title: 'Voucher Header',
+      title: 'Profile',
       body: setupAsync.when(
         data: (setup) {
           _seedControllers(setup);
@@ -86,31 +78,13 @@ class _StaffAccountInfoScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          setup.businessName,
-                          style: AppTextStyles.title,
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          setup.businessSubtitle,
-                          style: AppTextStyles.bodyMuted,
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
                         TextFormField(
-                          controller: _businessAddressController,
+                          controller: _accountCodeController,
+                          textCapitalization: TextCapitalization.characters,
                           decoration: const InputDecoration(
-                            labelText: 'Address',
+                            labelText: 'Account Code',
                           ),
-                          validator: _requiredValidator,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        TextFormField(
-                          controller: _businessPhoneController,
-                          keyboardType: TextInputType.phone,
-                          decoration: const InputDecoration(
-                            labelText: 'Phone Numbers',
-                          ),
-                          validator: _requiredValidator,
+                          validator: _accountCodeValidator,
                         ),
                         const SizedBox(height: AppSpacing.lg),
                         SizedBox(
@@ -136,8 +110,9 @@ class _StaffAccountInfoScreenState
     );
   }
 
-  String? _requiredValidator(String? value) {
-    if ((value ?? '').trim().isEmpty) {
+  String? _accountCodeValidator(String? value) {
+    final raw = (value ?? '').trim();
+    if (raw.isEmpty) {
       return 'Required.';
     }
     return null;

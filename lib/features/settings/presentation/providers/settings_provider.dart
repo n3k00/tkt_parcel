@@ -40,6 +40,16 @@ final settingsSetupProvider =
       SettingsSetupNotifier.new,
     );
 
+final defaultSourceTownNameProvider = FutureProvider<String?>((ref) async {
+  final repository = await ref.watch(settingsRepositoryProvider.future);
+  return repository.getDefaultSourceTownName();
+});
+
+final printerPresetProvider = FutureProvider<String>((ref) async {
+  final repository = await ref.watch(settingsRepositoryProvider.future);
+  return repository.getPrinterPreset();
+});
+
 final settingsDataProvider = FutureProvider<SettingsViewData>((ref) async {
   final setup = await ref.watch(settingsSetupProvider.future);
   final appInfo = await ref.watch(appVersionInfoProvider.future);

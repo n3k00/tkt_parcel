@@ -151,12 +151,19 @@ class ParcelFormNotifier extends AsyncNotifier<ParcelFormState> {
 
   Future<ParcelFormState> _createInitialState() async {
     final townRepository = ref.read(townRepositoryProvider);
+    final settingsRepository = await ref.read(settingsRepositoryProvider.future);
     final sourceTowns = await townRepository.getSourceTowns();
     final destinationTowns = await townRepository.getDestinationTowns();
-    final fromTown = sourceTowns.isEmpty ? '' : sourceTowns.first.townName;
-    final fromTownCityCode = sourceTowns.isEmpty
-        ? ''
-        : (sourceTowns.first.cityCode ?? '');
+    final defaultSourceTownName = await settingsRepository
+        .getDefaultSourceTownName();
+    final selectedSourceTown = sourceTowns.firstWhere(
+      (town) => town.townName == defaultSourceTownName,
+      orElse: () => sourceTowns.isEmpty
+          ? const TownModel(townName: '', type: TownType.source)
+          : sourceTowns.first,
+    );
+    final fromTown = selectedSourceTown.townName;
+    final fromTownCityCode = selectedSourceTown.cityCode ?? '';
     final toTown = destinationTowns
         .firstWhere(
           (town) => town.townName != fromTown,

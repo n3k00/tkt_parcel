@@ -36,6 +36,7 @@ void main() {
         businessPhone: '09-000-000000',
         businessNameFontSize: 26,
         businessSubtitleFontSize: 18,
+        businessAddressFontSize: 16,
         businessPhoneFontSize: 15,
         receiptLabelFontSize: 21,
         receiptValueFontSize: 22,
