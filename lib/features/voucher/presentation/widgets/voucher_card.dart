@@ -64,7 +64,7 @@ class VoucherCard extends StatelessWidget {
               setup: setup,
               isPrintable: isPrintable,
             ),
-            SizedBox(height: isPrintable ? 10 : 8),
+            SizedBox(height: isPrintable ? 14 : 10),
             _MetaRow(
               label: 'အချိန်နှင့်ရက်စွဲ',
               value: _formatDateTime(parcel.createdAt),
@@ -102,7 +102,7 @@ class VoucherCard extends StatelessWidget {
               setup: setup,
               isPrintable: isPrintable,
             ),
-            SizedBox(height: isPrintable ? 12 : 8),
+            SizedBox(height: isPrintable ? 16 : 10),
             _LabelValueRow(
               label: 'အရေအတွက်',
               value: parcel.numberOfParcels.toString(),
@@ -118,22 +118,22 @@ class VoucherCard extends StatelessWidget {
               setup: setup,
               isPrintable: isPrintable,
             ),
-            SizedBox(height: isPrintable ? 12 : 8),
+            SizedBox(height: isPrintable ? 16 : 10),
             _LabelValueRow(
               label: 'ငွေပေးချေမှု',
               value: _paymentLabel(parcel),
               setup: setup,
               isPrintable: isPrintable,
             ),
-            SizedBox(height: isPrintable ? 12 : 8),
+            SizedBox(height: isPrintable ? 16 : 10),
             _LabelValueRow(
-              label: 'ထုတ်ငွေ',
+              label: 'စိုက်ငွေ',
               value: _formatAmount(parcel.cashAdvance),
               setup: setup,
               isPrintable: isPrintable,
             ),
             if ((parcel.remark ?? '').trim().isNotEmpty) ...[
-              SizedBox(height: isPrintable ? 12 : 8),
+              SizedBox(height: isPrintable ? 16 : 10),
               _LabelValueRow(
                 label: 'မှတ်ချက်',
                 value: parcel.remark!.trim(),
@@ -147,16 +147,17 @@ class VoucherCard extends StatelessWidget {
             Center(
               child: VoucherQrView(
                 payload: qrPayload,
-                size: isPrintable ? 116 : 96,
+                size: isPrintable ? 148 : 116,
               ),
             ),
             SizedBox(height: isPrintable ? 18 : 12),
-            if ((setup.footerMessage ?? '').trim().isNotEmpty)
-              Text(
-                setup.footerMessage!.trim(),
-                textAlign: TextAlign.center,
-                style: _ReceiptStyles.footer(isPrintable),
-              ),
+            Text(
+              (setup.footerMessage ?? '').trim().isEmpty
+                  ? 'ကျေးဇူးတင်ပါသည်'
+                  : setup.footerMessage!.trim(),
+              textAlign: TextAlign.center,
+              style: _ReceiptStyles.footer(isPrintable),
+            ),
           ],
         ),
       ),
@@ -164,7 +165,9 @@ class VoucherCard extends StatelessWidget {
   }
 
   String _paymentLabel(ParcelModel parcel) {
-    return parcel.paymentStatus.value == 'paid' ? 'ငွေချေပြီး' : 'ငွေချေရန်';
+    return parcel.paymentStatus.value == 'paid'
+        ? 'ငွေရှင်းပြီး'
+        : 'ငွေတောင်းရန်';
   }
 
   String _formatAmount(double value) {
@@ -237,7 +240,7 @@ class _MetaRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
-          flex: 4,
+          flex: 2,
           child: Text(
             label,
             style: _ReceiptStyles.label(setup, isPrintable),
@@ -245,10 +248,9 @@ class _MetaRow extends StatelessWidget {
         ),
         SizedBox(width: isPrintable ? 16 : 12),
         Expanded(
-          flex: 6,
+          flex: 3,
           child: Text(
             value,
-            textAlign: TextAlign.right,
             style: _ReceiptStyles.value(setup, isPrintable),
           ),
         ),
@@ -275,14 +277,16 @@ class _LabelValueRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: isPrintable ? 168 : 114,
+        Expanded(
+          flex: 2,
           child: Text(
             label,
             style: _ReceiptStyles.label(setup, isPrintable),
           ),
         ),
+        SizedBox(width: isPrintable ? 16 : 12),
         Expanded(
+          flex: 3,
           child: Text(
             value,
             style: _ReceiptStyles.value(setup, isPrintable),
@@ -308,25 +312,21 @@ class _TownRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: _SimpleBlock(
-            label: 'လက်ခံသည့် မြို့',
-            value: fromTown,
-            setup: setup,
-            isPrintable: isPrintable,
-          ),
+        _LabelValueRow(
+          label: 'လက်ခံသည့် မြို့',
+          value: fromTown,
+          setup: setup,
+          isPrintable: isPrintable,
         ),
-        SizedBox(width: isPrintable ? 20 : 16),
-        Expanded(
-          child: _SimpleBlock(
-            label: 'ပို့မည့် မြို့',
-            value: toTown,
-            setup: setup,
-            isPrintable: isPrintable,
-          ),
+        SizedBox(height: isPrintable ? 10 : 8),
+        _LabelValueRow(
+          label: 'ပို့မည့် မြို့',
+          value: toTown,
+          setup: setup,
+          isPrintable: isPrintable,
         ),
       ],
     );
@@ -356,69 +356,36 @@ class _PartyRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: _SimpleBlock(
-            label: leftLabel,
-            value: leftPrimary,
-            secondaryValue: leftSecondary,
-            setup: setup,
-            isPrintable: isPrintable,
-          ),
-        ),
-        SizedBox(width: isPrintable ? 20 : 16),
-        Expanded(
-          child: _SimpleBlock(
-            label: rightLabel,
-            value: rightPrimary,
-            secondaryValue: rightSecondary,
-            setup: setup,
-            isPrintable: isPrintable,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SimpleBlock extends StatelessWidget {
-  const _SimpleBlock({
-    required this.label,
-    required this.value,
-    required this.setup,
-    required this.isPrintable,
-    this.secondaryValue,
-  });
-
-  final String label;
-  final String value;
-  final AppSetupConfig setup;
-  final String? secondaryValue;
-  final bool isPrintable;
-
-  @override
-  Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          label,
-          style: _ReceiptStyles.label(setup, isPrintable),
+        _LabelValueRow(
+          label: leftLabel,
+          value: leftPrimary,
+          setup: setup,
+          isPrintable: isPrintable,
         ),
-        SizedBox(height: isPrintable ? 4 : 2),
-        Text(
-          value,
-          style: _ReceiptStyles.value(setup, isPrintable),
+        SizedBox(height: isPrintable ? 10 : 8),
+        _LabelValueRow(
+          label: '',
+          value: leftSecondary,
+          setup: setup,
+          isPrintable: isPrintable,
         ),
-        if ((secondaryValue ?? '').trim().isNotEmpty) ...[
-          SizedBox(height: isPrintable ? 4 : 2),
-          Text(
-            secondaryValue!.trim(),
-            style: _ReceiptStyles.value(setup, isPrintable),
-          ),
-        ],
+        SizedBox(height: isPrintable ? 14 : 10),
+        _LabelValueRow(
+          label: rightLabel,
+          value: rightPrimary,
+          setup: setup,
+          isPrintable: isPrintable,
+        ),
+        SizedBox(height: isPrintable ? 10 : 8),
+        _LabelValueRow(
+          label: '',
+          value: rightSecondary,
+          setup: setup,
+          isPrintable: isPrintable,
+        ),
       ],
     );
   }
@@ -497,7 +464,7 @@ class _ReceiptStyles {
       );
 
   static TextStyle footer(bool isPrintable) => TextStyle(
-        fontSize: isPrintable ? 18 : 14,
+        fontSize: isPrintable ? 22 : 16,
         fontWeight: FontWeight.w600,
         height: 1.2,
         color: Colors.black,

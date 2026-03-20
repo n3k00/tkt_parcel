@@ -30,54 +30,92 @@ class VoucherPreviewScreen extends ConsumerStatefulWidget {
 
 class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
   final GlobalKey _printBoundaryKey = GlobalKey();
+  bool _isSaving = false;
 
   Future<void> _handlePrintAndSave(VoucherPreviewData preview) async {
+    if (_isSaving) {
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
     final printerNotifier = ref.read(printerStateProvider.notifier);
     final printerState = ref.read(printerStateProvider);
 
-    if (!printerState.isConnected) {
-      await Navigator.of(context).pushNamed(PrinterConnectScreen.routeName);
-      if (!mounted || !ref.read(printerStateProvider).isConnected) {
+    try {
+      if (!printerState.isConnected) {
+        await Navigator.of(context).pushNamed(PrinterConnectScreen.routeName);
+        if (!mounted || !ref.read(printerStateProvider).isConnected) {
+          return;
+        }
+      }
+
+      final imageBytes = await ref
+          .read(printServiceProvider)
+          .captureWidgetAsPng(_printBoundaryKey);
+      final success = await printerNotifier.printImageBytes(imageBytes);
+
+      if (!mounted) {
         return;
       }
-    }
 
-    final imageBytes = await ref
-        .read(printServiceProvider)
-        .captureWidgetAsPng(_printBoundaryKey);
-    final success = await printerNotifier.printImageBytes(imageBytes);
-
-    if (!mounted) {
-      return;
-    }
-
-    if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            ref.read(printerStateProvider).errorMessage ??
-                'Voucher print failed. Parcel was not saved.',
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ref.read(printerStateProvider).errorMessage ??
+                  'Voucher print failed. Parcel was not saved.',
+            ),
           ),
-        ),
+        );
+        return;
+      }
+
+      final parcelId = await ref
+          .read(parcelRepositoryProvider)
+          .createParcel(preview.parcel);
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Parcel #$parcelId printed and saved.')),
       );
-      return;
-    }
 
-    final parcelId = await ref
-        .read(parcelRepositoryProvider)
-        .createParcel(preview.parcel);
-    if (!mounted) {
-      return;
+      await ref.read(parcelFormProvider.notifier).reset();
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_messageForSaveError(error))),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
     }
+  }
 
-    await ref.read(parcelFormProvider.notifier).reset();
-    if (!mounted) {
-      return;
+  String _messageForSaveError(Object error) {
+    final message = error.toString().toLowerCase();
+    if (message.contains('unique') && message.contains('tracking_id')) {
+      return 'This tracking ID already exists. Open preview again and print with a new tracking ID.';
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Parcel #$parcelId printed and saved.')),
-    );
+    if (message.contains('number_of_parcels')) {
+      return 'Parcel count must be greater than 0.';
+    }
+    if (message.contains('total_charges')) {
+      return 'Total charges cannot be negative.';
+    }
+    if (message.contains('cash_advance')) {
+      return 'Cash advance cannot be negative.';
+    }
+    return 'Parcel save failed. Please try again.';
   }
 
   @override
@@ -100,7 +138,7 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
               borderRadius: BorderRadius.all(Radius.circular(14)),
             ),
           ),
-          onPressed: previewAsync.isLoading || printerState.isBusy
+          onPressed: previewAsync.isLoading || printerState.isBusy || _isSaving
               ? null
               : () {
                   final preview = previewAsync.asData?.value;

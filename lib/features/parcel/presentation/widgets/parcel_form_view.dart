@@ -8,6 +8,7 @@ import '../../../../core/theme/app_input_decoration.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../data/models/enums/payment_status.dart';
 import '../providers/parcel_form_provider.dart';
 
 class ParcelFormView extends ConsumerWidget {
@@ -155,6 +156,11 @@ class ParcelFormView extends ConsumerWidget {
                       hint: 'Enter total charges',
                       prefixIcon: const Icon(Icons.attach_money_rounded),
                     ).copyWith(errorText: form.fieldErrors['totalCharges']),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _PaymentStatusField(
+                    value: form.paymentStatus,
+                    onChanged: controller.updatePaymentStatus,
                   ),
                   const SizedBox(height: AppSpacing.md),
                   TextFormField(
@@ -510,5 +516,105 @@ class _TownDropdown extends StatelessWidget {
     if (selectedTown != null) {
       onChanged(selectedTown);
     }
+  }
+}
+
+class _PaymentStatusField extends StatelessWidget {
+  const _PaymentStatusField({
+    required this.value,
+    required this.onChanged,
+  });
+
+  final PaymentStatus value;
+  final ValueChanged<PaymentStatus> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: AppRadius.medium,
+      onTap: () => _openPicker(context),
+      child: InputDecorator(
+        decoration: AppInputDecoration.basic(
+          label: 'Payment Status',
+          hint: 'Select payment status',
+          prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+        ).copyWith(
+          suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded),
+        ),
+        child: Text(_labelFor(value), style: AppTextStyles.body),
+      ),
+    );
+  }
+
+  Future<void> _openPicker(BuildContext context) async {
+    final selected = await showModalBottomSheet<PaymentStatus>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Payment Status', style: AppTextStyles.subtitle),
+                const SizedBox(height: AppSpacing.xs),
+                const Text(
+                  'Select one option',
+                  style: AppTextStyles.bodyMuted,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ...PaymentStatus.values.map((status) {
+                  final isSelected = status == value;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                    child: Material(
+                      color: isSelected
+                          ? AppColors.sectionBackground
+                          : Colors.transparent,
+                      borderRadius: AppRadius.medium,
+                      child: ListTile(
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadius.medium,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.xs,
+                        ),
+                        title: Text(
+                          _labelFor(status),
+                          style: isSelected
+                              ? AppTextStyles.label
+                              : AppTextStyles.body,
+                        ),
+                        trailing: isSelected
+                            ? const Icon(
+                                Icons.check_circle_rounded,
+                                color: AppColors.secondary,
+                              )
+                            : null,
+                        onTap: () => Navigator.of(context).pop(status),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selected != null) {
+      onChanged(selected);
+    }
+  }
+
+  static String _labelFor(PaymentStatus status) {
+    return status == PaymentStatus.unpaid ? 'ငွေတောင်းရန်' : 'ငွေရှင်းပြီး';
   }
 }
