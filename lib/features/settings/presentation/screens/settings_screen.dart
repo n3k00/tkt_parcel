@@ -5,6 +5,7 @@ import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../providers/printer_provider.dart';
+import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
@@ -27,15 +28,18 @@ class SettingsScreen extends ConsumerWidget {
 
     return AppScaffold(
       title: 'Settings',
+      drawer: const AppDrawer(currentRoute: SettingsScreen.routeName),
       canPop: false,
       onBackNavigation: () {
         Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
       },
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded),
-        onPressed: () {
-          Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
-        },
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu_rounded),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+        ),
       ),
       body: settingsData.when(
         data: (data) {

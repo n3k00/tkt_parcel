@@ -5,6 +5,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
+import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../voucher/presentation/screens/voucher_reprint_preview_screen.dart';
@@ -26,15 +27,18 @@ class ParcelListScreen extends ConsumerWidget {
 
     return AppScaffold(
       title: 'Parcel List',
+      drawer: const AppDrawer(currentRoute: ParcelListScreen.routeName),
       canPop: false,
       onBackNavigation: () {
         Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
       },
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded),
-        onPressed: () {
-          Navigator.of(context).pushReplacementNamed(HomeScreen.routeName);
-        },
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: const Icon(Icons.menu_rounded),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+        ),
       ),
       actions: [
         IconButton(
