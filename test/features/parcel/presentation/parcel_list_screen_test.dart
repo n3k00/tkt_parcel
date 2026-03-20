@@ -2,20 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tkt_parcel/core/theme/app_theme.dart';
+import 'package:tkt_parcel/core/utils/date_utils.dart';
 import 'package:tkt_parcel/data/models/enums/payment_status.dart';
 import 'package:tkt_parcel/data/models/parcel.dart';
 import 'package:tkt_parcel/features/parcel/presentation/providers/parcel_list_provider.dart';
 import 'package:tkt_parcel/features/parcel/presentation/screens/parcel_list_screen.dart';
-import 'package:tkt_parcel/providers/printer_provider.dart';
-
-class _FakePrinterNotifier extends PrinterNotifier {
-  _FakePrinterNotifier(this._state);
-
-  final PrinterState _state;
-
-  @override
-  PrinterState build() => _state;
-}
 
 void main() {
   testWidgets(
@@ -60,9 +51,6 @@ void main() {
         ProviderScope(
           overrides: [
             parcelListProvider.overrideWith((ref) => Stream.value(parcels)),
-            printerStateProvider.overrideWith(
-              () => _FakePrinterNotifier(const PrinterState()),
-            ),
           ],
           child: MaterialApp(
             theme: AppTheme.light(),
@@ -72,10 +60,14 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('TGI-A1-250317-0002'), findsOneWidget);
-      expect(find.text('TGI-A1-250317-0001'), findsOneWidget);
       expect(find.text('Ma Nilar'), findsOneWidget);
       expect(find.text('Ma Su'), findsOneWidget);
+      expect(find.text('0999111111'), findsOneWidget);
+      expect(find.text('0999222222'), findsOneWidget);
+      expect(
+        find.text(AppDateUtils.formatDateTime12Hour(parcels.first.createdAt)),
+        findsOneWidget,
+      );
     },
   );
 }
