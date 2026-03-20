@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/voucher_layout.dart';
+import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../providers/printer_provider.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
+import '../../../parcel/presentation/screens/parcel_list_screen.dart';
 import '../../../printing/presentation/screens/printer_connect_screen.dart';
 import '../providers/voucher_preview_provider.dart';
 import '../widgets/voucher_card.dart';
@@ -28,37 +30,64 @@ class VoucherReprintPreviewScreen extends ConsumerStatefulWidget {
 class _VoucherReprintPreviewScreenState
     extends ConsumerState<VoucherReprintPreviewScreen> {
   final GlobalKey _printBoundaryKey = GlobalKey();
+  bool _isReprinting = false;
 
   Future<void> _handleReprint(VoucherPreviewData preview) async {
-    final printerNotifier = ref.read(printerStateProvider.notifier);
-    final printerState = ref.read(printerStateProvider);
-
-    if (!printerState.isConnected) {
-      await Navigator.of(context).pushNamed(PrinterConnectScreen.routeName);
-      if (!mounted || !ref.read(printerStateProvider).isConnected) {
-        return;
-      }
-    }
-
-    final imageBytes = await ref
-        .read(printServiceProvider)
-        .captureWidgetAsPng(_printBoundaryKey);
-    final success = await printerNotifier.printImageBytes(imageBytes);
-
-    if (!mounted) {
+    if (_isReprinting) {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          success
-              ? 'Voucher reprinted successfully.'
-              : ref.read(printerStateProvider).errorMessage ??
-                    'Voucher print failed.',
+    setState(() {
+      _isReprinting = true;
+    });
+
+    final printerNotifier = ref.read(printerStateProvider.notifier);
+    final printerState = ref.read(printerStateProvider);
+
+    try {
+      if (!printerState.isConnected) {
+        await Navigator.of(context).pushNamed(PrinterConnectScreen.routeName);
+        if (!mounted || !ref.read(printerStateProvider).isConnected) {
+          return;
+        }
+      }
+
+      final imageBytes = await ref
+          .read(printServiceProvider)
+          .captureWidgetAsPng(_printBoundaryKey);
+      final success = await printerNotifier.printImageBytes(imageBytes);
+
+      if (!mounted) {
+        return;
+      }
+
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              ref.read(printerStateProvider).errorMessage ??
+                  'Voucher print failed.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Voucher reprinted successfully.'),
         ),
-      ),
-    );
+      );
+      Navigator.of(context).popUntil((route) {
+        return route.settings.name == ParcelListScreen.routeName || route.isFirst;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isReprinting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -67,38 +96,52 @@ class _VoucherReprintPreviewScreenState
       voucherReprintPreviewProvider(widget.parcelId),
     );
     final printerState = ref.watch(printerStateProvider);
+    final isProcessing =
+        previewAsync.isLoading || printerState.isBusy || _isReprinting;
 
     return AppScaffold(
       title: 'Reprint Voucher',
+      isBlocking: _isReprinting || printerState.isBusy,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: SizedBox(
-        width: math.max(
-          0.0,
-          MediaQuery.sizeOf(context).width - (AppSpacing.lg * 2),
-        ),
-        child: FilledButton(
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(58),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(14)),
+      floatingActionButton: LayoutBuilder(
+        builder: (context, constraints) {
+          final buttonWidth = math.min(
+            AppResponsive.centeredContentWidth(
+              context,
+              horizontalPadding: AppSpacing.lg,
             ),
-          ),
-          onPressed: previewAsync.isLoading || printerState.isBusy
-              ? null
-              : () {
-                  final preview = previewAsync.asData?.value;
-                  if (preview != null) {
-                    _handleReprint(preview);
-                  }
-                },
-          child: const Text('Reprint'),
-        ),
+            720.0,
+          );
+          return SizedBox(
+            width: buttonWidth,
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(58),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(14)),
+                ),
+              ),
+              onPressed: isProcessing
+                  ? null
+                  : () {
+                      final preview = previewAsync.asData?.value;
+                      if (preview != null) {
+                        _handleReprint(preview);
+                      }
+                    },
+              child: const Text('Reprint'),
+            ),
+          );
+        },
       ),
       body: previewAsync.when(
         data: (preview) => LayoutBuilder(
           builder: (context, constraints) {
             final previewWidth = math.min(
-              constraints.maxWidth,
+              AppResponsive.centeredContentWidth(
+                context,
+                horizontalPadding: AppSpacing.lg,
+              ),
               VoucherLayout.previewPaperWidth,
             );
             return ListView(
@@ -128,7 +171,7 @@ class _VoucherReprintPreviewScreenState
                     printerState.lastPrintableImageBytes != null) ...[
                   const SizedBox(height: AppSpacing.sm),
                   OutlinedButton(
-                    onPressed: printerState.isBusy
+                    onPressed: isProcessing
                         ? null
                         : () => ref
                               .read(printerStateProvider.notifier)
@@ -139,7 +182,7 @@ class _VoucherReprintPreviewScreenState
                 if (printerState.lastPrintableImageBytes != null) ...[
                   const SizedBox(height: AppSpacing.sm),
                   TextButton(
-                    onPressed: printerState.isBusy
+                    onPressed: isProcessing
                         ? null
                         : () => ref
                               .read(printerStateProvider.notifier)

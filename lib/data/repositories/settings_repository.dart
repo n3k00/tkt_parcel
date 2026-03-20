@@ -8,6 +8,7 @@ class SettingsRepository {
   static const _defaultAccountCode = 'A1';
   static const _defaultBusinessName = 'သိင်္ခသူ';
   static const _defaultBusinessSubtitle = 'ခရီးသည် နှင့် ကုန်စည် ပို့ဆောင်ရေး';
+  static const _defaultBusinessAddress = 'ပါဆပ်ကားလေးကွင်း၊တာချီလိတ်မြို့။';
   static const _defaultBusinessPhone = '09250787547,09253003004';
   static const _defaultBusinessNameFontSize = 60.0;
   static const _defaultBusinessSubtitleFontSize = 26.0;
@@ -40,6 +41,8 @@ class SettingsRepository {
       businessName: _preferences.getBusinessName() ?? _defaultBusinessName,
       businessSubtitle:
           _preferences.getBusinessSubtitle() ?? _defaultBusinessSubtitle,
+      businessAddress:
+          _preferences.getBusinessAddress() ?? _defaultBusinessAddress,
       businessPhone: _preferences.getBusinessPhone() ?? _defaultBusinessPhone,
       businessNameFontSize:
           _preferences.getBusinessNameFontSize() ?? _defaultBusinessNameFontSize,
@@ -47,7 +50,8 @@ class SettingsRepository {
           _preferences.getBusinessSubtitleFontSize() ??
           _defaultBusinessSubtitleFontSize,
       businessPhoneFontSize:
-          _preferences.getBusinessPhoneFontSize() ?? _defaultBusinessPhoneFontSize,
+          _preferences.getBusinessPhoneFontSize() ??
+          _defaultBusinessPhoneFontSize,
       receiptLabelFontSize:
           _preferences.getReceiptLabelFontSize() ?? _defaultReceiptLabelFontSize,
       receiptValueFontSize:
@@ -69,6 +73,7 @@ class SettingsRepository {
     await _preferences.setAccountCode(config.accountCode.toUpperCase());
     await _preferences.setBusinessName(config.businessName.trim());
     await _preferences.setBusinessSubtitle(config.businessSubtitle.trim());
+    await _preferences.setBusinessAddress(config.businessAddress.trim());
     await _preferences.setBusinessPhone(config.businessPhone.trim());
     await _preferences.setBusinessNameFontSize(config.businessNameFontSize);
     await _preferences.setBusinessSubtitleFontSize(

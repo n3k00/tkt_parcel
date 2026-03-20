@@ -25,6 +25,7 @@ class _StaffAccountInfoScreenState
   final _formKey = GlobalKey<FormState>();
   final _businessNameController = TextEditingController();
   final _businessSubtitleController = TextEditingController();
+  final _businessAddressController = TextEditingController();
   final _businessPhoneController = TextEditingController();
   final _titleSizeController = TextEditingController();
   final _subtitleSizeController = TextEditingController();
@@ -36,6 +37,7 @@ class _StaffAccountInfoScreenState
   void dispose() {
     _businessNameController.dispose();
     _businessSubtitleController.dispose();
+    _businessAddressController.dispose();
     _businessPhoneController.dispose();
     _titleSizeController.dispose();
     _subtitleSizeController.dispose();
@@ -50,6 +52,7 @@ class _StaffAccountInfoScreenState
 
     _businessNameController.text = setup.businessName;
     _businessSubtitleController.text = setup.businessSubtitle;
+    _businessAddressController.text = setup.businessAddress;
     _businessPhoneController.text = setup.businessPhone;
     _titleSizeController.text = setup.businessNameFontSize.toStringAsFixed(0);
     _subtitleSizeController.text = setup.businessSubtitleFontSize
@@ -66,6 +69,7 @@ class _StaffAccountInfoScreenState
     final nextSetup = currentSetup.copyWith(
       businessName: _businessNameController.text.trim(),
       businessSubtitle: _businessSubtitleController.text.trim(),
+      businessAddress: _businessAddressController.text.trim(),
       businessPhone: _businessPhoneController.text.trim(),
       businessNameFontSize: double.parse(_titleSizeController.text.trim()),
       businessSubtitleFontSize: double.parse(
@@ -79,9 +83,9 @@ class _StaffAccountInfoScreenState
       return;
     }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Voucher header settings saved.')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Voucher header settings saved.')),
+    );
   }
 
   @override
@@ -105,10 +109,7 @@ class _StaffAccountInfoScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Voucher Header',
-                          style: AppTextStyles.title,
-                        ),
+                        const Text('Voucher Header', style: AppTextStyles.title),
                         const SizedBox(height: AppSpacing.xs),
                         const Text(
                           'These values are stored locally with SharedPreferences and used directly in voucher preview and printing.',
@@ -134,6 +135,15 @@ class _StaffAccountInfoScreenState
                         ),
                         const SizedBox(height: AppSpacing.md),
                         TextFormField(
+                          controller: _businessAddressController,
+                          decoration: const InputDecoration(
+                            labelText: 'Address',
+                            hintText: 'ပါဆပ်ကားလေးကွင်း၊တာချီလိတ်မြို့။',
+                          ),
+                          validator: _requiredValidator,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        TextFormField(
                           controller: _businessPhoneController,
                           keyboardType: TextInputType.phone,
                           decoration: const InputDecoration(
@@ -143,7 +153,10 @@ class _StaffAccountInfoScreenState
                           validator: _requiredValidator,
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        const Text('Header Text Sizes', style: AppTextStyles.label),
+                        const Text(
+                          'Header Text Sizes',
+                          style: AppTextStyles.label,
+                        ),
                         const SizedBox(height: AppSpacing.sm),
                         Row(
                           children: [
@@ -190,10 +203,7 @@ class _StaffAccountInfoScreenState
                         const SizedBox(height: AppSpacing.lg),
                         _InfoRow(label: 'City Code', value: setup.cityCode),
                         const Divider(),
-                        _InfoRow(
-                          label: 'Account Code',
-                          value: setup.accountCode,
-                        ),
+                        _InfoRow(label: 'Account Code', value: setup.accountCode),
                         const SizedBox(height: AppSpacing.lg),
                         SizedBox(
                           width: double.infinity,
@@ -234,8 +244,8 @@ class _StaffAccountInfoScreenState
       return 'Invalid.';
     }
 
-    if (parsed < 10 || parsed > 48) {
-      return '10-48';
+    if (parsed < 10 || parsed > 80) {
+      return '10-80';
     }
 
     return null;

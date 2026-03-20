@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../providers/printer_provider.dart';
 import '../../../../shared/helpers/printer_connect_navigation.dart';
@@ -59,9 +60,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ],
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: const ParcelNextActionButton(),
-      body: ListView(
-        padding: AppSpacing.screenPadding,
-        children: const [ParcelFormView()],
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final contentWidth = constraints.maxWidth >= AppBreakpoints.medium
+              ? AppResponsive.centeredContentWidth(
+                  context,
+                  horizontalPadding: AppSpacing.lg,
+                )
+              : constraints.maxWidth;
+
+          return Align(
+            alignment: Alignment.topCenter,
+            child: SizedBox(
+              width: contentWidth,
+              child: ListView(
+                padding: AppSpacing.screenPadding,
+                children: const [ParcelFormView()],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

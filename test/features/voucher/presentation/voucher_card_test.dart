@@ -32,6 +32,7 @@ void main() {
         accountCode: 'A1',
         businessName: 'TKT Parcel',
         businessSubtitle: 'Parcel Voucher Service',
+        businessAddress: 'ပါဆပ်ကားလေးကွင်း၊တာချီလိတ်မြို့။',
         businessPhone: '09-000-000000',
         businessNameFontSize: 26,
         businessSubtitleFontSize: 18,

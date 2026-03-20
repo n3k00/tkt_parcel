@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/voucher_layout.dart';
+import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/enums/payment_status.dart';
@@ -57,59 +58,20 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
             now: DateTime(2026, 3, 19, 18, 23),
           );
 
-          return ListView(
-            padding: AppSpacing.screenPadding,
-            children: [
-              SectionCard(
-                child: Padding(
-                  padding: AppSpacing.cardPadding,
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final isExpanded = constraints.maxWidth >= AppBreakpoints.medium;
+              final contentWidth = AppResponsive.centeredContentWidth(
+                context,
+                horizontalPadding: AppSpacing.lg,
+              );
+
+              final controlCards = [
+                _SettingsSection(
+                  title: 'Header Font Size',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Live Preview',
-                        style: AppTextStyles.title,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final previewWidth = math.min(
-                            constraints.maxWidth,
-                            VoucherLayout.previewPaperWidth,
-                          );
-                          return Center(
-                            child: ConstrainedBox(
-                              constraints: BoxConstraints(maxWidth: previewWidth),
-                              child: FittedBox(
-                                fit: BoxFit.contain,
-                                alignment: Alignment.topCenter,
-                                child: VoucherCard(
-                                  parcel: sampleParcel,
-                                  qrPayload: 'TRACK:TGI-A1-260319-0003',
-                                  setup: draft,
-                                  isPrintable: true,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SectionCard(
-                child: Padding(
-                  padding: AppSpacing.cardPadding,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Header Font Size',
-                        style: AppTextStyles.title,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
                       _SliderField(
                         label: 'Title',
                         value: draft.businessNameFontSize,
@@ -142,19 +104,11 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SectionCard(
-                child: Padding(
-                  padding: AppSpacing.cardPadding,
+                _SettingsSection(
+                  title: 'Body Font Size',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Body Font Size',
-                        style: AppTextStyles.title,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
                       _SliderField(
                         label: 'Label',
                         value: draft.receiptLabelFontSize,
@@ -176,19 +130,11 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SectionCard(
-                child: Padding(
-                  padding: AppSpacing.cardPadding,
+                _SettingsSection(
+                  title: 'Receipt Padding',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Receipt Padding',
-                        style: AppTextStyles.title,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
                       _SliderField(
                         label: 'Top',
                         value: draft.receiptPaddingTop,
@@ -222,24 +168,112 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              ElevatedButton(
-                onPressed: () async {
-                  final messenger = ScaffoldMessenger.of(context);
-                  await ref.read(settingsSetupProvider.notifier).saveSetup(draft);
-                  if (!mounted) return;
-                  messenger.showSnackBar(
-                    const SnackBar(content: Text('Receipt settings saved.')),
-                  );
-                },
-                child: const Text('Save Receipt Settings'),
-              ),
-            ],
+              ];
+
+              return Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: contentWidth,
+                  child: ListView(
+                    padding: AppSpacing.screenPadding,
+                    children: [
+                      _SettingsSection(
+                        title: 'Live Preview',
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            final previewWidth = math.min(
+                              constraints.maxWidth,
+                              VoucherLayout.previewPaperWidth,
+                            );
+                            return Center(
+                              child: ConstrainedBox(
+                                constraints: BoxConstraints(maxWidth: previewWidth),
+                                child: FittedBox(
+                                  fit: BoxFit.contain,
+                                  alignment: Alignment.topCenter,
+                                  child: VoucherCard(
+                                    parcel: sampleParcel,
+                                    qrPayload: 'TRACK:TGI-A1-260319-0003',
+                                    setup: draft,
+                                    isPrintable: true,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      if (isExpanded)
+                        Wrap(
+                          spacing: AppSpacing.md,
+                          runSpacing: AppSpacing.md,
+                          children: controlCards
+                              .map(
+                                (card) => SizedBox(
+                                  width: (contentWidth - AppSpacing.md) / 2,
+                                  child: card,
+                                ),
+                              )
+                              .toList(),
+                        )
+                      else
+                        ...controlCards.expand(
+                          (card) => [card, const SizedBox(height: AppSpacing.md)],
+                        ),
+                      const SizedBox(height: AppSpacing.md),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final messenger = ScaffoldMessenger.of(context);
+                            await ref.read(settingsSetupProvider.notifier).saveSetup(draft);
+                            if (!mounted) return;
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text('Receipt settings saved.'),
+                              ),
+                            );
+                          },
+                          child: const Text('Save Receipt Settings'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           );
         },
         loading: AppLoading.new,
         error: (error, _) => AppErrorView(message: error.toString()),
+      ),
+    );
+  }
+}
+
+class _SettingsSection extends StatelessWidget {
+  const _SettingsSection({
+    required this.title,
+    required this.child,
+  });
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionCard(
+      child: Padding(
+        padding: AppSpacing.cardPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: AppTextStyles.title),
+            const SizedBox(height: AppSpacing.sm),
+            child,
+          ],
+        ),
       ),
     );
   }

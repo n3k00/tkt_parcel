@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../providers/printer_provider.dart';
@@ -32,12 +33,15 @@ class SettingsScreen extends ConsumerWidget {
           final setup = data.setup;
           final appInfo = data.appInfo;
 
-          return ListView(
-            padding: AppSpacing.screenPadding,
-            children: [
-              SectionCard(
-                child: Padding(
-                  padding: AppSpacing.cardPadding,
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final isExpanded = constraints.maxWidth >= AppBreakpoints.medium;
+              final contentWidth = AppResponsive.centeredContentWidth(
+                context,
+                horizontalPadding: AppSpacing.lg,
+              );
+              final cards = [
+                _SettingsCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -53,6 +57,11 @@ class SettingsScreen extends ConsumerWidget {
                       _SummaryRow(
                         label: 'Account Code',
                         value: setup.accountCode,
+                      ),
+                      const Divider(),
+                      _SummaryRow(
+                        label: 'Address',
+                        value: setup.businessAddress,
                       ),
                       const SizedBox(height: AppSpacing.md),
                       SizedBox(
@@ -83,11 +92,7 @@ class SettingsScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SectionCard(
-                child: Padding(
-                  padding: AppSpacing.cardPadding,
+                _SettingsCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -119,11 +124,7 @@ class SettingsScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SectionCard(
-                child: Padding(
-                  padding: AppSpacing.cardPadding,
+                _SettingsCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -140,12 +141,57 @@ class SettingsScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-              ),
-            ],
+              ];
+
+              return Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: contentWidth,
+                  child: ListView(
+                    padding: AppSpacing.screenPadding,
+                    children: [
+                      if (isExpanded)
+                        Wrap(
+                          spacing: AppSpacing.md,
+                          runSpacing: AppSpacing.md,
+                          children: cards
+                              .map(
+                                (card) => SizedBox(
+                                  width: (contentWidth - AppSpacing.md) / 2,
+                                  child: card,
+                                ),
+                              )
+                              .toList(),
+                        )
+                      else
+                        ...cards.expand(
+                          (card) => [card, const SizedBox(height: AppSpacing.md)],
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
           );
         },
         loading: AppLoading.new,
         error: (error, _) => AppErrorView(message: error.toString()),
+      ),
+    );
+  }
+}
+
+class _SettingsCard extends StatelessWidget {
+  const _SettingsCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return SectionCard(
+      child: Padding(
+        padding: AppSpacing.cardPadding,
+        child: child,
       ),
     );
   }

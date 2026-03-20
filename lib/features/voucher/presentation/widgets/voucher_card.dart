@@ -210,7 +210,13 @@ class _ReceiptHeader extends StatelessWidget {
           textAlign: TextAlign.center,
           style: _ReceiptStyles.subtitle(setup, isPrintable),
         ),
-        SizedBox(height: isPrintable ? 16 : 12),
+        SizedBox(height: isPrintable ? 14 : 10),
+        Text(
+          setup.businessAddress,
+          textAlign: TextAlign.center,
+          style: _ReceiptStyles.address(setup, isPrintable),
+        ),
+        SizedBox(height: isPrintable ? 14 : 10),
         Text(
           'Ph - ${setup.businessPhone}',
           textAlign: TextAlign.center,
@@ -439,6 +445,13 @@ class _ReceiptStyles {
         fontSize: _scale(setup.businessSubtitleFontSize, isPrintable, 1.22),
         fontWeight: FontWeight.w600,
         height: 1.15,
+        color: Colors.black,
+      );
+
+  static TextStyle address(AppSetupConfig setup, bool isPrintable) => TextStyle(
+        fontSize: _scale(setup.businessSubtitleFontSize, isPrintable, 1.08),
+        fontWeight: FontWeight.w500,
+        height: 1.2,
         color: Colors.black,
       );
 

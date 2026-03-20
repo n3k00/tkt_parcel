@@ -11,6 +11,8 @@ class AppScaffold extends StatelessWidget {
     this.floatingActionButtonLocation,
     this.appBarBackgroundColor,
     this.appBarForegroundColor,
+    this.isBlocking = false,
+    this.blockingOverlay,
   });
 
   final String title;
@@ -21,20 +23,43 @@ class AppScaffold extends StatelessWidget {
   final FloatingActionButtonLocation? floatingActionButtonLocation;
   final Color? appBarBackgroundColor;
   final Color? appBarForegroundColor;
+  final bool isBlocking;
+  final Widget? blockingOverlay;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    final scaffold = Scaffold(
       drawer: drawer,
       appBar: AppBar(
+        automaticallyImplyLeading: !isBlocking,
         title: Text(title),
-        actions: actions,
+        actions: isBlocking ? const [] : actions,
         backgroundColor: appBarBackgroundColor,
         foregroundColor: appBarForegroundColor,
       ),
       body: body,
-      floatingActionButton: floatingActionButton,
+      floatingActionButton: isBlocking ? null : floatingActionButton,
       floatingActionButtonLocation: floatingActionButtonLocation,
+    );
+
+    return PopScope(
+      canPop: !isBlocking,
+      child: Stack(
+        children: [
+          scaffold,
+          if (isBlocking)
+            Positioned.fill(
+              child:
+                  blockingOverlay ??
+                  ColoredBox(
+                    color: Colors.black26,
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+            ),
+        ],
+      ),
     );
   }
 }

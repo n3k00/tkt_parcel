@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/voucher_layout.dart';
+import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../providers/parcel_repository_provider.dart';
 import '../../../../providers/printer_provider.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
+import '../../../parcel/presentation/screens/home_screen.dart';
 import '../../../parcel/presentation/providers/parcel_form_provider.dart';
 import '../../../printing/presentation/screens/printer_connect_screen.dart';
 import '../models/voucher_preview_args.dart';
@@ -85,6 +87,12 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
       );
 
       await ref.read(parcelFormProvider.notifier).reset();
+      if (!mounted) {
+        return;
+      }
+      Navigator.of(context).popUntil((route) {
+        return route.settings.name == HomeScreen.routeName || route.isFirst;
+      });
     } catch (error) {
       if (!mounted) {
         return;
@@ -122,38 +130,52 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
   Widget build(BuildContext context) {
     final previewAsync = ref.watch(voucherPreviewProvider(widget.args));
     final printerState = ref.watch(printerStateProvider);
+    final isProcessing =
+        previewAsync.isLoading || printerState.isBusy || _isSaving;
 
     return AppScaffold(
       title: 'Voucher Preview',
+      isBlocking: _isSaving || printerState.isBusy,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: SizedBox(
-        width: math.max(
-          0.0,
-          MediaQuery.sizeOf(context).width - (AppSpacing.lg * 2),
-        ),
-        child: FilledButton(
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(58),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(14)),
+      floatingActionButton: LayoutBuilder(
+        builder: (context, constraints) {
+          final buttonWidth = math.min(
+            AppResponsive.centeredContentWidth(
+              context,
+              horizontalPadding: AppSpacing.lg,
             ),
-          ),
-          onPressed: previewAsync.isLoading || printerState.isBusy || _isSaving
-              ? null
-              : () {
-                  final preview = previewAsync.asData?.value;
-                  if (preview != null) {
-                    _handlePrintAndSave(preview);
-                  }
-                },
-          child: const Text('Print and Save'),
-        ),
+            720.0,
+          );
+          return SizedBox(
+            width: buttonWidth,
+            child: FilledButton(
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(58),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(14)),
+                ),
+              ),
+              onPressed: isProcessing
+                  ? null
+                  : () {
+                      final preview = previewAsync.asData?.value;
+                      if (preview != null) {
+                        _handlePrintAndSave(preview);
+                      }
+                    },
+              child: const Text('Print and Save'),
+            ),
+          );
+        },
       ),
       body: previewAsync.when(
         data: (preview) => LayoutBuilder(
           builder: (context, constraints) {
             final previewWidth = math.min(
-              constraints.maxWidth,
+              AppResponsive.centeredContentWidth(
+                context,
+                horizontalPadding: AppSpacing.lg,
+              ),
               VoucherLayout.previewPaperWidth,
             );
             return ListView(

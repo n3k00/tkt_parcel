@@ -4,6 +4,7 @@ class AppSetupConfig {
     required this.accountCode,
     required this.businessName,
     required this.businessSubtitle,
+    required this.businessAddress,
     required this.businessPhone,
     required this.businessNameFontSize,
     required this.businessSubtitleFontSize,
@@ -21,6 +22,7 @@ class AppSetupConfig {
   final String accountCode;
   final String businessName;
   final String businessSubtitle;
+  final String businessAddress;
   final String businessPhone;
   final double businessNameFontSize;
   final double businessSubtitleFontSize;
@@ -38,6 +40,7 @@ class AppSetupConfig {
     String? accountCode,
     String? businessName,
     String? businessSubtitle,
+    String? businessAddress,
     String? businessPhone,
     double? businessNameFontSize,
     double? businessSubtitleFontSize,
@@ -56,6 +59,7 @@ class AppSetupConfig {
       accountCode: accountCode ?? this.accountCode,
       businessName: businessName ?? this.businessName,
       businessSubtitle: businessSubtitle ?? this.businessSubtitle,
+      businessAddress: businessAddress ?? this.businessAddress,
       businessPhone: businessPhone ?? this.businessPhone,
       businessNameFontSize:
           businessNameFontSize ?? this.businessNameFontSize,

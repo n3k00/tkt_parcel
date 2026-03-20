@@ -8,6 +8,7 @@ class AppPreferences {
   static const _townListKey = 'setup_town_list';
   static const _businessNameKey = 'business_name';
   static const _businessSubtitleKey = 'business_subtitle';
+  static const _businessAddressKey = 'business_address';
   static const _businessPhoneKey = 'business_phone';
   static const _businessNameFontSizeKey = 'business_name_font_size';
   static const _businessSubtitleFontSizeKey = 'business_subtitle_font_size';
@@ -48,6 +49,8 @@ class AppPreferences {
   String? getBusinessName() => _preferences.getString(_businessNameKey);
 
   String? getBusinessSubtitle() => _preferences.getString(_businessSubtitleKey);
+
+  String? getBusinessAddress() => _preferences.getString(_businessAddressKey);
 
   String? getBusinessPhone() => _preferences.getString(_businessPhoneKey);
 
@@ -95,6 +98,10 @@ class AppPreferences {
 
   Future<bool> setBusinessSubtitle(String value) {
     return _preferences.setString(_businessSubtitleKey, value);
+  }
+
+  Future<bool> setBusinessAddress(String value) {
+    return _preferences.setString(_businessAddressKey, value);
   }
 
   Future<bool> setBusinessPhone(String value) {
