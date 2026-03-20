@@ -1,8 +1,7 @@
 class QrService {
   String buildParcelPayload({
-    required String trackingNumber,
-    required String receiverName,
+    required String trackingId,
   }) {
-    return 'tracking=$trackingNumber;receiver=$receiverName';
+    return trackingId;
   }
 }

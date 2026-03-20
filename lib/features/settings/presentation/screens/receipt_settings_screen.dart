@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/constants/receipt_strings.dart';
 import '../../../../core/constants/voucher_layout.dart';
 import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -15,6 +17,7 @@ import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../voucher/presentation/widgets/voucher_card.dart';
+import '../constants/receipt_settings_dimens.dart';
 import '../providers/settings_provider.dart';
 
 class ReceiptSettingsScreen extends ConsumerStatefulWidget {
@@ -35,22 +38,22 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
     final setupAsync = ref.watch(settingsSetupProvider);
 
     return AppScaffold(
-      title: 'Receipt Settings',
+      title: AppStrings.receiptSettingsTitle,
       body: setupAsync.when(
         data: (setup) {
           _draft ??= setup;
           final draft = _draft!;
           final sampleParcel = ParcelModel.create(
-            trackingId: 'TGI-A1-260319-0003',
-            fromTown: 'တောင်ကြီး',
-            toTown: 'တာချီလိတ်',
+            trackingId: ReceiptStrings.sampleTrackingId,
+            fromTown: ReceiptStrings.sampleFromTown,
+            toTown: ReceiptStrings.sampleToTown,
             cityCode: 'TGI',
             accountCode: 'A1',
-            senderName: 'နန္ဒာလှ',
-            senderPhone: '52388',
-            receiverName: 'မအမာ',
-            receiverPhone: '8368',
-            parcelType: 'အကြီး',
+            senderName: ReceiptStrings.sampleSenderName,
+            senderPhone: ReceiptStrings.sampleSenderPhone,
+            receiverName: ReceiptStrings.sampleReceiverName,
+            receiverPhone: ReceiptStrings.sampleReceiverPhone,
+            parcelType: ReceiptStrings.sampleParcelType,
             numberOfParcels: 255,
             totalCharges: 5586,
             paymentStatus: PaymentStatus.unpaid,
@@ -68,24 +71,24 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
 
               final controlCards = [
                 _SettingsSection(
-                  title: 'Header Font Size',
+                  title: AppStrings.headerFontSizeTitle,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _SliderField(
-                        label: 'Title',
+                        label: AppStrings.titleLabel,
                         value: draft.businessNameFontSize,
-                        min: 18,
-                        max: 80,
+                        min: ReceiptSettingsDimens.titleFontMin,
+                        max: ReceiptSettingsDimens.titleFontMax,
                         onChanged: (value) => setState(() {
                           _draft = draft.copyWith(businessNameFontSize: value);
                         }),
                       ),
                       _SliderField(
-                        label: 'Subtitle',
+                        label: AppStrings.subtitleLabel,
                         value: draft.businessSubtitleFontSize,
-                        min: 12,
-                        max: 40,
+                        min: ReceiptSettingsDimens.subtitleFontMin,
+                        max: ReceiptSettingsDimens.subtitleFontMax,
                         onChanged: (value) => setState(() {
                           _draft = draft.copyWith(
                             businessSubtitleFontSize: value,
@@ -93,10 +96,10 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                         }),
                       ),
                       _SliderField(
-                        label: 'Address',
+                        label: AppStrings.addressLabel,
                         value: draft.businessAddressFontSize,
-                        min: 10,
-                        max: 36,
+                        min: ReceiptSettingsDimens.addressFontMin,
+                        max: ReceiptSettingsDimens.addressFontMax,
                         onChanged: (value) => setState(() {
                           _draft = draft.copyWith(
                             businessAddressFontSize: value,
@@ -104,10 +107,10 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                         }),
                       ),
                       _SliderField(
-                        label: 'Phone',
+                        label: AppStrings.phoneLabel,
                         value: draft.businessPhoneFontSize,
-                        min: 10,
-                        max: 32,
+                        min: ReceiptSettingsDimens.phoneFontMin,
+                        max: ReceiptSettingsDimens.phoneFontMax,
                         onChanged: (value) => setState(() {
                           _draft = draft.copyWith(businessPhoneFontSize: value);
                         }),
@@ -116,24 +119,24 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                   ),
                 ),
                 _SettingsSection(
-                  title: 'Body Font Size',
+                  title: AppStrings.bodyFontSizeTitle,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _SliderField(
-                        label: 'Label',
+                        label: AppStrings.labelLabel,
                         value: draft.receiptLabelFontSize,
-                        min: 14,
-                        max: 40,
+                        min: ReceiptSettingsDimens.labelFontMin,
+                        max: ReceiptSettingsDimens.labelFontMax,
                         onChanged: (value) => setState(() {
                           _draft = draft.copyWith(receiptLabelFontSize: value);
                         }),
                       ),
                       _SliderField(
-                        label: 'Value',
+                        label: AppStrings.valueLabel,
                         value: draft.receiptValueFontSize,
-                        min: 14,
-                        max: 44,
+                        min: ReceiptSettingsDimens.valueFontMin,
+                        max: ReceiptSettingsDimens.valueFontMax,
                         onChanged: (value) => setState(() {
                           _draft = draft.copyWith(receiptValueFontSize: value);
                         }),
@@ -142,24 +145,24 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                   ),
                 ),
                 _SettingsSection(
-                  title: 'Receipt Padding',
+                  title: AppStrings.receiptPaddingTitle,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _SliderField(
-                        label: 'Top',
+                        label: AppStrings.topLabel,
                         value: draft.receiptPaddingTop,
-                        min: 0,
-                        max: 60,
+                        min: ReceiptSettingsDimens.receiptTopPaddingMin,
+                        max: ReceiptSettingsDimens.receiptTopPaddingMax,
                         onChanged: (value) => setState(() {
                           _draft = draft.copyWith(receiptPaddingTop: value);
                         }),
                       ),
                       _SliderField(
-                        label: 'Horizontal',
+                        label: AppStrings.horizontalLabel,
                         value: draft.receiptPaddingLeft,
-                        min: 0,
-                        max: 40,
+                        min: ReceiptSettingsDimens.receiptHorizontalPaddingMin,
+                        max: ReceiptSettingsDimens.receiptHorizontalPaddingMax,
                         onChanged: (value) => setState(() {
                           _draft = draft.copyWith(
                             receiptPaddingLeft: value,
@@ -168,10 +171,10 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                         }),
                       ),
                       _SliderField(
-                        label: 'Bottom',
+                        label: AppStrings.bottomLabel,
                         value: draft.receiptPaddingBottom,
-                        min: 0,
-                        max: 80,
+                        min: ReceiptSettingsDimens.receiptBottomPaddingMin,
+                        max: ReceiptSettingsDimens.receiptBottomPaddingMax,
                         onChanged: (value) => setState(() {
                           _draft = draft.copyWith(receiptPaddingBottom: value);
                         }),
@@ -189,11 +192,11 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                     padding: AppSpacing.screenPadding,
                     children: [
                       _SettingsSection(
-                        title: 'Live Preview',
+                        title: AppStrings.livePreviewTitle,
                         child: LayoutBuilder(
-                          builder: (context, constraints) {
+                          builder: (context, previewConstraints) {
                             final previewWidth = math.min(
-                              constraints.maxWidth,
+                              previewConstraints.maxWidth,
                               VoucherLayout.previewPaperWidth,
                             );
                             return Center(
@@ -204,7 +207,7 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                                   alignment: Alignment.topCenter,
                                   child: VoucherCard(
                                     parcel: sampleParcel,
-                                    qrPayload: 'TRACK:TGI-A1-260319-0003',
+                                    qrPayload: ReceiptStrings.sampleQrPayload,
                                     setup: draft,
                                     isPrintable: true,
                                   ),
@@ -238,15 +241,19 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                         child: ElevatedButton(
                           onPressed: () async {
                             final messenger = ScaffoldMessenger.of(context);
-                            await ref.read(settingsSetupProvider.notifier).saveSetup(draft);
-                            if (!mounted) return;
+                            await ref
+                                .read(settingsSetupProvider.notifier)
+                                .saveSetup(draft);
+                            if (!mounted) {
+                              return;
+                            }
                             messenger.showSnackBar(
                               const SnackBar(
-                                content: Text('Receipt settings saved.'),
+                                content: Text(AppStrings.receiptSettingsSaved),
                               ),
                             );
                           },
-                          child: const Text('Save Receipt Settings'),
+                          child: const Text(AppStrings.saveReceiptSettings),
                         ),
                       ),
                     ],

@@ -1,3 +1,4 @@
+import '../../core/constants/receipt_strings.dart';
 import '../../shared/models/app_setup_config.dart';
 import '../local/preferences/app_preferences.dart';
 
@@ -6,10 +7,10 @@ class SettingsRepository {
 
   static const _defaultCityCode = 'TGI';
   static const _defaultAccountCode = 'A1';
-  static const _defaultBusinessName = 'သိင်္ခသူ';
-  static const _defaultBusinessSubtitle = 'ခရီးသည် နှင့် ကုန်စည် ပို့ဆောင်ရေး';
-  static const _defaultBusinessAddress = 'ပါဆပ်ကားလေးကွင်း၊တာချီလိတ်မြို့။';
-  static const _defaultBusinessPhone = '09250787547,09253003004';
+  static const _defaultBusinessName = ReceiptStrings.defaultBusinessName;
+  static const _defaultBusinessSubtitle = ReceiptStrings.defaultBusinessSubtitle;
+  static const _defaultBusinessAddress = ReceiptStrings.defaultBusinessAddress;
+  static const _defaultBusinessPhone = ReceiptStrings.defaultBusinessPhone;
   static const _defaultBusinessNameFontSize = 60.0;
   static const _defaultBusinessSubtitleFontSize = 26.0;
   static const _defaultBusinessAddressFontSize = 22.0;
@@ -20,7 +21,7 @@ class SettingsRepository {
   static const _defaultReceiptPaddingLeft = 24.0;
   static const _defaultReceiptPaddingRight = 24.0;
   static const _defaultReceiptPaddingBottom = 40.0;
-  static const _defaultFooterMessage = '';
+  static const _defaultFooterMessage = ReceiptStrings.defaultFooter;
   static const _defaultPrinterPreset = 'balanced';
   static const _defaultTownList = [
     'Taunggyi',

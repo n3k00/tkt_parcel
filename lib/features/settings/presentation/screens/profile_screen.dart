@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/models/app_setup_config.dart';
 import '../../../../shared/widgets/app_error_view.dart';
@@ -53,7 +54,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile settings saved.')),
+      const SnackBar(content: Text(AppStrings.profileSaved)),
     );
   }
 
@@ -62,7 +63,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final setupAsync = ref.watch(settingsSetupProvider);
 
     return AppScaffold(
-      title: 'Profile',
+      title: AppStrings.profileTitle,
       body: setupAsync.when(
         data: (setup) {
           _seedControllers(setup);
@@ -82,7 +83,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           controller: _accountCodeController,
                           textCapitalization: TextCapitalization.characters,
                           decoration: const InputDecoration(
-                            labelText: 'Account Code',
+                            labelText: AppStrings.accountCodeLabel,
                           ),
                           validator: _accountCodeValidator,
                         ),
@@ -93,7 +94,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             onPressed: setupAsync.isLoading
                                 ? null
                                 : () => _save(setup),
-                            child: const Text('Save Changes'),
+                            child: const Text(AppStrings.saveChanges),
                           ),
                         ),
                       ],
@@ -113,7 +114,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   String? _accountCodeValidator(String? value) {
     final raw = (value ?? '').trim();
     if (raw.isEmpty) {
-      return 'Required.';
+      return AppStrings.requiredField;
     }
     return null;
   }

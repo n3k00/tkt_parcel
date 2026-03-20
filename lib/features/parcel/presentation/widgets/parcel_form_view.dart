@@ -5,11 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/theme/app_input_decoration.dart';
 import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/enums/payment_status.dart';
+import '../constants/parcel_form_dimens.dart';
 import '../providers/parcel_form_provider.dart';
 
 class ParcelFormView extends ConsumerWidget {
@@ -215,10 +217,12 @@ class ParcelFormView extends ConsumerWidget {
                     imagePath: form.parcelImagePath,
                     onPickImage: controller.pickParcelImage,
                     onClearImage: controller.clearParcelImage,
-                    height: isCompact ? 252 : 320,
+                    height: isCompact
+                        ? ParcelFormDimens.compactImageHeight
+                        : ParcelFormDimens.expandedImageHeight,
                   ),
                 ),
-                const SizedBox(height: 104),
+                const SizedBox(height: ParcelFormDimens.bottomActionClearance),
               ],
             ),
           );
@@ -244,8 +248,8 @@ class _FormSection extends StatelessWidget {
         boxShadow: const [
           BoxShadow(
             color: AppColors.shadowLight,
-            blurRadius: 14,
-            offset: Offset(0, 4),
+            blurRadius: AppDimens.cardShadowBlur,
+            offset: Offset(0, AppDimens.cardShadowOffsetY),
           ),
         ],
         border: Border.all(color: AppColors.border),
@@ -370,7 +374,7 @@ class _ImagePlaceholder extends StatelessWidget {
         children: [
           Icon(
             Icons.add_a_photo_outlined,
-            size: 48,
+            size: AppDimens.iconXl,
             color: AppColors.iconSecondary,
           ),
           SizedBox(height: AppSpacing.sm),
@@ -403,7 +407,7 @@ class _ImageActionButton extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xs),
-          child: Icon(icon, color: Colors.white, size: 20),
+          child: Icon(icon, color: Colors.white, size: AppDimens.iconSm),
         ),
       ),
     );
@@ -608,7 +612,7 @@ class _PickerTile<T> extends StatelessWidget {
       borderRadius: AppRadius.medium,
       child: ListTile(
         dense: true,
-        minTileHeight: 50,
+        minTileHeight: AppDimens.listTileMinHeight,
         shape: const RoundedRectangleBorder(
           borderRadius: AppRadius.medium,
         ),

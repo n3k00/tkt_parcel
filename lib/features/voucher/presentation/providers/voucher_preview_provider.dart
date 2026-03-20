@@ -74,8 +74,7 @@ final voucherPreviewProvider = FutureProvider.autoDispose
       final qrPayload = ref
           .read(qrServiceProvider)
           .buildParcelPayload(
-            trackingNumber: trackingId,
-            receiverName: parcel.receiverName,
+            trackingId: trackingId,
           );
 
       return VoucherPreviewData(
@@ -101,8 +100,7 @@ final voucherReprintPreviewProvider = FutureProvider.autoDispose
       final qrPayload = ref
           .read(qrServiceProvider)
           .buildParcelPayload(
-            trackingNumber: parcel.trackingId,
-            receiverName: parcel.receiverName,
+            trackingId: parcel.trackingId,
           );
 
       return VoucherPreviewData(

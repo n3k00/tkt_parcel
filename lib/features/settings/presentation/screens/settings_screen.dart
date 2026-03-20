@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -27,7 +28,7 @@ class SettingsScreen extends ConsumerWidget {
     final settingsData = ref.watch(settingsDataProvider);
 
     return AppScaffold(
-      title: 'Settings',
+      title: AppStrings.settingsTitle,
       drawer: const AppDrawer(currentRoute: SettingsScreen.routeName),
       canPop: false,
       onBackNavigation: () {
@@ -60,19 +61,17 @@ class SettingsScreen extends ConsumerWidget {
                 children: [
                   _SettingsListTile(
                     icon: Icons.person_outline_rounded,
-                    title: 'Profile',
-                    subtitle: 'Edit account code and future profile settings.',
+                    title: AppStrings.profileTitle,
+                    subtitle: AppStrings.profileSubtitle,
                     onTap: () {
-                      Navigator.of(
-                        context,
-                      ).pushNamed(ProfileScreen.routeName);
+                      Navigator.of(context).pushNamed(ProfileScreen.routeName);
                     },
                   ),
                   const Divider(height: 1, indent: AppSpacing.xl),
                   _SettingsListTile(
                     icon: Icons.location_on_outlined,
-                    title: 'From Town',
-                    subtitle: 'Choose the default source town for the form.',
+                    title: AppStrings.fromTownTitle,
+                    subtitle: AppStrings.fromTownSubtitle,
                     onTap: () {
                       Navigator.of(
                         context,
@@ -82,9 +81,8 @@ class SettingsScreen extends ConsumerWidget {
                   const Divider(height: 1, indent: AppSpacing.xl),
                   _SettingsListTile(
                     icon: Icons.edit_location_alt_outlined,
-                    title: 'Voucher Header',
-                    subtitle:
-                        'Edit the address and phone shown on the voucher header.',
+                    title: AppStrings.voucherHeaderTitle,
+                    subtitle: AppStrings.voucherHeaderSubtitle,
                     onTap: () {
                       Navigator.of(
                         context,
@@ -94,9 +92,8 @@ class SettingsScreen extends ConsumerWidget {
                   const Divider(height: 1, indent: AppSpacing.xl),
                   _SettingsListTile(
                     icon: Icons.receipt_long_outlined,
-                    title: 'Receipt Settings',
-                    subtitle:
-                        'Live preview, font size, and receipt padding controls.',
+                    title: AppStrings.receiptSettingsTitle,
+                    subtitle: AppStrings.receiptSettingsSubtitle,
                     onTap: () {
                       Navigator.of(
                         context,
@@ -106,8 +103,8 @@ class SettingsScreen extends ConsumerWidget {
                   const Divider(height: 1, indent: AppSpacing.xl),
                   _SettingsListTile(
                     icon: Icons.add_location_alt_outlined,
-                    title: 'To Town',
-                    subtitle: 'Add or remove destination towns.',
+                    title: AppStrings.toTownTitle,
+                    subtitle: AppStrings.toTownSubtitle,
                     onTap: () {
                       Navigator.of(
                         context,
@@ -117,9 +114,8 @@ class SettingsScreen extends ConsumerWidget {
                   const Divider(height: 1, indent: AppSpacing.xl),
                   _SettingsListTile(
                     icon: Icons.print_outlined,
-                    title: 'Printer Settings',
-                    subtitle:
-                        'Choose the printer preset used for receipt output.',
+                    title: AppStrings.printerSettingsTitle,
+                    subtitle: AppStrings.printerSettingsSubtitle,
                     onTap: () {
                       Navigator.of(
                         context,
@@ -128,7 +124,7 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   _SettingsInfoTile(
                     icon: Icons.info_outline,
-                    title: 'App Version',
+                    title: AppStrings.appVersionTitle,
                     subtitle:
                         '${appInfo.appName}\n${appInfo.versionLabel}\n${appInfo.packageName}',
                   ),

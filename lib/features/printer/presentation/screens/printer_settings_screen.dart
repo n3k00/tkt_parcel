@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../providers/parcel_repository_provider.dart';
@@ -17,18 +18,18 @@ class PrinterSettingsScreen extends ConsumerWidget {
   static const _presets = <_PrinterPresetOption>[
     _PrinterPresetOption(
       value: 'light',
-      title: 'Light',
-      subtitle: 'Lighter print density for thin paper or sharp black text.',
+      title: AppStrings.printerPresetLight,
+      subtitle: AppStrings.printerPresetLightSubtitle,
     ),
     _PrinterPresetOption(
       value: 'balanced',
-      title: 'Balanced',
-      subtitle: 'Recommended default for most receipts.',
+      title: AppStrings.printerPresetBalanced,
+      subtitle: AppStrings.printerPresetBalancedSubtitle,
     ),
     _PrinterPresetOption(
       value: 'dark',
-      title: 'Dark',
-      subtitle: 'Darker print density for bold output.',
+      title: AppStrings.printerPresetDark,
+      subtitle: AppStrings.printerPresetDarkSubtitle,
     ),
   ];
 
@@ -37,7 +38,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
     final presetAsync = ref.watch(printerPresetProvider);
 
     return AppScaffold(
-      title: 'Printer Settings',
+      title: AppStrings.printerSettingsTitle,
       body: presetAsync.when(
         data: (selectedPreset) {
           return ListView.separated(

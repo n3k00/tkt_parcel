@@ -55,6 +55,13 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
         }
       }
 
+      final parcelId = await ref
+          .read(parcelRepositoryProvider)
+          .createParcel(preview.parcel);
+      if (!mounted) {
+        return;
+      }
+
       final imageBytes = await ref
           .read(printServiceProvider)
           .captureWidgetAsPng(_printBoundaryKey);
@@ -69,23 +76,15 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
           SnackBar(
             content: Text(
               ref.read(printerStateProvider).errorMessage ??
-                  'Voucher print failed. Parcel was not saved.',
+                  'Parcel #$parcelId saved locally, but print failed. Reprint it from Parcel List.',
             ),
           ),
         );
-        return;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Parcel #$parcelId printed and saved.')),
+        );
       }
-
-      final parcelId = await ref
-          .read(parcelRepositoryProvider)
-          .createParcel(preview.parcel);
-      if (!mounted) {
-        return;
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Parcel #$parcelId printed and saved.')),
-      );
 
       await ref.read(parcelFormProvider.notifier).reset();
       if (!mounted) {

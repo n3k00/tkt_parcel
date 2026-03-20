@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../providers/parcel_repository_provider.dart';
 import '../../../../shared/widgets/app_error_view.dart';
@@ -21,16 +22,15 @@ class FromTownSettingsScreen extends ConsumerWidget {
     final defaultTownAsync = ref.watch(defaultSourceTownNameProvider);
 
     return AppScaffold(
-      title: 'From Town',
+      title: AppStrings.fromTownTitle,
       body: sourceTownsAsync.when(
         data: (sourceTowns) => defaultTownAsync.when(
           data: (defaultTownName) {
-            final selectedTownName = defaultTownName ?? (sourceTowns.isEmpty
-                ? ''
-                : sourceTowns.first.townName);
+            final selectedTownName = defaultTownName ??
+                (sourceTowns.isEmpty ? '' : sourceTowns.first.townName);
 
             if (sourceTowns.isEmpty) {
-              return const AppErrorView(message: 'No source towns available.');
+              return const AppErrorView(message: AppStrings.noSourceTowns);
             }
 
             return ListView.separated(
@@ -63,7 +63,7 @@ class FromTownSettingsScreen extends ConsumerWidget {
                     }
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Default from town updated.'),
+                        content: Text(AppStrings.defaultFromTownUpdated),
                       ),
                     );
                   },

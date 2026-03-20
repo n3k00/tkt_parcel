@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
@@ -43,7 +44,7 @@ class _ToTownSettingsScreenState extends ConsumerState<ToTownSettingsScreen> {
     });
 
     return AppScaffold(
-      title: 'To Town',
+      title: AppStrings.toTownTitle,
       body: townSettingsAsync.when(
         data: (state) {
           return ListView(
@@ -55,7 +56,7 @@ class _ToTownSettingsScreenState extends ConsumerState<ToTownSettingsScreen> {
                     child: TextField(
                       controller: _controller,
                       decoration: const InputDecoration(
-                        labelText: 'New destination town',
+                        labelText: AppStrings.newDestinationTownLabel,
                       ),
                     ),
                   ),
@@ -74,7 +75,7 @@ class _ToTownSettingsScreenState extends ConsumerState<ToTownSettingsScreen> {
                       }
                       _controller.clear();
                     },
-                    child: const Text('Add'),
+                    child: const Text(AppStrings.addAction),
                   ),
                 ],
               ),
@@ -92,11 +93,12 @@ class _ToTownSettingsScreenState extends ConsumerState<ToTownSettingsScreen> {
                         onPressed: town.id == null
                             ? null
                             : () async {
-                                final shouldDelete =
-                                    await showDialog<bool>(
+                                final shouldDelete = await showDialog<bool>(
                                       context: context,
                                       builder: (context) => AlertDialog(
-                                        title: const Text('Delete To Town'),
+                                        title: const Text(
+                                          AppStrings.deleteToTownTitle,
+                                        ),
                                         content: Text(
                                           'Remove "${town.townName}" from destination towns?',
                                         ),
@@ -105,7 +107,9 @@ class _ToTownSettingsScreenState extends ConsumerState<ToTownSettingsScreen> {
                                             onPressed: () {
                                               Navigator.of(context).pop(false);
                                             },
-                                            child: const Text('Cancel'),
+                                            child: const Text(
+                                              AppStrings.cancelAction,
+                                            ),
                                           ),
                                           ElevatedButton(
                                             style: ElevatedButton.styleFrom(
@@ -115,7 +119,9 @@ class _ToTownSettingsScreenState extends ConsumerState<ToTownSettingsScreen> {
                                             onPressed: () {
                                               Navigator.of(context).pop(true);
                                             },
-                                            child: const Text('Delete'),
+                                            child: const Text(
+                                              AppStrings.deleteAction,
+                                            ),
                                           ),
                                         ],
                                       ),

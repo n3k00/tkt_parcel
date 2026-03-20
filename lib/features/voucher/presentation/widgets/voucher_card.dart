@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/receipt_strings.dart';
 import '../../../../core/constants/voucher_layout.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../data/models/parcel.dart';
@@ -59,14 +60,14 @@ class VoucherCard extends StatelessWidget {
             const _DashedDivider(),
             SizedBox(height: isPrintable ? 14 : 12),
             _MetaRow(
-              label: 'ဘောင်ချာနံပါတ်',
+              label: ReceiptStrings.trackingIdLabel,
               value: parcel.trackingId,
               setup: setup,
               isPrintable: isPrintable,
             ),
             SizedBox(height: isPrintable ? 14 : 10),
             _MetaRow(
-              label: 'အချိန်နှင့်ရက်စွဲ',
+              label: ReceiptStrings.createdAtLabel,
               value: _formatDateTime(parcel.createdAt),
               setup: setup,
               isPrintable: isPrintable,
@@ -84,10 +85,10 @@ class VoucherCard extends StatelessWidget {
             const _DashedDivider(),
             SizedBox(height: isPrintable ? 14 : 12),
             _PartyRow(
-              leftLabel: 'ပေးပို့သူအမည်',
+              leftLabel: ReceiptStrings.senderNameLabel,
               leftPrimary: parcel.senderName,
               leftSecondary: parcel.senderPhone,
-              rightLabel: 'လက်ခံသူအမည်',
+              rightLabel: ReceiptStrings.receiverNameLabel,
               rightPrimary: parcel.receiverName,
               rightSecondary: parcel.receiverPhone,
               setup: setup,
@@ -97,14 +98,14 @@ class VoucherCard extends StatelessWidget {
             const _DashedDivider(),
             SizedBox(height: isPrintable ? 14 : 12),
             _LabelValueRow(
-              label: 'အမျိုးအစား',
+              label: ReceiptStrings.parcelTypeLabel,
               value: parcel.parcelType,
               setup: setup,
               isPrintable: isPrintable,
             ),
             SizedBox(height: isPrintable ? 16 : 10),
             _LabelValueRow(
-              label: 'အရေအတွက်',
+              label: ReceiptStrings.parcelCountLabel,
               value: parcel.numberOfParcels.toString(),
               setup: setup,
               isPrintable: isPrintable,
@@ -113,21 +114,21 @@ class VoucherCard extends StatelessWidget {
             const _DashedDivider(),
             SizedBox(height: isPrintable ? 14 : 12),
             _LabelValueRow(
-              label: 'ပို့ဆောင်ခ',
+              label: ReceiptStrings.totalChargesLabel,
               value: _formatAmount(parcel.totalCharges),
               setup: setup,
               isPrintable: isPrintable,
             ),
             SizedBox(height: isPrintable ? 16 : 10),
             _LabelValueRow(
-              label: 'ငွေပေးချေမှု',
-              value: _paymentLabel(parcel),
+              label: ReceiptStrings.paymentStatusLabel,
+              value: parcel.paymentStatus.receiptLabel,
               setup: setup,
               isPrintable: isPrintable,
             ),
             SizedBox(height: isPrintable ? 16 : 10),
             _LabelValueRow(
-              label: 'စိုက်ငွေ',
+              label: ReceiptStrings.cashAdvanceLabel,
               value: _formatAmount(parcel.cashAdvance),
               setup: setup,
               isPrintable: isPrintable,
@@ -135,7 +136,7 @@ class VoucherCard extends StatelessWidget {
             if ((parcel.remark ?? '').trim().isNotEmpty) ...[
               SizedBox(height: isPrintable ? 16 : 10),
               _LabelValueRow(
-                label: 'မှတ်ချက်',
+                label: ReceiptStrings.remarkLabel,
                 value: parcel.remark!.trim(),
                 setup: setup,
                 isPrintable: isPrintable,
@@ -153,7 +154,7 @@ class VoucherCard extends StatelessWidget {
             SizedBox(height: isPrintable ? 18 : 12),
             Text(
               (setup.footerMessage ?? '').trim().isEmpty
-                  ? 'ကျေးဇူးတင်ပါသည်'
+                  ? ReceiptStrings.thankYou
                   : setup.footerMessage!.trim(),
               textAlign: TextAlign.center,
               style: _ReceiptStyles.footer(isPrintable),
@@ -162,12 +163,6 @@ class VoucherCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _paymentLabel(ParcelModel parcel) {
-    return parcel.paymentStatus.value == 'paid'
-        ? 'ငွေရှင်းပြီး'
-        : 'ငွေတောင်းရန်';
   }
 
   String _formatAmount(double value) {
@@ -322,14 +317,14 @@ class _TownRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _LabelValueRow(
-          label: 'လက်ခံသည့် မြို့',
+          label: ReceiptStrings.fromTownLabel,
           value: fromTown,
           setup: setup,
           isPrintable: isPrintable,
         ),
         SizedBox(height: isPrintable ? 10 : 8),
         _LabelValueRow(
-          label: 'ပို့မည့် မြို့',
+          label: ReceiptStrings.toTownLabel,
           value: toTown,
           setup: setup,
           isPrintable: isPrintable,

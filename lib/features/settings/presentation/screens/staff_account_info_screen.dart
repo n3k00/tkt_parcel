@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/app_setup_config.dart';
@@ -61,7 +62,7 @@ class _StaffAccountInfoScreenState
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Voucher header settings saved.')),
+      const SnackBar(content: Text(AppStrings.voucherHeaderSaved)),
     );
   }
 
@@ -70,7 +71,7 @@ class _StaffAccountInfoScreenState
     final setupAsync = ref.watch(settingsSetupProvider);
 
     return AppScaffold(
-      title: 'Voucher Header',
+      title: AppStrings.voucherHeaderTitle,
       body: setupAsync.when(
         data: (setup) {
           _seedControllers(setup);
@@ -86,10 +87,7 @@ class _StaffAccountInfoScreenState
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          setup.businessName,
-                          style: AppTextStyles.title,
-                        ),
+                        Text(setup.businessName, style: AppTextStyles.title),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
                           setup.businessSubtitle,
@@ -99,7 +97,7 @@ class _StaffAccountInfoScreenState
                         TextFormField(
                           controller: _businessAddressController,
                           decoration: const InputDecoration(
-                            labelText: 'Address',
+                            labelText: AppStrings.addressLabel,
                           ),
                           validator: _requiredValidator,
                         ),
@@ -108,7 +106,7 @@ class _StaffAccountInfoScreenState
                           controller: _businessPhoneController,
                           keyboardType: TextInputType.phone,
                           decoration: const InputDecoration(
-                            labelText: 'Phone Numbers',
+                            labelText: AppStrings.phoneNumbersLabel,
                           ),
                           validator: _requiredValidator,
                         ),
@@ -119,7 +117,7 @@ class _StaffAccountInfoScreenState
                             onPressed: setupAsync.isLoading
                                 ? null
                                 : () => _save(setup),
-                            child: const Text('Save Changes'),
+                            child: const Text(AppStrings.saveChanges),
                           ),
                         ),
                       ],
@@ -138,7 +136,7 @@ class _StaffAccountInfoScreenState
 
   String? _requiredValidator(String? value) {
     if ((value ?? '').trim().isEmpty) {
-      return 'Required.';
+      return AppStrings.requiredField;
     }
     return null;
   }

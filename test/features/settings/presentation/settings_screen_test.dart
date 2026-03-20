@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:tkt_parcel/core/constants/app_strings.dart';
+import 'package:tkt_parcel/core/constants/receipt_strings.dart';
 import 'package:tkt_parcel/core/services/app_info_service.dart';
 import 'package:tkt_parcel/core/theme/app_theme.dart';
 import 'package:tkt_parcel/features/printer/presentation/screens/printer_settings_screen.dart';
@@ -17,10 +19,10 @@ void main() {
   const setup = AppSetupConfig(
     cityCode: 'TGI',
     accountCode: 'A1',
-    businessName: 'သိင်္ခသူ',
-    businessSubtitle: 'ခရီးသည် နှင့် ကုန်စည် ပို့ဆောင်ရေး',
-    businessAddress: 'ပါဆပ်ကားလေးကွင်း၊တာချီလိတ်မြို့။',
-    businessPhone: '09250787547,09253003004',
+    businessName: ReceiptStrings.defaultBusinessName,
+    businessSubtitle: ReceiptStrings.defaultBusinessSubtitle,
+    businessAddress: ReceiptStrings.defaultBusinessAddress,
+    businessPhone: ReceiptStrings.defaultBusinessPhone,
     businessNameFontSize: 60,
     businessSubtitleFontSize: 26,
     businessAddressFontSize: 22,
@@ -48,13 +50,15 @@ void main() {
       ProviderScope(
         overrides: [
           settingsDataProvider.overrideWith(
-            (ref) async => const SettingsViewData(setup: setup, appInfo: appInfo),
+            (ref) async =>
+                const SettingsViewData(setup: setup, appInfo: appInfo),
           ),
         ],
         child: MaterialApp(
           theme: AppTheme.light(),
           routes: {
-            ProfileScreen.routeName: (_) => const Scaffold(body: Text('Profile Page')),
+            ProfileScreen.routeName: (_) =>
+                const Scaffold(body: Text('Profile Page')),
             FromTownSettingsScreen.routeName: (_) =>
                 const Scaffold(body: Text('From Town Page')),
             StaffAccountInfoScreen.routeName: (_) =>
@@ -72,15 +76,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Profile'), findsOneWidget);
-    expect(find.text('From Town'), findsOneWidget);
-    expect(find.text('Voucher Header'), findsOneWidget);
-    expect(find.text('Receipt Settings'), findsOneWidget);
-    expect(find.text('To Town'), findsOneWidget);
-    expect(find.text('Printer Settings'), findsOneWidget);
+    expect(find.text(AppStrings.profileTitle), findsOneWidget);
+    expect(find.text(AppStrings.fromTownTitle), findsOneWidget);
+    expect(find.text(AppStrings.voucherHeaderTitle), findsOneWidget);
+    expect(find.text(AppStrings.receiptSettingsTitle), findsOneWidget);
+    expect(find.text(AppStrings.toTownTitle), findsOneWidget);
+    expect(find.text(AppStrings.printerSettingsTitle), findsOneWidget);
     expect(find.text('Account Info'), findsNothing);
 
-    await tester.tap(find.text('Profile'));
+    await tester.tap(find.text(AppStrings.profileTitle));
     await tester.pumpAndSettle();
 
     expect(find.text('Profile Page'), findsOneWidget);
