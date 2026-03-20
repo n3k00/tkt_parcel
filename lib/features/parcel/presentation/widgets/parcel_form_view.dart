@@ -457,81 +457,12 @@ class _TownDropdown extends StatelessWidget {
   }
 
   Future<void> _openTownPicker(BuildContext context) async {
-    final selectedTown = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
-      ),
-      builder: (context) {
-        final maxSheetWidth = AppResponsive.centeredContentWidth(
-          context,
-          horizontalPadding: AppSpacing.lg,
-        );
-
-        return SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxSheetWidth),
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(label, style: AppTextStyles.subtitle),
-                    const SizedBox(height: AppSpacing.xs),
-                    const Text('Select one option', style: AppTextStyles.bodyMuted),
-                    const SizedBox(height: AppSpacing.md),
-                    Flexible(
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: towns.length,
-                        separatorBuilder: (_, _) =>
-                            const SizedBox(height: AppSpacing.xs),
-                        itemBuilder: (context, index) {
-                          final town = towns[index];
-                          final selected = town == value;
-
-                          return Material(
-                            color: selected
-                                ? AppColors.sectionBackground
-                                : Colors.transparent,
-                            borderRadius: AppRadius.medium,
-                            child: ListTile(
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: AppRadius.medium,
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: AppSpacing.md,
-                                vertical: AppSpacing.xs,
-                              ),
-                              title: Text(
-                                town,
-                                style: selected
-                                    ? AppTextStyles.label
-                                    : AppTextStyles.body,
-                              ),
-                              trailing: selected
-                                  ? const Icon(
-                                      Icons.check_circle_rounded,
-                                      color: AppColors.secondary,
-                                    )
-                                  : null,
-                              onTap: () => Navigator.of(context).pop(town),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+    final selectedTown = await _showPickerSheet<String>(
+      context,
+      title: label,
+      selectedValue: value,
+      options: towns,
+      itemLabelBuilder: (town) => town,
     );
 
     if (selectedTown != null) {
@@ -568,76 +499,12 @@ class _PaymentStatusField extends StatelessWidget {
   }
 
   Future<void> _openPicker(BuildContext context) async {
-    final selected = await showModalBottomSheet<PaymentStatus>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
-      ),
-      builder: (context) {
-        final maxSheetWidth = AppResponsive.centeredContentWidth(
-          context,
-          horizontalPadding: AppSpacing.lg,
-        );
-
-        return SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxSheetWidth),
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Payment Status', style: AppTextStyles.subtitle),
-                    const SizedBox(height: AppSpacing.xs),
-                    const Text(
-                      'Select one option',
-                      style: AppTextStyles.bodyMuted,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    ...PaymentStatus.values.map((status) {
-                      final isSelected = status == value;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                        child: Material(
-                          color: isSelected
-                              ? AppColors.sectionBackground
-                              : Colors.transparent,
-                          borderRadius: AppRadius.medium,
-                          child: ListTile(
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: AppRadius.medium,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                              vertical: AppSpacing.xs,
-                            ),
-                            title: Text(
-                              _labelFor(status),
-                              style: isSelected
-                                  ? AppTextStyles.label
-                                  : AppTextStyles.body,
-                            ),
-                            trailing: isSelected
-                                ? const Icon(
-                                    Icons.check_circle_rounded,
-                                    color: AppColors.secondary,
-                                  )
-                                : null,
-                            onTap: () => Navigator.of(context).pop(status),
-                          ),
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
+    final selected = await _showPickerSheet<PaymentStatus>(
+      context,
+      title: 'Payment Status',
+      selectedValue: value,
+      options: PaymentStatus.values,
+      itemLabelBuilder: _labelFor,
     );
 
     if (selected != null) {
@@ -647,6 +514,121 @@ class _PaymentStatusField extends StatelessWidget {
 
   static String _labelFor(PaymentStatus status) {
     return status == PaymentStatus.unpaid ? 'ငွေတောင်းရန်' : 'ငွေရှင်းပြီး';
+  }
+}
+
+Future<T?> _showPickerSheet<T>(
+  BuildContext context, {
+  required String title,
+  required T? selectedValue,
+  required List<T> options,
+  required String Function(T option) itemLabelBuilder,
+}) {
+  return showModalBottomSheet<T>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: AppColors.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+    ),
+    builder: (context) {
+      final maxSheetWidth = AppResponsive.centeredContentWidth(
+        context,
+        horizontalPadding: AppSpacing.lg,
+      );
+
+      return SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxSheetWidth),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.lg,
+                    AppSpacing.md,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: AppTextStyles.subtitle),
+                      const SizedBox(height: AppSpacing.xs),
+                      const Text(
+                        'Select one option',
+                        style: AppTextStyles.bodyMuted,
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    itemCount: options.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppSpacing.xs),
+                    itemBuilder: (context, index) {
+                      final option = options[index];
+                      return _PickerTile<T>(
+                        option: option,
+                        selected: option == selectedValue,
+                        itemLabelBuilder: itemLabelBuilder,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+class _PickerTile<T> extends StatelessWidget {
+  const _PickerTile({
+    required this.option,
+    required this.selected,
+    required this.itemLabelBuilder,
+  });
+
+  final T option;
+  final bool selected;
+  final String Function(T option) itemLabelBuilder;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: selected ? AppColors.sectionBackground : Colors.transparent,
+      borderRadius: AppRadius.medium,
+      child: ListTile(
+        dense: true,
+        minTileHeight: 50,
+        shape: const RoundedRectangleBorder(
+          borderRadius: AppRadius.medium,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
+        title: Text(
+          itemLabelBuilder(option),
+          style: selected ? AppTextStyles.label : AppTextStyles.body,
+        ),
+        trailing: selected
+            ? const Icon(
+                Icons.check_circle_rounded,
+                color: AppColors.secondary,
+              )
+            : null,
+        onTap: () => Navigator.of(context).pop(option),
+      ),
+    );
   }
 }
 

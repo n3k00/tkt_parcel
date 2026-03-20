@@ -13,6 +13,7 @@ import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../parcel/presentation/screens/parcel_list_screen.dart';
 import '../../../printing/presentation/screens/printer_connect_screen.dart';
 import '../providers/voucher_preview_provider.dart';
+import '../widgets/parcel_image_preview_card.dart';
 import '../widgets/voucher_card.dart';
 
 class VoucherReprintPreviewScreen extends ConsumerStatefulWidget {
@@ -167,6 +168,12 @@ class _VoucherReprintPreviewScreenState
                     ),
                   ),
                 ),
+                if ((preview.parcel.parcelImagePath ?? '').isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  ParcelImagePreviewCard(
+                    imagePath: preview.parcel.parcelImagePath!,
+                  ),
+                ],
                 if (printerState.errorMessage != null &&
                     printerState.lastPrintableImageBytes != null) ...[
                   const SizedBox(height: AppSpacing.sm),

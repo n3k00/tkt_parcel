@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -311,9 +313,13 @@ class ParcelFormNotifier extends AsyncNotifier<ParcelFormState> {
   Future<void> pickParcelImage({
     ImageSource source = ImageSource.gallery,
   }) async {
+    final existingPath = state.value?.parcelImagePath;
     final path = await ref
         .read(imagePickerServiceProvider)
-        .pickImagePath(source: source);
+        .pickAndStoreImagePath(
+          source: source,
+          previousPath: existingPath,
+        );
     if (path == null) {
       return;
     }
@@ -322,6 +328,12 @@ class ParcelFormNotifier extends AsyncNotifier<ParcelFormState> {
   }
 
   void clearParcelImage() {
+    final existingPath = state.value?.parcelImagePath;
+    if (existingPath != null && existingPath.isNotEmpty) {
+      unawaited(
+        ref.read(imagePickerServiceProvider).deleteStoredImage(existingPath),
+      );
+    }
     _update((form) => form.copyWith(clearParcelImagePath: true));
   }
 

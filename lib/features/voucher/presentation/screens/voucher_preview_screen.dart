@@ -16,6 +16,7 @@ import '../../../parcel/presentation/providers/parcel_form_provider.dart';
 import '../../../printing/presentation/screens/printer_connect_screen.dart';
 import '../models/voucher_preview_args.dart';
 import '../providers/voucher_preview_provider.dart';
+import '../widgets/parcel_image_preview_card.dart';
 import '../widgets/voucher_card.dart';
 
 class VoucherPreviewScreen extends ConsumerStatefulWidget {
@@ -201,6 +202,12 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
                     ),
                   ),
                 ),
+                if ((preview.parcel.parcelImagePath ?? '').isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  ParcelImagePreviewCard(
+                    imagePath: preview.parcel.parcelImagePath!,
+                  ),
+                ],
                 const SizedBox(height: 104),
               ],
             );
