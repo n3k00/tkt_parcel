@@ -16,6 +16,7 @@ import 'from_town_settings_screen.dart';
 import 'profile_screen.dart';
 import 'receipt_settings_screen.dart';
 import 'staff_account_info_screen.dart';
+import 'backup_restore_screen.dart';
 import 'to_town_settings_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -120,6 +121,17 @@ class SettingsScreen extends ConsumerWidget {
                       Navigator.of(
                         context,
                       ).pushNamed(PrinterSettingsScreen.routeName);
+                    },
+                  ),
+                  const Divider(height: 1, indent: AppSpacing.xl),
+                  _SettingsListTile(
+                    icon: Icons.backup_outlined,
+                    title: AppStrings.backupRestoreTitle,
+                    subtitle: AppStrings.backupRestoreSubtitle,
+                    onTap: () {
+                      Navigator.of(
+                        context,
+                      ).pushNamed(BackupRestoreScreen.routeName);
                     },
                   ),
                   _SettingsInfoTile(

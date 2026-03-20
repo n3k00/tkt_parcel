@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/services/backup_restore_service.dart';
 import '../../../../core/services/app_info_service.dart';
+import '../../../../core/services/storage_permission_service.dart';
 import '../../../../providers/parcel_repository_provider.dart';
 import '../../../../shared/models/app_setup_config.dart';
 
@@ -28,6 +30,14 @@ class SettingsSetupNotifier extends AsyncNotifier<AppSetupConfig> {
 
 final appInfoServiceProvider = Provider<AppInfoService>((ref) {
   return const AppInfoService();
+});
+
+final backupRestoreServiceProvider = Provider<BackupRestoreService>((ref) {
+  return const BackupRestoreService();
+});
+
+final storagePermissionServiceProvider = Provider<StoragePermissionService>((ref) {
+  return const StoragePermissionService();
 });
 
 final appVersionInfoProvider = FutureProvider<AppVersionInfo>((ref) async {

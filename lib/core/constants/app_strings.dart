@@ -17,6 +17,25 @@ abstract final class AppStrings {
   static const printerSettingsTitle = 'Printer Settings';
   static const printerSettingsSubtitle =
       'Choose the printer preset used for receipt output.';
+  static const backupRestoreTitle = 'Backup and Restore';
+  static const backupRestoreSubtitle =
+      'Manage local parcel data backup and restore tools.';
+  static const fullBackupTitle = 'Full Backup';
+  static const fullBackupSubtitle =
+      'Create a zip backup with the SQLite database and parcel images.';
+  static const lightBackupTitle = 'Light Backup';
+  static const lightBackupSubtitle =
+      'Create a backup that includes the SQLite database only.';
+  static const restoreBackupTitle = 'Restore Backup';
+  static const restoreBackupSubtitle =
+      'Restore parcel data from a light backup or a full zip backup.';
+  static const noBackupFilesFound =
+      'No backup files were found in the TKT Parcel Backups folder.';
+  static const chooseBackupFileTitle = 'Choose Backup File';
+  static const chooseBackupFileSubtitle =
+      'Select a saved .zip or database backup file to restore.';
+  static const backupPermissionBlocked =
+      'Storage permission is blocked. Open Android settings and allow file access first.';
   static const appVersionTitle = 'App Version';
 
   static const headerFontSizeTitle = 'Header Font Size';

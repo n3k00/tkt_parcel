@@ -12,6 +12,7 @@ import 'package:tkt_parcel/features/settings/presentation/screens/profile_screen
 import 'package:tkt_parcel/features/settings/presentation/screens/receipt_settings_screen.dart';
 import 'package:tkt_parcel/features/settings/presentation/screens/settings_screen.dart';
 import 'package:tkt_parcel/features/settings/presentation/screens/staff_account_info_screen.dart';
+import 'package:tkt_parcel/features/settings/presentation/screens/backup_restore_screen.dart';
 import 'package:tkt_parcel/features/settings/presentation/screens/to_town_settings_screen.dart';
 import 'package:tkt_parcel/shared/models/app_setup_config.dart';
 
@@ -69,6 +70,8 @@ void main() {
                 const Scaffold(body: Text('To Town Page')),
             PrinterSettingsScreen.routeName: (_) =>
                 const Scaffold(body: Text('Printer Settings Page')),
+            BackupRestoreScreen.routeName: (_) =>
+                const Scaffold(body: Text('Backup and Restore Page')),
           },
           home: const SettingsScreen(),
         ),
@@ -82,6 +85,7 @@ void main() {
     expect(find.text(AppStrings.receiptSettingsTitle), findsOneWidget);
     expect(find.text(AppStrings.toTownTitle), findsOneWidget);
     expect(find.text(AppStrings.printerSettingsTitle), findsOneWidget);
+    expect(find.text(AppStrings.backupRestoreTitle), findsOneWidget);
     expect(find.text('Account Info'), findsNothing);
 
     await tester.tap(find.text(AppStrings.profileTitle));
