@@ -109,4 +109,22 @@ class ParcelsDao extends DatabaseAccessor<AppDatabase> with _$ParcelsDaoMixin {
 
     return query.get();
   }
+
+  Future<int> countParcelsCreatedOnForCounter({
+    required DateTime startDate,
+    required DateTime endDate,
+    required String cityCode,
+    required String accountCode,
+  }) async {
+    final countExpression = parcels.id.count();
+    final query = selectOnly(parcels)
+      ..addColumns([countExpression])
+      ..where(parcels.createdAt.isBiggerOrEqualValue(startDate))
+      ..where(parcels.createdAt.isSmallerOrEqualValue(endDate))
+      ..where(parcels.cityCode.equals(cityCode))
+      ..where(parcels.accountCode.equals(accountCode));
+
+    final row = await query.getSingle();
+    return row.read(countExpression) ?? 0;
+  }
 }

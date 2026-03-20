@@ -65,6 +65,24 @@ class ParcelRepository {
     return rows.length;
   }
 
+  Future<int> countParcelsCreatedOnForCounter(
+    DateTime date,
+    String cityCode,
+    String accountCode,
+  ) {
+    final startDate = DateTime(date.year, date.month, date.day);
+    final endDate = startDate
+        .add(const Duration(days: 1))
+        .subtract(const Duration(milliseconds: 1));
+
+    return _parcelsDao.countParcelsCreatedOnForCounter(
+      startDate: startDate,
+      endDate: endDate,
+      cityCode: cityCode,
+      accountCode: accountCode,
+    );
+  }
+
   Future<int> createParcel(ParcelModel parcel) {
     final now = DateTime.now();
     final parcelToCreate = parcel.copyWith(

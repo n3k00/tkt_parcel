@@ -69,15 +69,66 @@ void main() {
     expect(saved, isNotNull);
     expect(saved!.receiverName, 'Ma Su');
   });
+
+  test('counts parcels by city code, account code, and date for tracking IDs', () async {
+    await repository.createParcel(
+      _buildParcel(
+        trackingId: 'TGI-A1-250317-0001',
+        cityCode: 'TGI',
+        accountCode: 'A1',
+      ),
+    );
+    await repository.createParcel(
+      _buildParcel(
+        trackingId: 'TGI-A1-250317-0002',
+        cityCode: 'TGI',
+        accountCode: 'A1',
+      ),
+    );
+    await repository.createParcel(
+      _buildParcel(
+        trackingId: 'LSO-A1-250317-0001',
+        cityCode: 'LSO',
+        accountCode: 'A1',
+      ),
+    );
+    await repository.createParcel(
+      _buildParcel(
+        trackingId: 'TGI-B2-250317-0001',
+        cityCode: 'TGI',
+        accountCode: 'B2',
+      ),
+    );
+    await repository.createParcel(
+      _buildParcel(
+        trackingId: 'TGI-A1-250318-0001',
+        cityCode: 'TGI',
+        accountCode: 'A1',
+      ),
+    );
+
+    final count = await repository.countParcelsCreatedOnForCounter(
+      DateTime.now(),
+      'TGI',
+      'A1',
+    );
+
+    expect(count, 3);
+  });
 }
 
-ParcelModel _buildParcel({required String trackingId}) {
+ParcelModel _buildParcel({
+  required String trackingId,
+  String cityCode = 'TGI',
+  String accountCode = 'A1',
+  DateTime? now,
+}) {
   return ParcelModel.create(
     trackingId: trackingId,
     fromTown: 'Taunggyi',
     toTown: 'Kalaw',
-    cityCode: 'TGI',
-    accountCode: 'A1',
+    cityCode: cityCode,
+    accountCode: accountCode,
     senderName: 'Ko Aung',
     senderPhone: '0912345678',
     receiverName: 'Ma Su',
@@ -88,6 +139,6 @@ ParcelModel _buildParcel({required String trackingId}) {
     paymentStatus: PaymentStatus.paid,
     parcelImagePath: 'C:/parcel-images/sample.jpg',
     remark: 'Handle carefully',
-    now: DateTime(2025, 3, 17, 9, 0),
+    now: now ?? DateTime(2025, 3, 17, 9, 0),
   );
 }

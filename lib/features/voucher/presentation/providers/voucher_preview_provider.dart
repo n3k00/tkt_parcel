@@ -31,7 +31,6 @@ final voucherPreviewProvider = FutureProvider.autoDispose
       final townRepository = ref.read(townRepositoryProvider);
       final repository = ref.read(parcelRepositoryProvider);
       final now = DateTime.now();
-      final runningNumber = await repository.countParcelsCreatedOn(now) + 1;
       final sourceTown = args.form.fromTownCityCode.isNotEmpty
           ? null
           : await townRepository.getSourceTownByName(args.form.fromTown);
@@ -41,6 +40,12 @@ final voucherPreviewProvider = FutureProvider.autoDispose
       if (sourceCityCode == null || sourceCityCode.isEmpty) {
         throw StateError('Selected source town is missing a city code.');
       }
+      final runningNumber = await repository.countParcelsCreatedOnForCounter(
+            now,
+            sourceCityCode,
+            setup.accountCode,
+          ) +
+          1;
 
       final trackingId = ref
           .read(trackingIdServiceProvider)
