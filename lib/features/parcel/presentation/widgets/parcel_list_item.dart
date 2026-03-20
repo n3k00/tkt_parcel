@@ -67,6 +67,16 @@ class ParcelListItem extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        parcel.toTown,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
                       Row(
                         children: [
                           Expanded(

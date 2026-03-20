@@ -62,6 +62,7 @@ void main() {
 
       expect(find.text('Ma Nilar'), findsOneWidget);
       expect(find.text('Ma Su'), findsOneWidget);
+      expect(find.text('Kalaw'), findsNWidgets(2));
       expect(find.text('0999111111'), findsOneWidget);
       expect(find.text('0999222222'), findsOneWidget);
       expect(
