@@ -81,10 +81,9 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       return;
     }
 
-    await _runOperation(
+    await _runBackupOperation(
       progressText: 'Creating full backup...',
-      action: () async {
-        final service = ref.read(backupRestoreServiceProvider);
+      action: (service) async {
         final result = await service.createFullBackup();
         return '${result.message}\n${result.path}';
       },
@@ -97,10 +96,9 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       return;
     }
 
-    await _runOperation(
+    await _runBackupOperation(
       progressText: 'Creating light backup...',
-      action: () async {
-        final service = ref.read(backupRestoreServiceProvider);
+      action: (service) async {
         final result = await service.createLightBackup();
         return '${result.message}\n${result.path}';
       },
@@ -289,6 +287,29 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       ),
     );
     return false;
+  }
+
+  Future<void> _runBackupOperation({
+    required String progressText,
+    required Future<String> Function(BackupRestoreService service) action,
+  }) async {
+    await _runOperation(
+      progressText: progressText,
+      action: () async {
+        final service = ref.read(backupRestoreServiceProvider);
+        final database = ref.read(databaseProvider);
+        await database.close();
+
+        try {
+          return await action(service);
+        } finally {
+          ref.invalidate(databaseProvider);
+          ref.invalidate(parcelRepositoryProvider);
+          ref.invalidate(townRepositoryProvider);
+          ref.invalidate(parcelListProvider);
+        }
+      },
+    );
   }
 
   Future<void> _runOperation({
