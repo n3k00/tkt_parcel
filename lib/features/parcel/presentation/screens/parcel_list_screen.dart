@@ -13,17 +13,43 @@ import '../providers/parcel_list_provider.dart';
 import '../widgets/parcel_list_item.dart';
 import 'home_screen.dart';
 
-class ParcelListScreen extends ConsumerWidget {
+class ParcelListScreen extends ConsumerStatefulWidget {
   const ParcelListScreen({super.key});
 
   static const routeName = '/parcels';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ParcelListScreen> createState() => _ParcelListScreenState();
+}
+
+class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final parcelsAsync = ref.watch(parcelListProvider);
     final filters = ref.watch(parcelListFilterProvider);
     final filterNotifier = ref.read(parcelListFilterProvider.notifier);
     final selectedDate = filters.startDate;
+
+    if (_searchController.text != filters.query) {
+      _searchController.value = TextEditingValue(
+        text: filters.query,
+        selection: TextSelection.collapsed(offset: filters.query.length),
+      );
+    }
 
     return AppScaffold(
       title: 'Parcel List',
@@ -62,10 +88,11 @@ class ParcelListScreen extends ConsumerWidget {
           final searchCard = SectionCard(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
-              child: TextField(
-                onChanged: filterNotifier.updateQuery,
-                decoration: InputDecoration(
-                  hintText: selectedDate == null
+               child: TextField(
+                 controller: _searchController,
+                 onChanged: filterNotifier.updateQuery,
+                 decoration: InputDecoration(
+                   hintText: selectedDate == null
                       ? 'Search tracking, receiver, phone'
                       : 'Search in filtered date results',
                   prefixIcon: const Icon(Icons.search),

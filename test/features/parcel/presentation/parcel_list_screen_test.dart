@@ -50,7 +50,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            parcelListProvider.overrideWith((ref) => Stream.value(parcels)),
+            parcelHistoryProvider.overrideWith((ref) => Stream.value(parcels)),
           ],
           child: MaterialApp(
             theme: AppTheme.light(),

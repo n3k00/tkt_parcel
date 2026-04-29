@@ -69,14 +69,18 @@ final parcelListFilterProvider =
   ParcelListFilterNotifier.new,
 );
 
-final parcelListProvider = StreamProvider.autoDispose<List<ParcelModel>>((ref) {
+final parcelHistoryProvider = StreamProvider.autoDispose<List<ParcelModel>>((ref) {
   final repository = ref.watch(parcelRepositoryProvider);
-  final filters = ref.watch(parcelListFilterProvider);
+  return repository.watchParcels();
+});
 
-  return repository.watchParcels().map(
-        (parcels) =>
-            parcels.where((parcel) => _matchesFilter(parcel, filters)).toList(),
-      );
+final parcelListProvider = Provider.autoDispose<AsyncValue<List<ParcelModel>>>((ref) {
+  final filters = ref.watch(parcelListFilterProvider);
+  final parcelsAsync = ref.watch(parcelHistoryProvider);
+
+  return parcelsAsync.whenData(
+    (parcels) => parcels.where((parcel) => _matchesFilter(parcel, filters)).toList(),
+  );
 });
 
 bool _matchesFilter(ParcelModel parcel, ParcelListFilterState filters) {

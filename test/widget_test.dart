@@ -8,7 +8,7 @@ import 'package:tkt_parcel/features/parcel/presentation/screens/parcel_list_scre
 Widget _buildTestApp() {
   return ProviderScope(
     overrides: [
-      parcelListProvider.overrideWith((ref) => Stream.value(const [])),
+      parcelHistoryProvider.overrideWith((ref) => Stream.value(const [])),
     ],
     child: MaterialApp(
       theme: AppTheme.light(),
