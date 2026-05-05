@@ -108,7 +108,7 @@ void main() {
     );
 
     final count = await repository.countParcelsCreatedOnForCounter(
-      DateTime.now(),
+      DateTime(2025, 3, 17),
       'TGI',
       'A1',
     );
