@@ -12,6 +12,9 @@ abstract final class AppStrings {
   static const receiptSettingsTitle = 'Receipt Settings';
   static const receiptSettingsSubtitle =
       'Live preview, font size, and receipt padding controls.';
+  static const labelSettingsTitle = 'Label Settings';
+  static const labelSettingsSubtitle =
+      'Adjust the 70x50 parcel label preview and spacing.';
   static const toTownTitle = 'To Town';
   static const toTownSubtitle = 'Add or remove destination towns.';
   static const printerSettingsTitle = 'Printer Settings';
@@ -44,6 +47,8 @@ abstract final class AppStrings {
   static const livePreviewTitle = 'Live Preview';
   static const saveReceiptSettings = 'Save Receipt Settings';
   static const receiptSettingsSaved = 'Receipt settings saved.';
+  static const saveLabelSettings = 'Save Label Settings';
+  static const labelSettingsSaved = 'Label settings saved.';
 
   static const titleLabel = 'Title';
   static const subtitleLabel = 'Subtitle';
@@ -55,6 +60,8 @@ abstract final class AppStrings {
   static const topLabel = 'Top';
   static const horizontalLabel = 'Horizontal';
   static const bottomLabel = 'Bottom';
+  static const rowGapLabel = 'Row Gap';
+  static const bodyLabel = 'Body';
 
   static const voucherHeaderSaved = 'Voucher header settings saved.';
   static const saveChanges = 'Save Changes';

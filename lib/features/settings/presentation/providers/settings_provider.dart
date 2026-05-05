@@ -5,6 +5,8 @@ import '../../../../core/services/app_info_service.dart';
 import '../../../../core/services/storage_permission_service.dart';
 import '../../../../providers/parcel_repository_provider.dart';
 import '../../../../shared/models/app_setup_config.dart';
+import '../../../../shared/models/label_settings_config.dart';
+import '../../../../shared/models/label_printer_selection.dart';
 
 class SettingsViewData {
   const SettingsViewData({required this.setup, required this.appInfo});
@@ -25,6 +27,21 @@ class SettingsSetupNotifier extends AsyncNotifier<AppSetupConfig> {
     final repository = await ref.read(settingsRepositoryProvider.future);
     await repository.saveAppSetup(config);
     state = AsyncData(await repository.getAppSetup());
+  }
+}
+
+class LabelSettingsNotifier extends AsyncNotifier<LabelSettingsConfig> {
+  @override
+  Future<LabelSettingsConfig> build() async {
+    final repository = await ref.read(settingsRepositoryProvider.future);
+    return repository.getLabelSettings();
+  }
+
+  Future<void> saveSettings(LabelSettingsConfig config) async {
+    state = const AsyncLoading();
+    final repository = await ref.read(settingsRepositoryProvider.future);
+    await repository.saveLabelSettings(config);
+    state = AsyncData(await repository.getLabelSettings());
   }
 }
 
@@ -49,6 +66,26 @@ final settingsSetupProvider =
     AsyncNotifierProvider<SettingsSetupNotifier, AppSetupConfig>(
       SettingsSetupNotifier.new,
     );
+
+final labelSettingsProvider =
+    AsyncNotifierProvider<LabelSettingsNotifier, LabelSettingsConfig>(
+      LabelSettingsNotifier.new,
+    );
+
+final lastLabelPrinterProvider =
+    FutureProvider<LabelPrinterSelection?>((ref) async {
+      final repository = await ref.watch(settingsRepositoryProvider.future);
+      return repository.getLastLabelPrinter();
+    });
+
+Future<void> saveLastLabelPrinter(
+  WidgetRef ref,
+  LabelPrinterSelection printer,
+) async {
+  final repository = await ref.read(settingsRepositoryProvider.future);
+  await repository.saveLastLabelPrinter(printer);
+  ref.invalidate(lastLabelPrinterProvider);
+}
 
 final defaultSourceTownNameProvider = FutureProvider<String?>((ref) async {
   final repository = await ref.watch(settingsRepositoryProvider.future);

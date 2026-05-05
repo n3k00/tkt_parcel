@@ -781,7 +781,7 @@ packages:
     description:
       path: "."
       ref: main
-      resolved-ref: "78c53f24f5381c8a7e4d630b4ef3c3a273019007"
+      resolved-ref: "11ef9ca1fd1acdd84b05d6946c8372912f245a77"
       url: "https://github.com/n3k00/pos_printer_kit.git"
     source: git
     version: "0.1.0"
@@ -797,8 +797,8 @@ packages:
     dependency: transitive
     description:
       path: "vendor/print_bluetooth_thermal"
-      ref: "78c53f24f5381c8a7e4d630b4ef3c3a273019007"
-      resolved-ref: "78c53f24f5381c8a7e4d630b4ef3c3a273019007"
+      ref: "11ef9ca1fd1acdd84b05d6946c8372912f245a77"
+      resolved-ref: "11ef9ca1fd1acdd84b05d6946c8372912f245a77"
       url: "https://github.com/n3k00/pos_printer_kit.git"
     source: git
     version: "1.1.9"

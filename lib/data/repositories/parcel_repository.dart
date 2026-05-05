@@ -86,7 +86,6 @@ class ParcelRepository {
   Future<int> createParcel(ParcelModel parcel) {
     final now = DateTime.now();
     final parcelToCreate = parcel.copyWith(
-      createdAt: now,
       updatedAt: now,
       status: ParcelStatus.received,
       syncStatus: SyncStatus.pending,

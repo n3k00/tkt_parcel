@@ -46,6 +46,7 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
 
     final printerNotifier = ref.read(printerStateProvider.notifier);
     final printerState = ref.read(printerStateProvider);
+    int? savedParcelId;
 
     try {
       if (!printerState.isConnected) {
@@ -55,7 +56,7 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
         }
       }
 
-      final parcelId = await ref
+      savedParcelId = await ref
           .read(parcelRepositoryProvider)
           .createParcel(preview.parcel);
       if (!mounted) {
@@ -76,30 +77,35 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
           SnackBar(
             content: Text(
               ref.read(printerStateProvider).errorMessage ??
-                  'Parcel #$parcelId saved locally, but print failed. Reprint it from Parcel List.',
+                  'Parcel #$savedParcelId saved locally, but print failed. Reprint it from Parcel List.',
             ),
           ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Parcel #$parcelId printed and saved.')),
+          SnackBar(content: Text('Parcel #$savedParcelId printed and saved.')),
         );
       }
 
-      await ref.read(parcelFormProvider.notifier).reset();
-      if (!mounted) {
-        return;
-      }
-      Navigator.of(context).popUntil((route) {
-        return route.settings.name == HomeScreen.routeName || route.isFirst;
-      });
+      await _finishAfterSave();
     } catch (error) {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_messageForSaveError(error))),
-      );
+      if (savedParcelId != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Parcel #$savedParcelId saved locally, but voucher rendering or printing failed. Reprint it from Parcel List.',
+            ),
+          ),
+        );
+        await _finishAfterSave();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_messageForSaveError(error))),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -124,6 +130,16 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
       return 'Cash advance cannot be negative.';
     }
     return 'Parcel save failed. Please try again.';
+  }
+
+  Future<void> _finishAfterSave() async {
+    await ref.read(parcelFormProvider.notifier).reset();
+    if (!mounted) {
+      return;
+    }
+    Navigator.of(context).popUntil((route) {
+      return route.settings.name == HomeScreen.routeName || route.isFirst;
+    });
   }
 
   @override

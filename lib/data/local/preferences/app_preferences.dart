@@ -22,6 +22,14 @@ class AppPreferences {
   static const _receiptPaddingBottomKey = 'receipt_padding_bottom';
   static const _footerMessageKey = 'voucher_footer_message';
   static const _printerPresetKey = 'printer_preset';
+  static const _labelTitleFontSizeKey = 'label_title_font_size';
+  static const _labelSubtitleFontSizeKey = 'label_subtitle_font_size';
+  static const _labelBodyFontSizeKey = 'label_body_font_size';
+  static const _labelPaddingTopKey = 'label_padding_top';
+  static const _labelPaddingHorizontalKey = 'label_padding_horizontal';
+  static const _labelRowGapKey = 'label_row_gap';
+  static const _lastLabelPrinterIdKey = 'last_label_printer_id';
+  static const _lastLabelPrinterNameKey = 'last_label_printer_name';
 
   final SharedPreferences _preferences;
 
@@ -101,6 +109,38 @@ class AppPreferences {
 
   String? getPrinterPreset() => _preferences.getString(_printerPresetKey);
 
+  double? getLabelTitleFontSize() {
+    return _preferences.getDouble(_labelTitleFontSizeKey);
+  }
+
+  double? getLabelSubtitleFontSize() {
+    return _preferences.getDouble(_labelSubtitleFontSizeKey);
+  }
+
+  double? getLabelBodyFontSize() {
+    return _preferences.getDouble(_labelBodyFontSizeKey);
+  }
+
+  double? getLabelPaddingTop() {
+    return _preferences.getDouble(_labelPaddingTopKey);
+  }
+
+  double? getLabelPaddingHorizontal() {
+    return _preferences.getDouble(_labelPaddingHorizontalKey);
+  }
+
+  double? getLabelRowGap() {
+    return _preferences.getDouble(_labelRowGapKey);
+  }
+
+  String? getLastLabelPrinterId() {
+    return _preferences.getString(_lastLabelPrinterIdKey);
+  }
+
+  String? getLastLabelPrinterName() {
+    return _preferences.getString(_lastLabelPrinterNameKey);
+  }
+
   Future<bool> setBusinessName(String value) {
     return _preferences.setString(_businessNameKey, value);
   }
@@ -163,5 +203,41 @@ class AppPreferences {
 
   Future<bool> setPrinterPreset(String value) {
     return _preferences.setString(_printerPresetKey, value);
+  }
+
+  Future<bool> setLabelTitleFontSize(double value) {
+    return _preferences.setDouble(_labelTitleFontSizeKey, value);
+  }
+
+  Future<bool> setLabelSubtitleFontSize(double value) {
+    return _preferences.setDouble(_labelSubtitleFontSizeKey, value);
+  }
+
+  Future<bool> setLabelBodyFontSize(double value) {
+    return _preferences.setDouble(_labelBodyFontSizeKey, value);
+  }
+
+  Future<bool> setLabelPaddingTop(double value) {
+    return _preferences.setDouble(_labelPaddingTopKey, value);
+  }
+
+  Future<bool> setLabelPaddingHorizontal(double value) {
+    return _preferences.setDouble(_labelPaddingHorizontalKey, value);
+  }
+
+  Future<bool> setLabelRowGap(double value) {
+    return _preferences.setDouble(_labelRowGapKey, value);
+  }
+
+  Future<bool> setLastLabelPrinter({
+    required String id,
+    required String name,
+  }) async {
+    final savedId = await _preferences.setString(_lastLabelPrinterIdKey, id);
+    final savedName = await _preferences.setString(
+      _lastLabelPrinterNameKey,
+      name,
+    );
+    return savedId && savedName;
   }
 }

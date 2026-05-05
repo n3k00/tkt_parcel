@@ -26,6 +26,32 @@ class PrinterRepository {
     return _service.printImage(imageBytes, config: config);
   }
 
+  Future<bool> printTsplLabelImage(
+    Uint8List imageBytes, {
+    int widthPx = 560,
+    int heightPx = 400,
+    double labelWidthMm = 70,
+    double labelHeightMm = 50,
+    double gapMm = 2,
+    int xOffsetPx = 0,
+    int yOffsetPx = 0,
+    int copies = 1,
+    int threshold = 170,
+  }) {
+    return _service.printTsplLabelImage(
+      imageBytes,
+      widthPx: widthPx,
+      heightPx: heightPx,
+      labelWidthMm: labelWidthMm,
+      labelHeightMm: labelHeightMm,
+      gapMm: gapMm,
+      xOffsetPx: xOffsetPx,
+      yOffsetPx: yOffsetPx,
+      copies: copies,
+      threshold: threshold,
+    );
+  }
+
   Future<bool> testPrint() => _service.testPrint();
 
   bool get isConnected => _service.hasConnectedPrinter;

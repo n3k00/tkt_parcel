@@ -7,6 +7,7 @@ import '../../features/printer/presentation/screens/printer_settings_screen.dart
 import '../../features/printing/presentation/screens/printer_connect_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/receipt_settings_screen.dart';
+import '../../features/settings/presentation/screens/label_settings_screen.dart';
 import '../../features/settings/presentation/screens/profile_screen.dart';
 import '../../features/settings/presentation/screens/staff_account_info_screen.dart';
 import '../../features/settings/presentation/screens/from_town_settings_screen.dart';
@@ -99,6 +100,11 @@ class AppRouter {
       case ReceiptSettingsScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const ReceiptSettingsScreen(),
+          settings: settings,
+        );
+      case LabelSettingsScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const LabelSettingsScreen(),
           settings: settings,
         );
       case ParcelListScreen.routeName:

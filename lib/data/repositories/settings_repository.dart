@@ -1,4 +1,6 @@
 import '../../core/constants/receipt_strings.dart';
+import '../../shared/models/label_settings_config.dart';
+import '../../shared/models/label_printer_selection.dart';
 import '../../shared/models/app_setup_config.dart';
 import '../local/preferences/app_preferences.dart';
 
@@ -23,6 +25,12 @@ class SettingsRepository {
   static const _defaultReceiptPaddingBottom = 40.0;
   static const _defaultFooterMessage = ReceiptStrings.defaultFooter;
   static const _defaultPrinterPreset = 'balanced';
+  static const _defaultLabelTitleFontSize = 78.0;
+  static const _defaultLabelSubtitleFontSize = 30.0;
+  static const _defaultLabelBodyFontSize = 42.0;
+  static const _defaultLabelPaddingTop = 28.0;
+  static const _defaultLabelPaddingHorizontal = 28.0;
+  static const _defaultLabelRowGap = 18.0;
 
   final AppPreferences _preferences;
 
@@ -110,5 +118,80 @@ class SettingsRepository {
 
   Future<void> savePrinterPreset(String preset) async {
     await _preferences.setPrinterPreset(preset.trim().toLowerCase());
+  }
+
+  Future<LabelSettingsConfig> getLabelSettings() async {
+    return LabelSettingsConfig(
+      titleFontSize: _normalizeLabelValue(
+        _preferences.getLabelTitleFontSize(),
+        fallback: _defaultLabelTitleFontSize,
+        min: 52,
+        max: 110,
+      ),
+      subtitleFontSize: _normalizeLabelValue(
+        _preferences.getLabelSubtitleFontSize(),
+        fallback: _defaultLabelSubtitleFontSize,
+        min: 22,
+        max: 52,
+      ),
+      bodyFontSize: _normalizeLabelValue(
+        _preferences.getLabelBodyFontSize(),
+        fallback: _defaultLabelBodyFontSize,
+        min: 30,
+        max: 64,
+      ),
+      paddingTop: _normalizeLabelValue(
+        _preferences.getLabelPaddingTop(),
+        fallback: _defaultLabelPaddingTop,
+        min: 10,
+        max: 80,
+      ),
+      paddingHorizontal: _normalizeLabelValue(
+        _preferences.getLabelPaddingHorizontal(),
+        fallback: _defaultLabelPaddingHorizontal,
+        min: 8,
+        max: 80,
+      ),
+      rowGap: _normalizeLabelValue(
+        _preferences.getLabelRowGap(),
+        fallback: _defaultLabelRowGap,
+        min: 8,
+        max: 40,
+      ),
+    );
+  }
+
+  Future<void> saveLabelSettings(LabelSettingsConfig config) async {
+    await _preferences.setLabelTitleFontSize(config.titleFontSize);
+    await _preferences.setLabelSubtitleFontSize(config.subtitleFontSize);
+    await _preferences.setLabelBodyFontSize(config.bodyFontSize);
+    await _preferences.setLabelPaddingTop(config.paddingTop);
+    await _preferences.setLabelPaddingHorizontal(config.paddingHorizontal);
+    await _preferences.setLabelRowGap(config.rowGap);
+  }
+
+  Future<LabelPrinterSelection?> getLastLabelPrinter() async {
+    final id = _preferences.getLastLabelPrinterId();
+    final name = _preferences.getLastLabelPrinterName();
+    if (id == null || id.trim().isEmpty || name == null || name.trim().isEmpty) {
+      return null;
+    }
+    return LabelPrinterSelection(id: id.trim(), name: name.trim());
+  }
+
+  Future<void> saveLastLabelPrinter(LabelPrinterSelection printer) async {
+    await _preferences.setLastLabelPrinter(
+      id: printer.id.trim(),
+      name: printer.name.trim(),
+    );
+  }
+
+  double _normalizeLabelValue(
+    double? value, {
+    required double fallback,
+    required double min,
+    required double max,
+  }) {
+    return (value ?? fallback).clamp(min, max).toDouble();
   }
 }

@@ -13,6 +13,7 @@ import '../../../parcel/presentation/screens/home_screen.dart';
 import '../../../printer/presentation/screens/printer_settings_screen.dart';
 import '../providers/settings_provider.dart';
 import 'from_town_settings_screen.dart';
+import 'label_settings_screen.dart';
 import 'profile_screen.dart';
 import 'receipt_settings_screen.dart';
 import 'staff_account_info_screen.dart';
@@ -99,6 +100,17 @@ class SettingsScreen extends ConsumerWidget {
                       Navigator.of(
                         context,
                       ).pushNamed(ReceiptSettingsScreen.routeName);
+                    },
+                  ),
+                  const Divider(height: 1, indent: AppSpacing.xl),
+                  _SettingsListTile(
+                    icon: Icons.label_outline_rounded,
+                    title: AppStrings.labelSettingsTitle,
+                    subtitle: AppStrings.labelSettingsSubtitle,
+                    onTap: () {
+                      Navigator.of(
+                        context,
+                      ).pushNamed(LabelSettingsScreen.routeName);
                     },
                   ),
                   const Divider(height: 1, indent: AppSpacing.xl),

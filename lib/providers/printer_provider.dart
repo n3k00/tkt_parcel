@@ -211,6 +211,11 @@ class PrinterNotifier extends Notifier<PrinterState> {
     state = _fromCore(previous: state, clearErrorMessage: true);
   }
 
+  Future<void> stopScan() async {
+    await _repository.stopScan();
+    state = _fromCore(previous: state, clearErrorMessage: true);
+  }
+
   Future<void> disconnect() async {
     await _repository.disconnect();
     state = _fromCore(
@@ -218,6 +223,11 @@ class PrinterNotifier extends Notifier<PrinterState> {
       clearErrorMessage: true,
       lastPrintSucceeded: false,
     );
+  }
+
+  Future<void> connect(PrinterDevice device) async {
+    await _repository.connect(device);
+    state = _fromCore(previous: state, clearErrorMessage: true);
   }
 
   Future<bool> printImageBytes(
@@ -229,6 +239,24 @@ class PrinterNotifier extends Notifier<PrinterState> {
     final success = await _repository.printImage(
       imageBytes,
       config: printConfig,
+    );
+    state = _fromCore(
+      previous: state,
+      errorMessage: success ? null : _core.lastError?.message,
+      clearErrorMessage: success,
+      lastPrintableImageBytes: imageBytes,
+      lastPrintSucceeded: success,
+    );
+    return success;
+  }
+
+  Future<bool> printTsplLabelImage(
+    Uint8List imageBytes, {
+    int copies = 1,
+  }) async {
+    final success = await _repository.printTsplLabelImage(
+      imageBytes,
+      copies: copies,
     );
     state = _fromCore(
       previous: state,
