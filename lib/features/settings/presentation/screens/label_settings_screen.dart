@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pos_printer_kit/pos_printer_kit.dart';
 
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/constants/label_strings.dart';
 import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -150,7 +151,9 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
 
   Future<void> _connectTemporaryLabelPrinter(PrinterDevice labelPrinter) async {
     final printerNotifier = ref.read(printerStateProvider.notifier);
-    _receiptPrinterBeforeLabelPrint = ref.read(printerStateProvider).connectedDevice;
+    _receiptPrinterBeforeLabelPrint = ref
+        .read(printerStateProvider)
+        .connectedDevice;
     _shouldRestoreReceiptPrinter = false;
 
     if (_receiptPrinterBeforeLabelPrint?.id == labelPrinter.id) {
@@ -302,7 +305,9 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                               min: LabelSettingsDimens.subtitleFontMin,
                               max: LabelSettingsDimens.subtitleFontMax,
                               onChanged: (value) => setState(() {
-                                _draft = draft.copyWith(subtitleFontSize: value);
+                                _draft = draft.copyWith(
+                                  subtitleFontSize: value,
+                                );
                               }),
                             ),
                           ],
@@ -474,7 +479,7 @@ class _LabelPreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'သိင်္ခသူ',
+                      LabelStrings.businessTitle,
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -486,7 +491,7 @@ class _LabelPreview extends StatelessWidget {
                     ),
                     SizedBox(height: settings.rowGap / 2),
                     Text(
-                      '09-250787547, 09253003004',
+                      LabelStrings.businessPhone,
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -501,21 +506,21 @@ class _LabelPreview extends StatelessWidget {
                     SizedBox(height: settings.rowGap),
                     _LabelPreviewRow(
                       label: 'Name',
-                      value: 'ကိုကျော်',
+                      value: LabelStrings.sampleReceiverName,
                       fontSize: settings.bodyFontSize,
                       labelWidth: 150,
                     ),
                     SizedBox(height: settings.rowGap),
                     _LabelPreviewRow(
                       label: 'Phone',
-                      value: '09794249873',
+                      value: LabelStrings.sampleReceiverPhone,
                       fontSize: settings.bodyFontSize,
                       labelWidth: 150,
                     ),
                     SizedBox(height: settings.rowGap),
-                    _LabelPreviewRow(
-                      label: 'Qty',
-                      value: quantity.toString(),
+                    _LabelAddressQuantityRow(
+                      address: LabelStrings.sampleAddress,
+                      quantity: quantity,
                       fontSize: settings.bodyFontSize,
                       labelWidth: 150,
                     ),
@@ -531,10 +536,7 @@ class _LabelPreview extends StatelessWidget {
 }
 
 class _LabelTestPrintRequest {
-  const _LabelTestPrintRequest({
-    required this.quantity,
-    required this.printer,
-  });
+  const _LabelTestPrintRequest({required this.quantity, required this.printer});
 
   final int quantity;
   final PrinterDevice? printer;
@@ -589,30 +591,13 @@ class _LabelTestPrintDialogState extends ConsumerState<_LabelTestPrintDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DropdownButtonFormField<String>(
-            key: ValueKey(
-              '${selectedPrinter?.id ?? 'none'}-${allPrinters.length}',
-            ),
-            initialValue: selectedPrinter?.id,
-            decoration: const InputDecoration(
-              labelText: 'Printer',
-              border: OutlineInputBorder(),
-            ),
-            items: allPrinters
-                .map(
-                  (printer) => DropdownMenuItem(
-                    value: printer.id,
-                    child: Text(
-                      printer.id == printerState.connectedDevice?.id
-                          ? '${printer.name} (Connected)'
-                          : printer.name,
-                    ),
-                  ),
-                )
-                .toList(),
-            onChanged: (value) {
+          _PrinterPickerField(
+            selectedPrinter: selectedPrinter,
+            printers: allPrinters,
+            connectedPrinterId: printerState.connectedDevice?.id,
+            onSelected: (printer) {
               setState(() {
-                _selectedPrinterId = value;
+                _selectedPrinterId = printer.id;
               });
             },
           ),
@@ -622,10 +607,12 @@ class _LabelTestPrintDialogState extends ConsumerState<_LabelTestPrintDialog> {
                 ? null
                 : () => ref.read(printerStateProvider.notifier).startScan(),
             icon: const Icon(Icons.bluetooth_searching_rounded),
-            label: Text(printerState.isScanning ? 'Scanning...' : 'Scan Printer'),
+            label: Text(
+              printerState.isScanning ? 'Scanning...' : 'Scan Printer',
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
-          Text('ပစ္စည်းအရေအတွက်', style: AppTextStyles.label),
+          Text(LabelStrings.quantityPrompt, style: AppTextStyles.label),
           const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
@@ -702,6 +689,164 @@ class _LabelTestPrintDialogState extends ConsumerState<_LabelTestPrintDialog> {
   }
 }
 
+class _PrinterPickerField extends StatelessWidget {
+  const _PrinterPickerField({
+    required this.selectedPrinter,
+    required this.printers,
+    required this.connectedPrinterId,
+    required this.onSelected,
+  });
+
+  final PrinterDevice? selectedPrinter;
+  final List<PrinterDevice> printers;
+  final String? connectedPrinterId;
+  final ValueChanged<PrinterDevice> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasPrinters = printers.isNotEmpty;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(4),
+      onTap: hasPrinters ? () => _showPicker(context) : null,
+      child: InputDecorator(
+        decoration: const InputDecoration(
+          labelText: 'Printer',
+          border: OutlineInputBorder(),
+          suffixIcon: Icon(Icons.keyboard_arrow_down_rounded),
+        ),
+        child: Text(
+          selectedPrinter == null
+              ? (hasPrinters ? 'Choose label printer' : 'Scan printer first')
+              : _printerTitle(selectedPrinter!),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showPicker(BuildContext context) async {
+    final selected = await showModalBottomSheet<PrinterDevice>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: ListView.separated(
+            shrinkWrap: true,
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            itemCount: printers.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (context, index) {
+              final printer = printers[index];
+              final isSelected = printer.id == selectedPrinter?.id;
+              final isConnected = printer.id == connectedPrinterId;
+              return ListTile(
+                title: Text(_printerTitle(printer)),
+                subtitle: isConnected ? const Text('Connected') : null,
+                trailing: isSelected
+                    ? const Icon(Icons.check_circle_rounded)
+                    : null,
+                onTap: () => Navigator.of(context).pop(printer),
+              );
+            },
+          ),
+        );
+      },
+    );
+
+    if (selected != null) {
+      onSelected(selected);
+    }
+  }
+
+  String _printerTitle(PrinterDevice printer) {
+    return printer.id == connectedPrinterId
+        ? '${printer.name} (Connected)'
+        : printer.name;
+  }
+}
+
+class _LabelAddressQuantityRow extends StatelessWidget {
+  const _LabelAddressQuantityRow({
+    required this.address,
+    required this.quantity,
+    required this.fontSize,
+    required this.labelWidth,
+  });
+
+  final String address;
+  final int quantity;
+  final double fontSize;
+  final double labelWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: labelWidth,
+          child: Text(
+            'Address',
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w700,
+              height: 1.1,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            address,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w600,
+              height: 1.1,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        _QuantityBadge(quantity: quantity, fontSize: fontSize),
+      ],
+    );
+  }
+}
+
+class _QuantityBadge extends StatelessWidget {
+  const _QuantityBadge({required this.quantity, required this.fontSize});
+
+  final int quantity;
+  final double fontSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final size = (fontSize * 1.8).clamp(32.0, 54.0);
+
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.black, width: 2),
+      ),
+      child: Text(
+        quantity.toString(),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          fontSize: fontSize * 0.8,
+          fontWeight: FontWeight.w800,
+          height: 1,
+        ),
+      ),
+    );
+  }
+}
+
 class _LabelPreviewRow extends StatelessWidget {
   const _LabelPreviewRow({
     required this.label,
@@ -749,10 +894,7 @@ class _LabelPreviewRow extends StatelessWidget {
 }
 
 class _SettingsSection extends StatelessWidget {
-  const _SettingsSection({
-    required this.title,
-    required this.child,
-  });
+  const _SettingsSection({required this.title, required this.child});
 
   final String title;
   final Widget child;

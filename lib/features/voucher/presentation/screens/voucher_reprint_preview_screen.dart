@@ -123,9 +123,9 @@ class _VoucherReprintPreviewScreenState
       );
     } catch (error) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Label print failed: $error')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Label print failed: $error')));
       }
     } finally {
       await _restoreReceiptPrinter();
@@ -142,7 +142,9 @@ class _VoucherReprintPreviewScreenState
 
   Future<void> _connectTemporaryLabelPrinter(PrinterDevice labelPrinter) async {
     final printerNotifier = ref.read(printerStateProvider.notifier);
-    _receiptPrinterBeforeLabelPrint = ref.read(printerStateProvider).connectedDevice;
+    _receiptPrinterBeforeLabelPrint = ref
+        .read(printerStateProvider)
+        .connectedDevice;
     _shouldRestoreReceiptPrinter = false;
 
     if (_receiptPrinterBeforeLabelPrint?.id == labelPrinter.id) {
@@ -260,12 +262,11 @@ class _VoucherReprintPreviewScreenState
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Voucher reprinted successfully.'),
-        ),
+        const SnackBar(content: Text('Voucher reprinted successfully.')),
       );
       Navigator.of(context).popUntil((route) {
-        return route.settings.name == ParcelListScreen.routeName || route.isFirst;
+        return route.settings.name == ParcelListScreen.routeName ||
+            route.isFirst;
       });
     } finally {
       if (mounted) {
@@ -306,7 +307,8 @@ class _VoucherReprintPreviewScreenState
           icon: const Icon(Icons.label_outline),
         ),
       ],
-      isBlocking: (_isReprinting || _isLabelPrinting || printerState.isBusy) &&
+      isBlocking:
+          (_isReprinting || _isLabelPrinting || printerState.isBusy) &&
           !_isCapturingLabel,
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: LayoutBuilder(
@@ -358,9 +360,7 @@ class _VoucherReprintPreviewScreenState
                   children: [
                     Center(
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: previewWidth,
-                        ),
+                        constraints: BoxConstraints(maxWidth: previewWidth),
                         child: FittedBox(
                           fit: BoxFit.contain,
                           alignment: Alignment.topCenter,
@@ -422,6 +422,7 @@ class _VoucherReprintPreviewScreenState
                       settings: labelSettingsAsync.value!,
                       name: preview.parcel.receiverName,
                       phone: preview.parcel.receiverPhone,
+                      address: preview.parcel.toTown,
                       quantity:
                           _labelQuantity ?? preview.parcel.numberOfParcels,
                       includeShadow: false,
