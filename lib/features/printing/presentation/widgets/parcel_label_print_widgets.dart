@@ -9,6 +9,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../providers/printer_provider.dart';
 import '../../../../shared/models/label_settings_config.dart';
 import '../../../../shared/models/label_printer_selection.dart';
+import 'label_shared_widgets.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 
 class LabelPrintRequest {
@@ -70,7 +71,7 @@ class _LabelPrintDialogState extends ConsumerState<LabelPrintDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _PrinterPickerField(
+          LabelPrinterPickerField(
             selectedPrinter: selectedPrinter,
             printers: allPrinters,
             connectedPrinterId: printerState.connectedDevice?.id,
@@ -194,88 +195,11 @@ class _LabelPrintDialogState extends ConsumerState<LabelPrintDialog> {
   }
 }
 
-class _PrinterPickerField extends StatelessWidget {
-  const _PrinterPickerField({
-    required this.selectedPrinter,
-    required this.printers,
-    required this.connectedPrinterId,
-    required this.onSelected,
-  });
-
-  final PrinterDevice? selectedPrinter;
-  final List<PrinterDevice> printers;
-  final String? connectedPrinterId;
-  final ValueChanged<PrinterDevice> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasPrinters = printers.isNotEmpty;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(4),
-      onTap: hasPrinters ? () => _showPicker(context) : null,
-      child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: 'Printer',
-          border: OutlineInputBorder(),
-          suffixIcon: Icon(Icons.keyboard_arrow_down_rounded),
-        ),
-        child: Text(
-          selectedPrinter == null
-              ? (hasPrinters ? 'Choose label printer' : 'Scan printer first')
-              : _printerTitle(selectedPrinter!),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showPicker(BuildContext context) async {
-    final selected = await showModalBottomSheet<PrinterDevice>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: ListView.separated(
-            shrinkWrap: true,
-            padding: const EdgeInsets.only(bottom: AppSpacing.md),
-            itemCount: printers.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final printer = printers[index];
-              final isSelected = printer.id == selectedPrinter?.id;
-              final isConnected = printer.id == connectedPrinterId;
-              return ListTile(
-                title: Text(_printerTitle(printer)),
-                subtitle: isConnected ? const Text('Connected') : null,
-                trailing: isSelected
-                    ? const Icon(Icons.check_circle_rounded)
-                    : null,
-                onTap: () => Navigator.of(context).pop(printer),
-              );
-            },
-          ),
-        );
-      },
-    );
-
-    if (selected != null) {
-      onSelected(selected);
-    }
-  }
-
-  String _printerTitle(PrinterDevice printer) {
-    return printer.id == connectedPrinterId
-        ? '${printer.name} (Connected)'
-        : printer.name;
-  }
-}
-
 class ParcelLabelPreview extends StatelessWidget {
   const ParcelLabelPreview({
     super.key,
     required this.settings,
+    required this.businessPhone,
     required this.name,
     required this.phone,
     required this.address,
@@ -286,6 +210,7 @@ class ParcelLabelPreview extends StatelessWidget {
   });
 
   final LabelSettingsConfig settings;
+  final String businessPhone;
   final String name;
   final String phone;
   final String address;
@@ -340,7 +265,7 @@ class ParcelLabelPreview extends StatelessWidget {
                     ),
                     SizedBox(height: settings.rowGap / 2),
                     Text(
-                      LabelStrings.businessPhone,
+                      businessPhone,
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -367,7 +292,7 @@ class ParcelLabelPreview extends StatelessWidget {
                       labelWidth: 150,
                     ),
                     SizedBox(height: settings.rowGap),
-                    _LabelAddressQuantityRow(
+                    LabelAddressQuantityRow(
                       address: address,
                       quantity: quantity,
                       fontSize: settings.bodyFontSize,
@@ -378,86 +303,6 @@ class ParcelLabelPreview extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LabelAddressQuantityRow extends StatelessWidget {
-  const _LabelAddressQuantityRow({
-    required this.address,
-    required this.quantity,
-    required this.fontSize,
-    required this.labelWidth,
-  });
-
-  final String address;
-  final int quantity;
-  final double fontSize;
-  final double labelWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: labelWidth,
-          child: Text(
-            'Address',
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w700,
-              height: 1.1,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            address,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w600,
-              height: 1.1,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        _QuantityBadge(quantity: quantity, fontSize: fontSize),
-      ],
-    );
-  }
-}
-
-class _QuantityBadge extends StatelessWidget {
-  const _QuantityBadge({required this.quantity, required this.fontSize});
-
-  final int quantity;
-  final double fontSize;
-
-  @override
-  Widget build(BuildContext context) {
-    final size = (fontSize * 1.8).clamp(32.0, 54.0);
-
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.black, width: 2),
-      ),
-      child: Text(
-        quantity.toString(),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: fontSize * 0.8,
-          fontWeight: FontWeight.w800,
-          height: 1,
         ),
       ),
     );

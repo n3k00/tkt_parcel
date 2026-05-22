@@ -420,6 +420,7 @@ class _VoucherReprintPreviewScreenState
                     width: 560,
                     child: ParcelLabelPreview(
                       settings: labelSettingsAsync.value!,
+                      businessPhone: preview.setup.businessPhone,
                       name: preview.parcel.receiverName,
                       phone: preview.parcel.receiverPhone,
                       address: preview.parcel.toTown,

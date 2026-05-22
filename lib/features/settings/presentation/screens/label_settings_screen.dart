@@ -8,12 +8,14 @@ import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../providers/printer_provider.dart';
+import '../../../../shared/models/label_printer_selection.dart';
 import '../../../../shared/models/label_settings_config.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../printing/presentation/screens/printer_connect_screen.dart';
+import '../../../printing/presentation/widgets/label_shared_widgets.dart';
 import '../constants/label_settings_dimens.dart';
 import '../providers/settings_provider.dart';
 
@@ -37,6 +39,12 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
 
   Future<void> _handleTestPrint() async {
     if (_isTestPrinting) {
+      return;
+    }
+    if (!ref.read(settingsSetupProvider).hasValue) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Voucher header is still loading.')),
+      );
       return;
     }
 
@@ -244,6 +252,7 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(labelSettingsProvider);
+    final setupAsync = ref.watch(settingsSetupProvider);
     final printerState = ref.watch(printerStateProvider);
     final isProcessing = _isTestPrinting || printerState.isBusy;
 
@@ -258,6 +267,8 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
             context,
             horizontalPadding: AppSpacing.lg,
           );
+          final businessPhone = setupAsync.asData?.value.businessPhone;
+          final isSetupReady = businessPhone != null;
 
           return Stack(
             clipBehavior: Clip.none,
@@ -272,17 +283,23 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                       _SettingsSection(
                         title: AppStrings.livePreviewTitle,
                         child: Center(
-                          child: FittedBox(
-                            fit: BoxFit.contain,
-                            child: SizedBox(
-                              width: 560,
-                              child: _LabelPreview(
-                                settings: draft,
-                                quantity: _testQuantity,
-                                maxWidth: 560,
-                              ),
-                            ),
-                          ),
+                          child: isSetupReady
+                              ? FittedBox(
+                                  fit: BoxFit.contain,
+                                  child: SizedBox(
+                                    width: 560,
+                                    child: _LabelPreview(
+                                      settings: draft,
+                                      businessPhone: businessPhone,
+                                      quantity: _testQuantity,
+                                      maxWidth: 560,
+                                    ),
+                                  ),
+                                )
+                              : const Padding(
+                                  padding: EdgeInsets.all(AppSpacing.lg),
+                                  child: AppLoading(),
+                                ),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -367,7 +384,9 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          onPressed: isProcessing ? null : _handleTestPrint,
+                          onPressed: isProcessing || !isSetupReady
+                              ? null
+                              : _handleTestPrint,
                           icon: const Icon(Icons.print_outlined),
                           label: const Text('Test Print'),
                         ),
@@ -403,23 +422,25 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                   ),
                 ),
               ),
-              Positioned(
-                left: -10000,
-                top: 0,
-                child: RepaintBoundary(
-                  key: _labelPrintKey,
-                  child: SizedBox(
-                    width: 560,
-                    child: _LabelPreview(
-                      settings: draft,
-                      quantity: _testQuantity,
-                      includeShadow: false,
-                      includeBorder: false,
-                      maxWidth: 560,
+              if (isSetupReady)
+                Positioned(
+                  left: -10000,
+                  top: 0,
+                  child: RepaintBoundary(
+                    key: _labelPrintKey,
+                    child: SizedBox(
+                      width: 560,
+                      child: _LabelPreview(
+                        settings: draft,
+                        businessPhone: businessPhone,
+                        quantity: _testQuantity,
+                        includeShadow: false,
+                        includeBorder: false,
+                        maxWidth: 560,
+                      ),
                     ),
                   ),
                 ),
-              ),
             ],
           );
         },
@@ -433,6 +454,7 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
 class _LabelPreview extends StatelessWidget {
   const _LabelPreview({
     required this.settings,
+    required this.businessPhone,
     required this.quantity,
     this.includeShadow = true,
     this.includeBorder = true,
@@ -440,6 +462,7 @@ class _LabelPreview extends StatelessWidget {
   });
 
   final LabelSettingsConfig settings;
+  final String businessPhone;
   final int quantity;
   final bool includeShadow;
   final bool includeBorder;
@@ -491,7 +514,7 @@ class _LabelPreview extends StatelessWidget {
                     ),
                     SizedBox(height: settings.rowGap / 2),
                     Text(
-                      LabelStrings.businessPhone,
+                      businessPhone,
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -518,7 +541,7 @@ class _LabelPreview extends StatelessWidget {
                       labelWidth: 150,
                     ),
                     SizedBox(height: settings.rowGap),
-                    _LabelAddressQuantityRow(
+                    LabelAddressQuantityRow(
                       address: LabelStrings.sampleAddress,
                       quantity: quantity,
                       fontSize: settings.bodyFontSize,
@@ -562,7 +585,7 @@ class _LabelTestPrintDialogState extends ConsumerState<_LabelTestPrintDialog> {
     _quantity = widget.initialQuantity.clamp(1, 999).toInt();
     Future.microtask(() {
       final printerState = ref.read(printerStateProvider);
-      _selectedPrinterId = printerState.connectedDevice?.id;
+      _selectedPrinterId = ref.read(lastLabelPrinterProvider).asData?.value?.id;
       if (printerState.printers.isEmpty) {
         ref.read(printerStateProvider.notifier).startScan();
       }
@@ -572,18 +595,23 @@ class _LabelTestPrintDialogState extends ConsumerState<_LabelTestPrintDialog> {
   @override
   Widget build(BuildContext context) {
     final printerState = ref.watch(printerStateProvider);
+    final lastLabelPrinter = ref.watch(lastLabelPrinterProvider).asData?.value;
     final printers = printerState.printers;
     final allPrinters = [
       if (printerState.connectedDevice != null) printerState.connectedDevice!,
       for (final printer in printers)
         if (printer.id != printerState.connectedDevice?.id) printer,
+      if (lastLabelPrinter != null &&
+          !_containsPrinterId(
+            printerState.connectedDevice,
+            printers,
+            lastLabelPrinter.id,
+          ))
+        PrinterDevice(id: lastLabelPrinter.id, name: lastLabelPrinter.name),
     ];
     final selectedPrinter = _selectedPrinterId == null
-        ? (printerState.connectedDevice ??
-              (allPrinters.isEmpty ? null : allPrinters.first))
-        : _findPrinter(allPrinters, _selectedPrinterId!) ??
-              printerState.connectedDevice ??
-              (allPrinters.isEmpty ? null : allPrinters.first);
+        ? null
+        : _findPrinter(allPrinters, _selectedPrinterId!);
 
     return AlertDialog(
       title: const Text('Test Print Label'),
@@ -591,7 +619,7 @@ class _LabelTestPrintDialogState extends ConsumerState<_LabelTestPrintDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _PrinterPickerField(
+          LabelPrinterPickerField(
             selectedPrinter: selectedPrinter,
             printers: allPrinters,
             connectedPrinterId: printerState.connectedDevice?.id,
@@ -661,11 +689,21 @@ class _LabelTestPrintDialogState extends ConsumerState<_LabelTestPrintDialog> {
         FilledButton(
           onPressed: selectedPrinter == null
               ? null
-              : () {
+              : () async {
                   debugPrint(
                     '[label_print] dialog print requested '
                     'printer=${selectedPrinter.name} qty=$_quantity',
                   );
+                  await saveLastLabelPrinter(
+                    ref,
+                    LabelPrinterSelection(
+                      id: selectedPrinter.id,
+                      name: selectedPrinter.name,
+                    ),
+                  );
+                  if (!context.mounted) {
+                    return;
+                  }
                   Navigator.of(context).pop(
                     _LabelTestPrintRequest(
                       quantity: _quantity.clamp(1, 999).toInt(),
@@ -687,163 +725,21 @@ class _LabelTestPrintDialogState extends ConsumerState<_LabelTestPrintDialog> {
     }
     return null;
   }
-}
 
-class _PrinterPickerField extends StatelessWidget {
-  const _PrinterPickerField({
-    required this.selectedPrinter,
-    required this.printers,
-    required this.connectedPrinterId,
-    required this.onSelected,
-  });
-
-  final PrinterDevice? selectedPrinter;
-  final List<PrinterDevice> printers;
-  final String? connectedPrinterId;
-  final ValueChanged<PrinterDevice> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final hasPrinters = printers.isNotEmpty;
-
-    return InkWell(
-      borderRadius: BorderRadius.circular(4),
-      onTap: hasPrinters ? () => _showPicker(context) : null,
-      child: InputDecorator(
-        decoration: const InputDecoration(
-          labelText: 'Printer',
-          border: OutlineInputBorder(),
-          suffixIcon: Icon(Icons.keyboard_arrow_down_rounded),
-        ),
-        child: Text(
-          selectedPrinter == null
-              ? (hasPrinters ? 'Choose label printer' : 'Scan printer first')
-              : _printerTitle(selectedPrinter!),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _showPicker(BuildContext context) async {
-    final selected = await showModalBottomSheet<PrinterDevice>(
-      context: context,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: ListView.separated(
-            shrinkWrap: true,
-            padding: const EdgeInsets.only(bottom: AppSpacing.md),
-            itemCount: printers.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final printer = printers[index];
-              final isSelected = printer.id == selectedPrinter?.id;
-              final isConnected = printer.id == connectedPrinterId;
-              return ListTile(
-                title: Text(_printerTitle(printer)),
-                subtitle: isConnected ? const Text('Connected') : null,
-                trailing: isSelected
-                    ? const Icon(Icons.check_circle_rounded)
-                    : null,
-                onTap: () => Navigator.of(context).pop(printer),
-              );
-            },
-          ),
-        );
-      },
-    );
-
-    if (selected != null) {
-      onSelected(selected);
+  bool _containsPrinterId(
+    PrinterDevice? connectedDevice,
+    List<PrinterDevice> printers,
+    String id,
+  ) {
+    if (connectedDevice?.id == id) {
+      return true;
     }
-  }
-
-  String _printerTitle(PrinterDevice printer) {
-    return printer.id == connectedPrinterId
-        ? '${printer.name} (Connected)'
-        : printer.name;
-  }
-}
-
-class _LabelAddressQuantityRow extends StatelessWidget {
-  const _LabelAddressQuantityRow({
-    required this.address,
-    required this.quantity,
-    required this.fontSize,
-    required this.labelWidth,
-  });
-
-  final String address;
-  final int quantity;
-  final double fontSize;
-  final double labelWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(
-          width: labelWidth,
-          child: Text(
-            'Address',
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w700,
-              height: 1.1,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            address,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w600,
-              height: 1.1,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        _QuantityBadge(quantity: quantity, fontSize: fontSize),
-      ],
-    );
-  }
-}
-
-class _QuantityBadge extends StatelessWidget {
-  const _QuantityBadge({required this.quantity, required this.fontSize});
-
-  final int quantity;
-  final double fontSize;
-
-  @override
-  Widget build(BuildContext context) {
-    final size = (fontSize * 1.8).clamp(32.0, 54.0);
-
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.black, width: 2),
-      ),
-      child: Text(
-        quantity.toString(),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: fontSize * 0.8,
-          fontWeight: FontWeight.w800,
-          height: 1,
-        ),
-      ),
-    );
+    for (final printer in printers) {
+      if (printer.id == id) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 
