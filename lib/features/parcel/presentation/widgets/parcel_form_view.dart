@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -99,11 +100,16 @@ class ParcelFormView extends ConsumerWidget {
                         initialValue: form.receiverPhone,
                         onChanged: controller.updateReceiverPhone,
                         keyboardType: TextInputType.phone,
-                        decoration: AppInputDecoration.basic(
-                          label: 'Receiver Phone',
-                          hint: 'Enter receiver phone',
-                          prefixIcon: const Icon(Icons.phone_in_talk_outlined),
-                        ).copyWith(errorText: form.fieldErrors['receiverPhone']),
+                        decoration:
+                            AppInputDecoration.basic(
+                              label: 'Receiver Phone',
+                              hint: 'Enter receiver phone',
+                              prefixIcon: const Icon(
+                                Icons.phone_in_talk_outlined,
+                              ),
+                            ).copyWith(
+                              errorText: form.fieldErrors['receiverPhone'],
+                            ),
                       ),
                     ],
                   ),
@@ -128,15 +134,16 @@ class ParcelFormView extends ConsumerWidget {
                           initialValue: form.numberOfParcelsText,
                           keyboardType: TextInputType.number,
                           onChanged: controller.updateNumberOfParcels,
-                          decoration: AppInputDecoration.basic(
-                            label: 'Number of Parcels',
-                            hint: 'Enter parcel count',
-                            prefixIcon: const Icon(
-                              Icons.format_list_numbered_rounded,
-                            ),
-                          ).copyWith(
-                            errorText: form.fieldErrors['numberOfParcels'],
-                          ),
+                          decoration:
+                              AppInputDecoration.basic(
+                                label: 'Number of Parcels',
+                                hint: 'Enter parcel count',
+                                prefixIcon: const Icon(
+                                  Icons.format_list_numbered_rounded,
+                                ),
+                              ).copyWith(
+                                errorText: form.fieldErrors['numberOfParcels'],
+                              ),
                         ),
                         right: TextFormField(
                           initialValue: form.totalCharges == 0
@@ -155,13 +162,16 @@ class ParcelFormView extends ConsumerWidget {
                               double.tryParse(value) ?? 0,
                             );
                           },
-                          decoration: AppInputDecoration.basic(
-                            label: 'Total Charges',
-                            hint: 'Enter total charges',
-                            prefixIcon: const Icon(Icons.attach_money_rounded),
-                          ).copyWith(
-                            errorText: form.fieldErrors['totalCharges'],
-                          ),
+                          decoration:
+                              AppInputDecoration.basic(
+                                label: 'Total Charges',
+                                hint: 'Enter total charges',
+                                prefixIcon: const Icon(
+                                  Icons.attach_money_rounded,
+                                ),
+                              ).copyWith(
+                                errorText: form.fieldErrors['totalCharges'],
+                              ),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -271,7 +281,7 @@ class _ParcelImageField extends StatelessWidget {
   });
 
   final String? imagePath;
-  final VoidCallback onPickImage;
+  final Future<void> Function({ImageSource source}) onPickImage;
   final VoidCallback onClearImage;
   final double height;
 
@@ -282,7 +292,9 @@ class _ParcelImageField extends StatelessWidget {
 
     return InkWell(
       borderRadius: AppRadius.medium,
-      onTap: hasImage ? () => _showImagePreview(context) : onPickImage,
+      onTap: hasImage
+          ? () => _showImagePreview(context)
+          : () => _showImageSourceSheet(context),
       child: Container(
         width: double.infinity,
         height: height,
@@ -303,7 +315,7 @@ class _ParcelImageField extends StatelessWidget {
                     errorBuilder: (context, error, stackTrace) =>
                         const _ImagePlaceholder(),
                   ),
-                  _buildImageActions(),
+                  _buildImageActions(context),
                 ],
               )
             : const _ImagePlaceholder(),
@@ -311,14 +323,17 @@ class _ParcelImageField extends StatelessWidget {
     );
   }
 
-  Widget _buildImageActions() {
+  Widget _buildImageActions(BuildContext context) {
     return Positioned(
       top: AppSpacing.sm,
       right: AppSpacing.sm,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _ImageActionButton(icon: Icons.edit_outlined, onTap: onPickImage),
+          _ImageActionButton(
+            icon: Icons.edit_outlined,
+            onTap: () => _showImageSourceSheet(context),
+          ),
           const SizedBox(width: AppSpacing.xs),
           _ImageActionButton(
             icon: Icons.delete_outline_rounded,
@@ -327,6 +342,70 @@ class _ParcelImageField extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _showImageSourceSheet(BuildContext context) async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      useSafeArea: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.lg,
+              AppSpacing.md,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Parcel Image', style: AppTextStyles.subtitle),
+                const SizedBox(height: AppSpacing.xs),
+                const Text(
+                  'Take a new photo or choose one from gallery.',
+                  style: AppTextStyles.bodyMuted,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _ImageSourceTile(
+                  icon: Icons.photo_camera_outlined,
+                  title: 'Take Photo',
+                  subtitle: 'Open camera and attach a new parcel photo',
+                  source: ImageSource.camera,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                _ImageSourceTile(
+                  icon: Icons.photo_library_outlined,
+                  title: 'Choose from Gallery',
+                  subtitle: 'Pick an existing parcel image',
+                  source: ImageSource.gallery,
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (source == null) {
+      return;
+    }
+
+    try {
+      await onPickImage(source: source);
+    } catch (error) {
+      if (!context.mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Parcel image could not be selected: $error')),
+      );
+    }
   }
 
   Future<void> _showImagePreview(BuildContext context) async {
@@ -404,11 +483,43 @@ class _ImageActionButton extends StatelessWidget {
       borderRadius: AppRadius.roundedPill,
       child: InkWell(
         borderRadius: AppRadius.roundedPill,
-        onTap: onTap,
+        onTap: () {
+          onTap();
+        },
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.xs),
           child: Icon(icon, color: Colors.white, size: AppDimens.iconSm),
         ),
+      ),
+    );
+  }
+}
+
+class _ImageSourceTile extends StatelessWidget {
+  const _ImageSourceTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.source,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final ImageSource source;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.card,
+      borderRadius: AppRadius.medium,
+      child: ListTile(
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.medium),
+        leading: Icon(icon, color: AppColors.secondary),
+        title: Text(title, style: AppTextStyles.label),
+        subtitle: Text(subtitle, style: AppTextStyles.bodyMuted),
+        trailing: const Icon(Icons.chevron_right_rounded),
+        onTap: () => Navigator.of(context).pop(source),
       ),
     );
   }
@@ -440,14 +551,15 @@ class _TownDropdown extends StatelessWidget {
       onTap: () => _openTownPicker(context),
       child: InputDecorator(
         isEmpty: value == null || value!.isEmpty,
-        decoration: AppInputDecoration.basic(
-          label: label,
-          hint: hint,
-          prefixIcon: Icon(icon),
-        ).copyWith(
-          suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded),
-          errorText: errorText,
-        ),
+        decoration:
+            AppInputDecoration.basic(
+              label: label,
+              hint: hint,
+              prefixIcon: Icon(icon),
+            ).copyWith(
+              suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded),
+              errorText: errorText,
+            ),
         child: Text(
           value?.isNotEmpty == true ? value! : hint,
           maxLines: 1,
@@ -476,10 +588,7 @@ class _TownDropdown extends StatelessWidget {
 }
 
 class _PaymentStatusField extends StatelessWidget {
-  const _PaymentStatusField({
-    required this.value,
-    required this.onChanged,
-  });
+  const _PaymentStatusField({required this.value, required this.onChanged});
 
   final PaymentStatus value;
   final ValueChanged<PaymentStatus> onChanged;
@@ -494,9 +603,7 @@ class _PaymentStatusField extends StatelessWidget {
           label: 'Payment Status',
           hint: 'Select payment status',
           prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
-        ).copyWith(
-          suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded),
-        ),
+        ).copyWith(suffixIcon: const Icon(Icons.keyboard_arrow_down_rounded)),
         child: Text(_labelFor(value), style: AppTextStyles.body),
       ),
     );
@@ -613,9 +720,7 @@ class _PickerTile<T> extends StatelessWidget {
       child: ListTile(
         dense: true,
         minTileHeight: AppDimens.listTileMinHeight,
-        shape: const RoundedRectangleBorder(
-          borderRadius: AppRadius.medium,
-        ),
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.medium),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.xs,
@@ -625,10 +730,7 @@ class _PickerTile<T> extends StatelessWidget {
           style: selected ? AppTextStyles.label : AppTextStyles.body,
         ),
         trailing: selected
-            ? const Icon(
-                Icons.check_circle_rounded,
-                color: AppColors.secondary,
-              )
+            ? const Icon(Icons.check_circle_rounded, color: AppColors.secondary)
             : null,
         onTap: () => Navigator.of(context).pop(option),
       ),

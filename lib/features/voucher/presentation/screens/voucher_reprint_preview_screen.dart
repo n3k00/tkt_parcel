@@ -33,6 +33,8 @@ class VoucherReprintPreviewScreen extends ConsumerStatefulWidget {
 
 class _VoucherReprintPreviewScreenState
     extends ConsumerState<VoucherReprintPreviewScreen> {
+  static const _printerSwitchDelay = Duration(milliseconds: 650);
+
   final GlobalKey _printBoundaryKey = GlobalKey();
   final GlobalKey _labelPrintKey = GlobalKey();
   bool _isReprinting = false;
@@ -87,6 +89,10 @@ class _VoucherReprintPreviewScreenState
 
       final printerNotifier = ref.read(printerStateProvider.notifier);
       final selectedPrinter = request.printer;
+      await printerNotifier.stopScan();
+      if (!mounted) {
+        return;
+      }
       if (selectedPrinter == null) {
         await Navigator.of(context).pushNamed(PrinterConnectScreen.routeName);
         if (!mounted || !ref.read(printerStateProvider).isConnected) {
@@ -96,7 +102,6 @@ class _VoucherReprintPreviewScreenState
         await _connectTemporaryLabelPrinter(selectedPrinter);
       }
 
-      await printerNotifier.stopScan();
       final isIdle = await _waitForPrinterIdle();
       if (!isIdle) {
         throw StateError('Printer is busy. Please try again.');
@@ -148,12 +153,15 @@ class _VoucherReprintPreviewScreenState
     _shouldRestoreReceiptPrinter = false;
 
     if (_receiptPrinterBeforeLabelPrint?.id == labelPrinter.id) {
+      await _waitForPrinterIdle();
       return;
     }
 
     if (_receiptPrinterBeforeLabelPrint != null) {
       _shouldRestoreReceiptPrinter = true;
       await printerNotifier.disconnect();
+      await _waitForPrinterDisconnected(_receiptPrinterBeforeLabelPrint!.id);
+      await Future<void>.delayed(_printerSwitchDelay);
     }
 
     await printerNotifier.connect(labelPrinter);
@@ -164,6 +172,8 @@ class _VoucherReprintPreviewScreenState
             'Label printer connection failed.',
       );
     }
+    await _waitForPrinterIdle();
+    await Future<void>.delayed(_printerSwitchDelay);
   }
 
   Future<void> _restoreReceiptPrinter() async {
@@ -183,8 +193,11 @@ class _VoucherReprintPreviewScreenState
 
     try {
       await printerNotifier.disconnect();
+      await _waitForPrinterDisconnected(connectedPrinter?.id);
+      await Future<void>.delayed(_printerSwitchDelay);
       await printerNotifier.connect(receiptPrinter);
       await _waitForPrinterConnection(receiptPrinter.id);
+      await _waitForPrinterIdle();
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -199,9 +212,24 @@ class _VoucherReprintPreviewScreenState
   }
 
   Future<bool> _waitForPrinterConnection(String printerId) async {
-    for (var attempt = 0; attempt < 12; attempt++) {
+    for (var attempt = 0; attempt < 20; attempt++) {
       final connectedPrinter = ref.read(printerStateProvider).connectedDevice;
       if (connectedPrinter?.id == printerId) {
+        return true;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
+    return false;
+  }
+
+  Future<bool> _waitForPrinterDisconnected(String? printerId) async {
+    if (printerId == null) {
+      return true;
+    }
+
+    for (var attempt = 0; attempt < 20; attempt++) {
+      final connectedPrinter = ref.read(printerStateProvider).connectedDevice;
+      if (connectedPrinter == null || connectedPrinter.id != printerId) {
         return true;
       }
       await Future<void>.delayed(const Duration(milliseconds: 250));

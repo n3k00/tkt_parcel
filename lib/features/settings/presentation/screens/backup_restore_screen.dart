@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -18,7 +19,8 @@ class BackupRestoreScreen extends ConsumerStatefulWidget {
   static const routeName = '/settings/backup-restore';
 
   @override
-  ConsumerState<BackupRestoreScreen> createState() => _BackupRestoreScreenState();
+  ConsumerState<BackupRestoreScreen> createState() =>
+      _BackupRestoreScreenState();
 }
 
 class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
@@ -106,25 +108,9 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
   }
 
   Future<void> _handleRestore() async {
-    final permissionResult = await _ensureBackupPermission();
-    if (!permissionResult) {
-      return;
-    }
-
     final service = ref.read(backupRestoreServiceProvider);
-    final backupFiles = await service.listAvailableRestoreFiles();
-    if (backupFiles.isEmpty) {
-      if (!mounted) {
-        return;
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.noBackupFilesFound)),
-      );
-      return;
-    }
-
-    final selectedFile = await _showRestoreFilePicker(backupFiles);
-    if (selectedFile == null) {
+    final selectedPath = await _pickRestoreFile();
+    if (selectedPath == null) {
       return;
     }
     if (!mounted) {
@@ -137,7 +123,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           builder: (dialogContext) => AlertDialog(
             title: const Text(AppStrings.restoreBackupTitle),
             content: Text(
-              'Restore from:\n${selectedFile.path}\n\nThis will replace the current local parcel database.',
+              'Restore from:\n$selectedPath\n\nThis will replace the current local parcel database.',
             ),
             actions: [
               TextButton(
@@ -166,88 +152,34 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
         final database = ref.read(databaseProvider);
         await database.close();
 
-        final result = await service.restoreBackup(selectedFile.path);
-
-        ref.invalidate(databaseProvider);
-        ref.invalidate(parcelRepositoryProvider);
-        ref.invalidate(townRepositoryProvider);
-        ref.invalidate(parcelListProvider);
-
-        return '${result.message}\n${result.usedBackupPath}';
+        try {
+          final result = await service.restoreBackup(selectedPath);
+          return '${result.message}\n${result.usedBackupPath}';
+        } finally {
+          ref.invalidate(databaseProvider);
+          ref.invalidate(parcelRepositoryProvider);
+          ref.invalidate(townRepositoryProvider);
+          ref.invalidate(parcelListProvider);
+        }
       },
     );
   }
 
-  Future<BackupFileEntry?> _showRestoreFilePicker(
-    List<BackupFileEntry> files,
-  ) async {
-    return showModalBottomSheet<BackupFileEntry>(
-      context: context,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: AppSpacing.screenPadding,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppStrings.chooseBackupFileTitle,
-                    style: AppTextStyles.title,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    AppStrings.chooseBackupFileSubtitle,
-                    style: AppTextStyles.bodyMuted,
-                  ),
-                ],
-              ),
-            ),
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: files.length,
-                separatorBuilder: (_, index) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final file = files[index];
-                  return ListTile(
-                    title: Text(file.name, style: AppTextStyles.label),
-                    subtitle: Text(
-                      '${_formatBytes(file.sizeBytes)} • ${_formatDateTime(file.modifiedAt)}',
-                      style: AppTextStyles.bodyMuted,
-                    ),
-                    trailing: const Icon(Icons.chevron_right_rounded),
-                    onTap: () => Navigator.of(sheetContext).pop(file),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
+  Future<String?> _pickRestoreFile() async {
+    final result = await FilePicker.platform.pickFiles(
+      dialogTitle: AppStrings.chooseBackupFileTitle,
+      type: FileType.custom,
+      allowedExtensions: const ['zip', 'sqlite', 'db'],
+      allowMultiple: false,
+      withData: false,
     );
-  }
 
-  String _formatBytes(int bytes) {
-    if (bytes >= 1024 * 1024) {
-      return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    final selectedPath = result?.files.single.path;
+    if (selectedPath == null || selectedPath.trim().isEmpty) {
+      return null;
     }
-    if (bytes >= 1024) {
-      return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    }
-    return '$bytes B';
-  }
 
-  String _formatDateTime(DateTime value) {
-    final month = value.month.toString().padLeft(2, '0');
-    final day = value.day.toString().padLeft(2, '0');
-    final year = value.year.toString();
-    final hour = value.hour.toString().padLeft(2, '0');
-    final minute = value.minute.toString().padLeft(2, '0');
-    return '$year-$month-$day $hour:$minute';
+    return selectedPath;
   }
 
   Future<bool> _ensureBackupPermission() async {
@@ -267,10 +199,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
           content: Text(
             permissionResult.message ?? AppStrings.backupPermissionBlocked,
           ),
-          action: SnackBarAction(
-            label: 'Settings',
-            onPressed: openAppSettings,
-          ),
+          action: SnackBarAction(label: 'Settings', onPressed: openAppSettings),
         ),
       );
       return false;
@@ -330,16 +259,16 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } catch (error) {
       if (!mounted) {
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.toString())));
     } finally {
       if (mounted) {
         setState(() {

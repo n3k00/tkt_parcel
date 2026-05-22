@@ -30,6 +30,8 @@ class LabelSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
+  static const _printerSwitchDelay = Duration(milliseconds: 650);
+
   final GlobalKey _labelPrintKey = GlobalKey();
   LabelSettingsConfig? _draft;
   int _testQuantity = 3;
@@ -98,6 +100,10 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
 
       final printerNotifier = ref.read(printerStateProvider.notifier);
       final selectedPrinter = request.printer;
+      await printerNotifier.stopScan();
+      if (!mounted) {
+        return;
+      }
       if (selectedPrinter == null) {
         await Navigator.of(context).pushNamed(PrinterConnectScreen.routeName);
         if (!mounted || !ref.read(printerStateProvider).isConnected) {
@@ -107,7 +113,6 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
         await _connectTemporaryLabelPrinter(selectedPrinter);
       }
 
-      await printerNotifier.stopScan();
       final isIdle = await _waitForPrinterIdle();
       debugPrint(
         '[label_print] before tspl print '
@@ -169,6 +174,7 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
         '[label_print] selected printer is already connected: '
         '${labelPrinter.name}',
       );
+      await _waitForPrinterIdle();
       return;
     }
 
@@ -179,6 +185,8 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
         '${_receiptPrinterBeforeLabelPrint!.name}',
       );
       await printerNotifier.disconnect();
+      await _waitForPrinterDisconnected(_receiptPrinterBeforeLabelPrint!.id);
+      await Future<void>.delayed(_printerSwitchDelay);
     }
 
     debugPrint('[label_print] connecting label printer: ${labelPrinter.name}');
@@ -190,6 +198,8 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
             'Label printer connection failed.',
       );
     }
+    await _waitForPrinterIdle();
+    await Future<void>.delayed(_printerSwitchDelay);
   }
 
   Future<void> _restoreReceiptPrinter() async {
@@ -212,8 +222,11 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
         '[label_print] restoring receipt printer: ${receiptPrinter.name}',
       );
       await printerNotifier.disconnect();
+      await _waitForPrinterDisconnected(connectedPrinter?.id);
+      await Future<void>.delayed(_printerSwitchDelay);
       await printerNotifier.connect(receiptPrinter);
       await _waitForPrinterConnection(receiptPrinter.id);
+      await _waitForPrinterIdle();
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -228,9 +241,24 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
   }
 
   Future<bool> _waitForPrinterConnection(String printerId) async {
-    for (var attempt = 0; attempt < 12; attempt++) {
+    for (var attempt = 0; attempt < 20; attempt++) {
       final connectedPrinter = ref.read(printerStateProvider).connectedDevice;
       if (connectedPrinter?.id == printerId) {
+        return true;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
+    return false;
+  }
+
+  Future<bool> _waitForPrinterDisconnected(String? printerId) async {
+    if (printerId == null) {
+      return true;
+    }
+
+    for (var attempt = 0; attempt < 20; attempt++) {
+      final connectedPrinter = ref.read(printerStateProvider).connectedDevice;
+      if (connectedPrinter == null || connectedPrinter.id != printerId) {
         return true;
       }
       await Future<void>.delayed(const Duration(milliseconds: 250));

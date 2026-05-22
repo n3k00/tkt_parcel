@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../shared/providers/repository_provider.dart';
+import '../../../../providers/parcel_repository_provider.dart';
 
 class SyncController {
   SyncController(this._ref);

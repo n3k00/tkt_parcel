@@ -32,11 +32,7 @@ abstract final class AppStrings {
   static const restoreBackupTitle = 'Restore Backup';
   static const restoreBackupSubtitle =
       'Restore parcel data from a light backup or a full zip backup.';
-  static const noBackupFilesFound =
-      'No backup files were found in the TKT Parcel Backups folder.';
   static const chooseBackupFileTitle = 'Choose Backup File';
-  static const chooseBackupFileSubtitle =
-      'Select a saved .zip or database backup file to restore.';
   static const backupPermissionBlocked =
       'Storage permission is blocked. Open Android settings and allow file access first.';
   static const appVersionTitle = 'App Version';

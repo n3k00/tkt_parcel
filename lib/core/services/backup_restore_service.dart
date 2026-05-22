@@ -4,39 +4,20 @@ import 'dart:typed_data';
 import 'package:archive/archive.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:sqlite3/sqlite3.dart';
 
 class BackupResult {
-  const BackupResult({
-    required this.path,
-    required this.message,
-  });
+  const BackupResult({required this.path, required this.message});
 
   final String path;
   final String message;
 }
 
 class RestoreResult {
-  const RestoreResult({
-    required this.message,
-    required this.usedBackupPath,
-  });
+  const RestoreResult({required this.message, required this.usedBackupPath});
 
   final String message;
   final String usedBackupPath;
-}
-
-class BackupFileEntry {
-  const BackupFileEntry({
-    required this.path,
-    required this.name,
-    required this.sizeBytes,
-    required this.modifiedAt,
-  });
-
-  final String path;
-  final String name;
-  final int sizeBytes;
-  final DateTime modifiedAt;
 }
 
 class BackupRestoreService {
@@ -45,6 +26,7 @@ class BackupRestoreService {
   static const _databaseFileName = 'tkt_parcel.sqlite';
   static const _imageDirectoryName = 'parcel_images';
   static const _backupFolderName = 'TKT Parcel Backups';
+  static const _currentSchemaVersion = 2;
 
   Future<BackupResult> createFullBackup() async {
     final databaseFile = await _databaseFile();
@@ -66,7 +48,10 @@ class BackupRestoreService {
         if (entity is! File) {
           continue;
         }
-        final relativePath = path.relative(entity.path, from: imageDirectory.path);
+        final relativePath = path.relative(
+          entity.path,
+          from: imageDirectory.path,
+        );
         archive.addFile(
           ArchiveFile(
             path.join(_imageDirectoryName, relativePath),
@@ -78,7 +63,10 @@ class BackupRestoreService {
     }
 
     final timestamp = _timestamp();
-    final outputPath = path.join(outputDirectory.path, 'tkt_parcel_full_$timestamp.zip');
+    final outputPath = path.join(
+      outputDirectory.path,
+      'tkt_parcel_full_$timestamp.zip',
+    );
     final outputStream = OutputFileStream(outputPath);
     ZipEncoder().encodeStream(archive, outputStream);
     outputStream.close();
@@ -95,51 +83,16 @@ class BackupRestoreService {
     await outputDirectory.create(recursive: true);
 
     final timestamp = _timestamp();
-    final outputPath = path.join(outputDirectory.path, 'tkt_parcel_light_$timestamp.sqlite');
+    final outputPath = path.join(
+      outputDirectory.path,
+      'tkt_parcel_light_$timestamp.sqlite',
+    );
     await databaseFile.copy(outputPath);
 
     return BackupResult(
       path: outputPath,
       message: 'Light backup created successfully.',
     );
-  }
-
-  Future<List<BackupFileEntry>> listAvailableRestoreFiles() async {
-    final entries = <BackupFileEntry>[];
-    final seenPaths = <String>{};
-
-    for (final directory in await _candidateBackupDirectories()) {
-      if (!await directory.exists()) {
-        continue;
-      }
-
-      await for (final entity in directory.list()) {
-        if (entity is! File) {
-          continue;
-        }
-
-        final extension = path.extension(entity.path).toLowerCase();
-        if (extension != '.zip' && extension != '.sqlite' && extension != '.db') {
-          continue;
-        }
-        if (!seenPaths.add(entity.path)) {
-          continue;
-        }
-
-        final stat = await entity.stat();
-        entries.add(
-          BackupFileEntry(
-            path: entity.path,
-            name: path.basename(entity.path),
-            sizeBytes: stat.size,
-            modifiedAt: stat.modified,
-          ),
-        );
-      }
-    }
-
-    entries.sort((a, b) => b.modifiedAt.compareTo(a.modifiedAt));
-    return entries;
   }
 
   Future<RestoreResult> restoreBackup(String backupPath) async {
@@ -153,6 +106,7 @@ class BackupRestoreService {
       return _restoreFromZip(sourceFile);
     }
     if (extension == '.sqlite' || extension == '.db') {
+      _validateBackupDatabase(sourceFile);
       await _replaceDatabaseFile(sourceFile);
       return RestoreResult(
         message: 'Database restored successfully.',
@@ -173,17 +127,30 @@ class BackupRestoreService {
 
     final tempDirectory = await getTemporaryDirectory();
     final workingDirectory = Directory(
-      path.join(tempDirectory.path, 'backup_restore_${DateTime.now().millisecondsSinceEpoch}'),
+      path.join(
+        tempDirectory.path,
+        'backup_restore_${DateTime.now().millisecondsSinceEpoch}',
+      ),
     );
     await workingDirectory.create(recursive: true);
 
     try {
-      final extractedDatabase = File(path.join(workingDirectory.path, _databaseFileName));
-      await extractedDatabase.writeAsBytes(_archiveBytes(databaseEntry), flush: true);
+      final extractedDatabase = File(
+        path.join(workingDirectory.path, _databaseFileName),
+      );
+      await extractedDatabase.writeAsBytes(
+        _archiveBytes(databaseEntry),
+        flush: true,
+      );
+      _validateBackupDatabase(extractedDatabase);
       await _replaceDatabaseFile(extractedDatabase);
 
       final imageEntries = archive.files
-          .where((file) => !file.isDirectory && file.name.startsWith('$_imageDirectoryName/'))
+          .where(
+            (file) =>
+                !file.isDirectory &&
+                file.name.startsWith('$_imageDirectoryName/'),
+          )
           .toList();
       if (imageEntries.isNotEmpty) {
         final targetImageDirectory = await _parcelImageDirectory();
@@ -193,8 +160,12 @@ class BackupRestoreService {
         await targetImageDirectory.create(recursive: true);
 
         for (final imageEntry in imageEntries) {
-          final relativePath = imageEntry.name.substring(_imageDirectoryName.length + 1);
-          final outputFile = File(path.join(targetImageDirectory.path, relativePath));
+          final relativePath = imageEntry.name.substring(
+            _imageDirectoryName.length + 1,
+          );
+          final outputFile = File(
+            path.join(targetImageDirectory.path, relativePath),
+          );
           await outputFile.parent.create(recursive: true);
           await outputFile.writeAsBytes(_archiveBytes(imageEntry), flush: true);
         }
@@ -223,6 +194,40 @@ class BackupRestoreService {
     await tempFile.rename(targetDatabase.path);
   }
 
+  void _validateBackupDatabase(File databaseFile) {
+    Database? database;
+    try {
+      database = sqlite3.open(databaseFile.path, mode: OpenMode.readOnly);
+      final schemaVersion =
+          database.select('PRAGMA user_version').first.values.first as int;
+      if (schemaVersion < 1 || schemaVersion > _currentSchemaVersion) {
+        throw StateError(
+          'Unsupported backup database version: $schemaVersion.',
+        );
+      }
+
+      final existingTables = database
+          .select(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('parcels', 'towns')",
+          )
+          .map((row) => row['name'] as String)
+          .toSet();
+      final missingTables = <String>[
+        if (!existingTables.contains('parcels')) 'parcels',
+        if (!existingTables.contains('towns')) 'towns',
+      ];
+      if (missingTables.isNotEmpty) {
+        throw StateError(
+          'Invalid backup database. Missing table(s): ${missingTables.join(', ')}.',
+        );
+      }
+    } on SqliteException catch (error) {
+      throw StateError('Invalid backup database file: ${error.message}');
+    } finally {
+      database?.close();
+    }
+  }
+
   Future<File> _databaseFile() async {
     final directory = await getApplicationDocumentsDirectory();
     return File(path.join(directory.path, _databaseFileName));
@@ -243,24 +248,6 @@ class BackupRestoreService {
 
     final documentsDirectory = await getApplicationDocumentsDirectory();
     return Directory(path.join(documentsDirectory.path, _backupFolderName));
-  }
-
-  Future<List<Directory>> _candidateBackupDirectories() async {
-    final directories = <Directory>[];
-    final seenPaths = <String>{};
-
-    final primaryDirectory = await _backupOutputDirectory();
-    if (seenPaths.add(primaryDirectory.path)) {
-      directories.add(primaryDirectory);
-    }
-
-    final documentsDirectory = await getApplicationDocumentsDirectory();
-    final fallbackDirectory = Directory(path.join(documentsDirectory.path, _backupFolderName));
-    if (seenPaths.add(fallbackDirectory.path)) {
-      directories.add(fallbackDirectory);
-    }
-
-    return directories;
   }
 
   Uint8List _archiveBytes(ArchiveFile file) {
