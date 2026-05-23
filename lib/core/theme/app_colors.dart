@@ -34,6 +34,7 @@ class AppColors {
   static const dispatched = Color(0xFFD97706);
   static const arrived = Color(0xFF2E8B57);
   static const claimed = Color(0xFF374151);
+  static const cancelled = Color(0xFFC62828);
   static const syncPending = Color(0xFFD97706);
   static const syncSynced = Color(0xFF2E8B57);
   static const syncFailed = Color(0xFFC62828);

@@ -29,7 +29,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -42,8 +42,89 @@ class AppDatabase extends _$AppDatabase {
         await migrator.createTable(towns);
         await _seedDefaultTowns();
       }
+      if (from < 3) {
+        await _addParcelColumnIfMissing(
+          migrator,
+          'client_parcel_id',
+          parcels.clientParcelId,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'device_id',
+          parcels.deviceId,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'branch_id',
+          parcels.branchId,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'sync_error',
+          parcels.syncError,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'last_sync_attempt_at',
+          parcels.lastSyncAttemptAt,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'dispatched_at',
+          parcels.dispatchedAt,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'cancelled_at',
+          parcels.cancelledAt,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'dispatch_id',
+          parcels.dispatchId,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'driver_id',
+          parcels.driverId,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'driver_name',
+          parcels.driverName,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'driver_phone',
+          parcels.driverPhone,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'dispatched_date',
+          parcels.dispatchedDate,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'claim_note',
+          parcels.claimNote,
+        );
+      }
     },
   );
+
+  Future<void> _addParcelColumnIfMissing(
+    Migrator migrator,
+    String columnName,
+    GeneratedColumn<Object> column,
+  ) async {
+    final columns = await customSelect(
+      'PRAGMA table_info(${parcels.actualTableName})',
+    ).get();
+    final hasColumn = columns.any((row) => row.data['name'] == columnName);
+    if (!hasColumn) {
+      await migrator.addColumn(parcels, column);
+    }
+  }
 
   Future<void> _seedDefaultTowns() async {
     final companions = DefaultTowns.all

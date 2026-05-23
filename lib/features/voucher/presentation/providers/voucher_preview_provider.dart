@@ -40,7 +40,10 @@ final voucherPreviewProvider = FutureProvider.autoDispose
       if (sourceCityCode == null || sourceCityCode.isEmpty) {
         throw StateError('Selected source town is missing a city code.');
       }
-      final runningNumber = await repository.countParcelsCreatedOnForCounter(
+      final deviceId = await settingsRepository.getOrCreateDeviceId();
+      final branchId = settingsRepository.branchIdForCityCode(sourceCityCode);
+      final runningNumber =
+          await repository.countParcelsCreatedOnForCounter(
             now,
             sourceCityCode,
             setup.accountCode,
@@ -58,6 +61,8 @@ final voucherPreviewProvider = FutureProvider.autoDispose
 
       final parcel = ParcelModel.create(
         trackingId: trackingId,
+        deviceId: deviceId,
+        branchId: branchId,
         fromTown: args.form.fromTown,
         toTown: args.form.toTown,
         cityCode: sourceCityCode,
@@ -78,9 +83,7 @@ final voucherPreviewProvider = FutureProvider.autoDispose
 
       final qrPayload = ref
           .read(qrServiceProvider)
-          .buildParcelPayload(
-            trackingId: trackingId,
-          );
+          .buildParcelPayload(trackingId: trackingId);
 
       return VoucherPreviewData(
         parcel: parcel,
@@ -104,9 +107,7 @@ final voucherReprintPreviewProvider = FutureProvider.autoDispose
 
       final qrPayload = ref
           .read(qrServiceProvider)
-          .buildParcelPayload(
-            trackingId: parcel.trackingId,
-          );
+          .buildParcelPayload(trackingId: parcel.trackingId);
 
       return VoucherPreviewData(
         parcel: parcel,

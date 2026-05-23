@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppPreferences {
   AppPreferences(this._preferences);
 
+  static const _deviceIdKey = 'device_id';
   static const _cityCodeKey = 'setup_city_code';
   static const _accountCodeKey = 'setup_account_code';
   static const _defaultSourceTownNameKey = 'default_source_town_name';
@@ -42,6 +43,8 @@ class AppPreferences {
 
   String? getAccountCode() => _preferences.getString(_accountCodeKey);
 
+  String? getDeviceId() => _preferences.getString(_deviceIdKey);
+
   String? getDefaultSourceTownName() =>
       _preferences.getString(_defaultSourceTownNameKey);
 
@@ -51,6 +54,10 @@ class AppPreferences {
 
   Future<bool> setAccountCode(String value) {
     return _preferences.setString(_accountCodeKey, value);
+  }
+
+  Future<bool> setDeviceId(String value) {
+    return _preferences.setString(_deviceIdKey, value);
   }
 
   Future<bool> setDefaultSourceTownName(String value) {

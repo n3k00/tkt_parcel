@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import '../../core/constants/receipt_strings.dart';
 import '../../shared/models/label_settings_config.dart';
 import '../../shared/models/label_printer_selection.dart';
@@ -7,10 +9,18 @@ import '../local/preferences/app_preferences.dart';
 class SettingsRepository {
   SettingsRepository(this._preferences);
 
+  static const _deviceIdPrefix = 'device';
+  static const Map<String, String> _branchIdsByCityCode = {
+    'TGI': 'source_tgi',
+    'LSO': 'source_lso',
+    'TCL': 'source_tcl',
+  };
+
   static const _defaultCityCode = 'TGI';
   static const _defaultAccountCode = 'A1';
   static const _defaultBusinessName = ReceiptStrings.defaultBusinessName;
-  static const _defaultBusinessSubtitle = ReceiptStrings.defaultBusinessSubtitle;
+  static const _defaultBusinessSubtitle =
+      ReceiptStrings.defaultBusinessSubtitle;
   static const _defaultBusinessAddress = ReceiptStrings.defaultBusinessAddress;
   static const _defaultBusinessPhone = ReceiptStrings.defaultBusinessPhone;
   static const _defaultBusinessNameFontSize = 60.0;
@@ -34,6 +44,23 @@ class SettingsRepository {
 
   final AppPreferences _preferences;
 
+  Future<String> getOrCreateDeviceId() async {
+    final savedDeviceId = _preferences.getDeviceId();
+    if (savedDeviceId != null && savedDeviceId.trim().isNotEmpty) {
+      return savedDeviceId.trim();
+    }
+
+    final generated = _generateDeviceId();
+    await _preferences.setDeviceId(generated);
+    return generated;
+  }
+
+  String branchIdForCityCode(String cityCode) {
+    final normalized = cityCode.trim().toUpperCase();
+    return _branchIdsByCityCode[normalized] ??
+        'source_${normalized.toLowerCase()}';
+  }
+
   Future<AppSetupConfig> getAppSetup() async {
     final cityCode = _preferences.getCityCode() ?? _defaultCityCode;
     final accountCode = _preferences.getAccountCode() ?? _defaultAccountCode;
@@ -48,7 +75,8 @@ class SettingsRepository {
           _preferences.getBusinessAddress() ?? _defaultBusinessAddress,
       businessPhone: _preferences.getBusinessPhone() ?? _defaultBusinessPhone,
       businessNameFontSize:
-          _preferences.getBusinessNameFontSize() ?? _defaultBusinessNameFontSize,
+          _preferences.getBusinessNameFontSize() ??
+          _defaultBusinessNameFontSize,
       businessSubtitleFontSize:
           _preferences.getBusinessSubtitleFontSize() ??
           _defaultBusinessSubtitleFontSize,
@@ -59,9 +87,11 @@ class SettingsRepository {
           _preferences.getBusinessPhoneFontSize() ??
           _defaultBusinessPhoneFontSize,
       receiptLabelFontSize:
-          _preferences.getReceiptLabelFontSize() ?? _defaultReceiptLabelFontSize,
+          _preferences.getReceiptLabelFontSize() ??
+          _defaultReceiptLabelFontSize,
       receiptValueFontSize:
-          _preferences.getReceiptValueFontSize() ?? _defaultReceiptValueFontSize,
+          _preferences.getReceiptValueFontSize() ??
+          _defaultReceiptValueFontSize,
       receiptPaddingTop:
           _preferences.getReceiptPaddingTop() ?? _defaultReceiptPaddingTop,
       receiptPaddingLeft:
@@ -69,7 +99,8 @@ class SettingsRepository {
       receiptPaddingRight:
           _preferences.getReceiptPaddingRight() ?? _defaultReceiptPaddingRight,
       receiptPaddingBottom:
-          _preferences.getReceiptPaddingBottom() ?? _defaultReceiptPaddingBottom,
+          _preferences.getReceiptPaddingBottom() ??
+          _defaultReceiptPaddingBottom,
       footerMessage: _preferences.getFooterMessage() ?? _defaultFooterMessage,
     );
   }
@@ -85,7 +116,9 @@ class SettingsRepository {
     await _preferences.setBusinessSubtitleFontSize(
       config.businessSubtitleFontSize,
     );
-    await _preferences.setBusinessAddressFontSize(config.businessAddressFontSize);
+    await _preferences.setBusinessAddressFontSize(
+      config.businessAddressFontSize,
+    );
     await _preferences.setBusinessPhoneFontSize(config.businessPhoneFontSize);
     await _preferences.setReceiptLabelFontSize(config.receiptLabelFontSize);
     await _preferences.setReceiptValueFontSize(config.receiptValueFontSize);
@@ -173,7 +206,10 @@ class SettingsRepository {
   Future<LabelPrinterSelection?> getLastLabelPrinter() async {
     final id = _preferences.getLastLabelPrinterId();
     final name = _preferences.getLastLabelPrinterName();
-    if (id == null || id.trim().isEmpty || name == null || name.trim().isEmpty) {
+    if (id == null ||
+        id.trim().isEmpty ||
+        name == null ||
+        name.trim().isEmpty) {
       return null;
     }
     return LabelPrinterSelection(id: id.trim(), name: name.trim());
@@ -184,6 +220,16 @@ class SettingsRepository {
       id: printer.id.trim(),
       name: printer.name.trim(),
     );
+  }
+
+  String _generateDeviceId() {
+    final random = Random.secure();
+    final timestamp = DateTime.now().millisecondsSinceEpoch.toRadixString(36);
+    final entropy = List.generate(
+      4,
+      (_) => random.nextInt(0x10000).toRadixString(16).padLeft(4, '0'),
+    ).join();
+    return '${_deviceIdPrefix}_${timestamp}_$entropy';
   }
 
   double _normalizeLabelValue(

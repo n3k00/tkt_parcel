@@ -16,6 +16,7 @@ import '../../../printing/presentation/screens/printer_connect_screen.dart';
 import '../../../printing/presentation/widgets/parcel_label_print_widgets.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../providers/voucher_preview_provider.dart';
+import '../widgets/dispatch_info_section.dart';
 import '../widgets/parcel_image_preview_card.dart';
 import '../widgets/voucher_card.dart';
 
@@ -404,6 +405,7 @@ class _VoucherReprintPreviewScreenState
                         ),
                       ),
                     ),
+                    DispatchInfoSection(parcel: preview.parcel),
                     if ((preview.parcel.parcelImagePath ?? '').isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.md),
                       ParcelImagePreviewCard(

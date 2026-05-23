@@ -21,6 +21,17 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _clientParcelIdMeta = const VerificationMeta(
+    'clientParcelId',
+  );
+  @override
+  late final GeneratedColumn<String> clientParcelId = GeneratedColumn<String>(
+    'client_parcel_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _trackingIdMeta = const VerificationMeta(
     'trackingId',
   );
@@ -42,6 +53,28 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
     false,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _branchIdMeta = const VerificationMeta(
+    'branchId',
+  );
+  @override
+  late final GeneratedColumn<String> branchId = GeneratedColumn<String>(
+    'branch_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _fromTownMeta = const VerificationMeta(
     'fromTown',
@@ -223,6 +256,40 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
         requiredDuringInsert: false,
         defaultValue: const Constant('pending'),
       ).withConverter<SyncStatus>($ParcelsTable.$convertersyncStatus);
+  static const VerificationMeta _syncErrorMeta = const VerificationMeta(
+    'syncError',
+  );
+  @override
+  late final GeneratedColumn<String> syncError = GeneratedColumn<String>(
+    'sync_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastSyncAttemptAtMeta = const VerificationMeta(
+    'lastSyncAttemptAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSyncAttemptAt =
+      GeneratedColumn<DateTime>(
+        'last_sync_attempt_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _dispatchedAtMeta = const VerificationMeta(
+    'dispatchedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> dispatchedAt = GeneratedColumn<DateTime>(
+    'dispatched_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _syncedAtMeta = const VerificationMeta(
     'syncedAt',
   );
@@ -256,6 +323,84 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _cancelledAtMeta = const VerificationMeta(
+    'cancelledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> cancelledAt = GeneratedColumn<DateTime>(
+    'cancelled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dispatchIdMeta = const VerificationMeta(
+    'dispatchId',
+  );
+  @override
+  late final GeneratedColumn<String> dispatchId = GeneratedColumn<String>(
+    'dispatch_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _driverIdMeta = const VerificationMeta(
+    'driverId',
+  );
+  @override
+  late final GeneratedColumn<String> driverId = GeneratedColumn<String>(
+    'driver_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _driverNameMeta = const VerificationMeta(
+    'driverName',
+  );
+  @override
+  late final GeneratedColumn<String> driverName = GeneratedColumn<String>(
+    'driver_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _driverPhoneMeta = const VerificationMeta(
+    'driverPhone',
+  );
+  @override
+  late final GeneratedColumn<String> driverPhone = GeneratedColumn<String>(
+    'driver_phone',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dispatchedDateMeta = const VerificationMeta(
+    'dispatchedDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> dispatchedDate =
+      GeneratedColumn<DateTime>(
+        'dispatched_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _claimNoteMeta = const VerificationMeta(
+    'claimNote',
+  );
+  @override
+  late final GeneratedColumn<String> claimNote = GeneratedColumn<String>(
+    'claim_note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -270,8 +415,11 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    clientParcelId,
     trackingId,
     createdAt,
+    deviceId,
+    branchId,
     fromTown,
     toTown,
     cityCode,
@@ -289,9 +437,19 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
     remark,
     status,
     syncStatus,
+    syncError,
+    lastSyncAttemptAt,
+    dispatchedAt,
     syncedAt,
     arrivedAt,
     claimedAt,
+    cancelledAt,
+    dispatchId,
+    driverId,
+    driverName,
+    driverPhone,
+    dispatchedDate,
+    claimNote,
     updatedAt,
   ];
   @override
@@ -309,6 +467,15 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
+    if (data.containsKey('client_parcel_id')) {
+      context.handle(
+        _clientParcelIdMeta,
+        clientParcelId.isAcceptableOrUnknown(
+          data['client_parcel_id']!,
+          _clientParcelIdMeta,
+        ),
+      );
+    }
     if (data.containsKey('tracking_id')) {
       context.handle(
         _trackingIdMeta,
@@ -324,6 +491,18 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
       );
     } else if (isInserting) {
       context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    }
+    if (data.containsKey('branch_id')) {
+      context.handle(
+        _branchIdMeta,
+        branchId.isAcceptableOrUnknown(data['branch_id']!, _branchIdMeta),
+      );
     }
     if (data.containsKey('from_town')) {
       context.handle(
@@ -455,6 +634,30 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
         remark.isAcceptableOrUnknown(data['remark']!, _remarkMeta),
       );
     }
+    if (data.containsKey('sync_error')) {
+      context.handle(
+        _syncErrorMeta,
+        syncError.isAcceptableOrUnknown(data['sync_error']!, _syncErrorMeta),
+      );
+    }
+    if (data.containsKey('last_sync_attempt_at')) {
+      context.handle(
+        _lastSyncAttemptAtMeta,
+        lastSyncAttemptAt.isAcceptableOrUnknown(
+          data['last_sync_attempt_at']!,
+          _lastSyncAttemptAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('dispatched_at')) {
+      context.handle(
+        _dispatchedAtMeta,
+        dispatchedAt.isAcceptableOrUnknown(
+          data['dispatched_at']!,
+          _dispatchedAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('synced_at')) {
       context.handle(
         _syncedAtMeta,
@@ -471,6 +674,57 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
       context.handle(
         _claimedAtMeta,
         claimedAt.isAcceptableOrUnknown(data['claimed_at']!, _claimedAtMeta),
+      );
+    }
+    if (data.containsKey('cancelled_at')) {
+      context.handle(
+        _cancelledAtMeta,
+        cancelledAt.isAcceptableOrUnknown(
+          data['cancelled_at']!,
+          _cancelledAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('dispatch_id')) {
+      context.handle(
+        _dispatchIdMeta,
+        dispatchId.isAcceptableOrUnknown(data['dispatch_id']!, _dispatchIdMeta),
+      );
+    }
+    if (data.containsKey('driver_id')) {
+      context.handle(
+        _driverIdMeta,
+        driverId.isAcceptableOrUnknown(data['driver_id']!, _driverIdMeta),
+      );
+    }
+    if (data.containsKey('driver_name')) {
+      context.handle(
+        _driverNameMeta,
+        driverName.isAcceptableOrUnknown(data['driver_name']!, _driverNameMeta),
+      );
+    }
+    if (data.containsKey('driver_phone')) {
+      context.handle(
+        _driverPhoneMeta,
+        driverPhone.isAcceptableOrUnknown(
+          data['driver_phone']!,
+          _driverPhoneMeta,
+        ),
+      );
+    }
+    if (data.containsKey('dispatched_date')) {
+      context.handle(
+        _dispatchedDateMeta,
+        dispatchedDate.isAcceptableOrUnknown(
+          data['dispatched_date']!,
+          _dispatchedDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('claim_note')) {
+      context.handle(
+        _claimNoteMeta,
+        claimNote.isAcceptableOrUnknown(data['claim_note']!, _claimNoteMeta),
       );
     }
     if (data.containsKey('updated_at')) {
@@ -498,6 +752,10 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
+      clientParcelId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}client_parcel_id'],
+      ),
       trackingId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}tracking_id'],
@@ -506,6 +764,14 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      ),
+      branchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}branch_id'],
+      ),
       fromTown: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}from_town'],
@@ -580,6 +846,18 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
           data['${effectivePrefix}sync_status'],
         )!,
       ),
+      syncError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_error'],
+      ),
+      lastSyncAttemptAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_sync_attempt_at'],
+      ),
+      dispatchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}dispatched_at'],
+      ),
       syncedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}synced_at'],
@@ -591,6 +869,34 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
       claimedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}claimed_at'],
+      ),
+      cancelledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}cancelled_at'],
+      ),
+      dispatchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}dispatch_id'],
+      ),
+      driverId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}driver_id'],
+      ),
+      driverName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}driver_name'],
+      ),
+      driverPhone: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}driver_phone'],
+      ),
+      dispatchedDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}dispatched_date'],
+      ),
+      claimNote: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}claim_note'],
       ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -616,8 +922,11 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
 
 class Parcel extends DataClass implements Insertable<Parcel> {
   final int id;
+  final String? clientParcelId;
   final String trackingId;
   final DateTime createdAt;
+  final String? deviceId;
+  final String? branchId;
   final String fromTown;
   final String toTown;
   final String cityCode;
@@ -635,14 +944,27 @@ class Parcel extends DataClass implements Insertable<Parcel> {
   final String? remark;
   final ParcelStatus status;
   final SyncStatus syncStatus;
+  final String? syncError;
+  final DateTime? lastSyncAttemptAt;
+  final DateTime? dispatchedAt;
   final DateTime? syncedAt;
   final DateTime? arrivedAt;
   final DateTime? claimedAt;
+  final DateTime? cancelledAt;
+  final String? dispatchId;
+  final String? driverId;
+  final String? driverName;
+  final String? driverPhone;
+  final DateTime? dispatchedDate;
+  final String? claimNote;
   final DateTime updatedAt;
   const Parcel({
     required this.id,
+    this.clientParcelId,
     required this.trackingId,
     required this.createdAt,
+    this.deviceId,
+    this.branchId,
     required this.fromTown,
     required this.toTown,
     required this.cityCode,
@@ -660,17 +982,36 @@ class Parcel extends DataClass implements Insertable<Parcel> {
     this.remark,
     required this.status,
     required this.syncStatus,
+    this.syncError,
+    this.lastSyncAttemptAt,
+    this.dispatchedAt,
     this.syncedAt,
     this.arrivedAt,
     this.claimedAt,
+    this.cancelledAt,
+    this.dispatchId,
+    this.driverId,
+    this.driverName,
+    this.driverPhone,
+    this.dispatchedDate,
+    this.claimNote,
     required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    if (!nullToAbsent || clientParcelId != null) {
+      map['client_parcel_id'] = Variable<String>(clientParcelId);
+    }
     map['tracking_id'] = Variable<String>(trackingId);
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || deviceId != null) {
+      map['device_id'] = Variable<String>(deviceId);
+    }
+    if (!nullToAbsent || branchId != null) {
+      map['branch_id'] = Variable<String>(branchId);
+    }
     map['from_town'] = Variable<String>(fromTown);
     map['to_town'] = Variable<String>(toTown);
     map['city_code'] = Variable<String>(cityCode);
@@ -704,6 +1045,15 @@ class Parcel extends DataClass implements Insertable<Parcel> {
         $ParcelsTable.$convertersyncStatus.toSql(syncStatus),
       );
     }
+    if (!nullToAbsent || syncError != null) {
+      map['sync_error'] = Variable<String>(syncError);
+    }
+    if (!nullToAbsent || lastSyncAttemptAt != null) {
+      map['last_sync_attempt_at'] = Variable<DateTime>(lastSyncAttemptAt);
+    }
+    if (!nullToAbsent || dispatchedAt != null) {
+      map['dispatched_at'] = Variable<DateTime>(dispatchedAt);
+    }
     if (!nullToAbsent || syncedAt != null) {
       map['synced_at'] = Variable<DateTime>(syncedAt);
     }
@@ -713,6 +1063,27 @@ class Parcel extends DataClass implements Insertable<Parcel> {
     if (!nullToAbsent || claimedAt != null) {
       map['claimed_at'] = Variable<DateTime>(claimedAt);
     }
+    if (!nullToAbsent || cancelledAt != null) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt);
+    }
+    if (!nullToAbsent || dispatchId != null) {
+      map['dispatch_id'] = Variable<String>(dispatchId);
+    }
+    if (!nullToAbsent || driverId != null) {
+      map['driver_id'] = Variable<String>(driverId);
+    }
+    if (!nullToAbsent || driverName != null) {
+      map['driver_name'] = Variable<String>(driverName);
+    }
+    if (!nullToAbsent || driverPhone != null) {
+      map['driver_phone'] = Variable<String>(driverPhone);
+    }
+    if (!nullToAbsent || dispatchedDate != null) {
+      map['dispatched_date'] = Variable<DateTime>(dispatchedDate);
+    }
+    if (!nullToAbsent || claimNote != null) {
+      map['claim_note'] = Variable<String>(claimNote);
+    }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -720,8 +1091,17 @@ class Parcel extends DataClass implements Insertable<Parcel> {
   ParcelsCompanion toCompanion(bool nullToAbsent) {
     return ParcelsCompanion(
       id: Value(id),
+      clientParcelId: clientParcelId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(clientParcelId),
       trackingId: Value(trackingId),
       createdAt: Value(createdAt),
+      deviceId: deviceId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deviceId),
+      branchId: branchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(branchId),
       fromTown: Value(fromTown),
       toTown: Value(toTown),
       cityCode: Value(cityCode),
@@ -743,6 +1123,15 @@ class Parcel extends DataClass implements Insertable<Parcel> {
           : Value(remark),
       status: Value(status),
       syncStatus: Value(syncStatus),
+      syncError: syncError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncError),
+      lastSyncAttemptAt: lastSyncAttemptAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncAttemptAt),
+      dispatchedAt: dispatchedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dispatchedAt),
       syncedAt: syncedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(syncedAt),
@@ -752,6 +1141,27 @@ class Parcel extends DataClass implements Insertable<Parcel> {
       claimedAt: claimedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(claimedAt),
+      cancelledAt: cancelledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(cancelledAt),
+      dispatchId: dispatchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dispatchId),
+      driverId: driverId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(driverId),
+      driverName: driverName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(driverName),
+      driverPhone: driverPhone == null && nullToAbsent
+          ? const Value.absent()
+          : Value(driverPhone),
+      dispatchedDate: dispatchedDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dispatchedDate),
+      claimNote: claimNote == null && nullToAbsent
+          ? const Value.absent()
+          : Value(claimNote),
       updatedAt: Value(updatedAt),
     );
   }
@@ -763,8 +1173,11 @@ class Parcel extends DataClass implements Insertable<Parcel> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Parcel(
       id: serializer.fromJson<int>(json['id']),
+      clientParcelId: serializer.fromJson<String?>(json['clientParcelId']),
       trackingId: serializer.fromJson<String>(json['trackingId']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      deviceId: serializer.fromJson<String?>(json['deviceId']),
+      branchId: serializer.fromJson<String?>(json['branchId']),
       fromTown: serializer.fromJson<String>(json['fromTown']),
       toTown: serializer.fromJson<String>(json['toTown']),
       cityCode: serializer.fromJson<String>(json['cityCode']),
@@ -788,9 +1201,21 @@ class Parcel extends DataClass implements Insertable<Parcel> {
       syncStatus: $ParcelsTable.$convertersyncStatus.fromJson(
         serializer.fromJson<String>(json['syncStatus']),
       ),
+      syncError: serializer.fromJson<String?>(json['syncError']),
+      lastSyncAttemptAt: serializer.fromJson<DateTime?>(
+        json['lastSyncAttemptAt'],
+      ),
+      dispatchedAt: serializer.fromJson<DateTime?>(json['dispatchedAt']),
       syncedAt: serializer.fromJson<DateTime?>(json['syncedAt']),
       arrivedAt: serializer.fromJson<DateTime?>(json['arrivedAt']),
       claimedAt: serializer.fromJson<DateTime?>(json['claimedAt']),
+      cancelledAt: serializer.fromJson<DateTime?>(json['cancelledAt']),
+      dispatchId: serializer.fromJson<String?>(json['dispatchId']),
+      driverId: serializer.fromJson<String?>(json['driverId']),
+      driverName: serializer.fromJson<String?>(json['driverName']),
+      driverPhone: serializer.fromJson<String?>(json['driverPhone']),
+      dispatchedDate: serializer.fromJson<DateTime?>(json['dispatchedDate']),
+      claimNote: serializer.fromJson<String?>(json['claimNote']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -799,8 +1224,11 @@ class Parcel extends DataClass implements Insertable<Parcel> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'clientParcelId': serializer.toJson<String?>(clientParcelId),
       'trackingId': serializer.toJson<String>(trackingId),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'deviceId': serializer.toJson<String?>(deviceId),
+      'branchId': serializer.toJson<String?>(branchId),
       'fromTown': serializer.toJson<String>(fromTown),
       'toTown': serializer.toJson<String>(toTown),
       'cityCode': serializer.toJson<String>(cityCode),
@@ -824,17 +1252,30 @@ class Parcel extends DataClass implements Insertable<Parcel> {
       'syncStatus': serializer.toJson<String>(
         $ParcelsTable.$convertersyncStatus.toJson(syncStatus),
       ),
+      'syncError': serializer.toJson<String?>(syncError),
+      'lastSyncAttemptAt': serializer.toJson<DateTime?>(lastSyncAttemptAt),
+      'dispatchedAt': serializer.toJson<DateTime?>(dispatchedAt),
       'syncedAt': serializer.toJson<DateTime?>(syncedAt),
       'arrivedAt': serializer.toJson<DateTime?>(arrivedAt),
       'claimedAt': serializer.toJson<DateTime?>(claimedAt),
+      'cancelledAt': serializer.toJson<DateTime?>(cancelledAt),
+      'dispatchId': serializer.toJson<String?>(dispatchId),
+      'driverId': serializer.toJson<String?>(driverId),
+      'driverName': serializer.toJson<String?>(driverName),
+      'driverPhone': serializer.toJson<String?>(driverPhone),
+      'dispatchedDate': serializer.toJson<DateTime?>(dispatchedDate),
+      'claimNote': serializer.toJson<String?>(claimNote),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
   Parcel copyWith({
     int? id,
+    Value<String?> clientParcelId = const Value.absent(),
     String? trackingId,
     DateTime? createdAt,
+    Value<String?> deviceId = const Value.absent(),
+    Value<String?> branchId = const Value.absent(),
     String? fromTown,
     String? toTown,
     String? cityCode,
@@ -852,14 +1293,29 @@ class Parcel extends DataClass implements Insertable<Parcel> {
     Value<String?> remark = const Value.absent(),
     ParcelStatus? status,
     SyncStatus? syncStatus,
+    Value<String?> syncError = const Value.absent(),
+    Value<DateTime?> lastSyncAttemptAt = const Value.absent(),
+    Value<DateTime?> dispatchedAt = const Value.absent(),
     Value<DateTime?> syncedAt = const Value.absent(),
     Value<DateTime?> arrivedAt = const Value.absent(),
     Value<DateTime?> claimedAt = const Value.absent(),
+    Value<DateTime?> cancelledAt = const Value.absent(),
+    Value<String?> dispatchId = const Value.absent(),
+    Value<String?> driverId = const Value.absent(),
+    Value<String?> driverName = const Value.absent(),
+    Value<String?> driverPhone = const Value.absent(),
+    Value<DateTime?> dispatchedDate = const Value.absent(),
+    Value<String?> claimNote = const Value.absent(),
     DateTime? updatedAt,
   }) => Parcel(
     id: id ?? this.id,
+    clientParcelId: clientParcelId.present
+        ? clientParcelId.value
+        : this.clientParcelId,
     trackingId: trackingId ?? this.trackingId,
     createdAt: createdAt ?? this.createdAt,
+    deviceId: deviceId.present ? deviceId.value : this.deviceId,
+    branchId: branchId.present ? branchId.value : this.branchId,
     fromTown: fromTown ?? this.fromTown,
     toTown: toTown ?? this.toTown,
     cityCode: cityCode ?? this.cityCode,
@@ -879,18 +1335,37 @@ class Parcel extends DataClass implements Insertable<Parcel> {
     remark: remark.present ? remark.value : this.remark,
     status: status ?? this.status,
     syncStatus: syncStatus ?? this.syncStatus,
+    syncError: syncError.present ? syncError.value : this.syncError,
+    lastSyncAttemptAt: lastSyncAttemptAt.present
+        ? lastSyncAttemptAt.value
+        : this.lastSyncAttemptAt,
+    dispatchedAt: dispatchedAt.present ? dispatchedAt.value : this.dispatchedAt,
     syncedAt: syncedAt.present ? syncedAt.value : this.syncedAt,
     arrivedAt: arrivedAt.present ? arrivedAt.value : this.arrivedAt,
     claimedAt: claimedAt.present ? claimedAt.value : this.claimedAt,
+    cancelledAt: cancelledAt.present ? cancelledAt.value : this.cancelledAt,
+    dispatchId: dispatchId.present ? dispatchId.value : this.dispatchId,
+    driverId: driverId.present ? driverId.value : this.driverId,
+    driverName: driverName.present ? driverName.value : this.driverName,
+    driverPhone: driverPhone.present ? driverPhone.value : this.driverPhone,
+    dispatchedDate: dispatchedDate.present
+        ? dispatchedDate.value
+        : this.dispatchedDate,
+    claimNote: claimNote.present ? claimNote.value : this.claimNote,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   Parcel copyWithCompanion(ParcelsCompanion data) {
     return Parcel(
       id: data.id.present ? data.id.value : this.id,
+      clientParcelId: data.clientParcelId.present
+          ? data.clientParcelId.value
+          : this.clientParcelId,
       trackingId: data.trackingId.present
           ? data.trackingId.value
           : this.trackingId,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      branchId: data.branchId.present ? data.branchId.value : this.branchId,
       fromTown: data.fromTown.present ? data.fromTown.value : this.fromTown,
       toTown: data.toTown.present ? data.toTown.value : this.toTown,
       cityCode: data.cityCode.present ? data.cityCode.value : this.cityCode,
@@ -932,9 +1407,33 @@ class Parcel extends DataClass implements Insertable<Parcel> {
       syncStatus: data.syncStatus.present
           ? data.syncStatus.value
           : this.syncStatus,
+      syncError: data.syncError.present ? data.syncError.value : this.syncError,
+      lastSyncAttemptAt: data.lastSyncAttemptAt.present
+          ? data.lastSyncAttemptAt.value
+          : this.lastSyncAttemptAt,
+      dispatchedAt: data.dispatchedAt.present
+          ? data.dispatchedAt.value
+          : this.dispatchedAt,
       syncedAt: data.syncedAt.present ? data.syncedAt.value : this.syncedAt,
       arrivedAt: data.arrivedAt.present ? data.arrivedAt.value : this.arrivedAt,
       claimedAt: data.claimedAt.present ? data.claimedAt.value : this.claimedAt,
+      cancelledAt: data.cancelledAt.present
+          ? data.cancelledAt.value
+          : this.cancelledAt,
+      dispatchId: data.dispatchId.present
+          ? data.dispatchId.value
+          : this.dispatchId,
+      driverId: data.driverId.present ? data.driverId.value : this.driverId,
+      driverName: data.driverName.present
+          ? data.driverName.value
+          : this.driverName,
+      driverPhone: data.driverPhone.present
+          ? data.driverPhone.value
+          : this.driverPhone,
+      dispatchedDate: data.dispatchedDate.present
+          ? data.dispatchedDate.value
+          : this.dispatchedDate,
+      claimNote: data.claimNote.present ? data.claimNote.value : this.claimNote,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -943,8 +1442,11 @@ class Parcel extends DataClass implements Insertable<Parcel> {
   String toString() {
     return (StringBuffer('Parcel(')
           ..write('id: $id, ')
+          ..write('clientParcelId: $clientParcelId, ')
           ..write('trackingId: $trackingId, ')
           ..write('createdAt: $createdAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('branchId: $branchId, ')
           ..write('fromTown: $fromTown, ')
           ..write('toTown: $toTown, ')
           ..write('cityCode: $cityCode, ')
@@ -962,9 +1464,19 @@ class Parcel extends DataClass implements Insertable<Parcel> {
           ..write('remark: $remark, ')
           ..write('status: $status, ')
           ..write('syncStatus: $syncStatus, ')
+          ..write('syncError: $syncError, ')
+          ..write('lastSyncAttemptAt: $lastSyncAttemptAt, ')
+          ..write('dispatchedAt: $dispatchedAt, ')
           ..write('syncedAt: $syncedAt, ')
           ..write('arrivedAt: $arrivedAt, ')
           ..write('claimedAt: $claimedAt, ')
+          ..write('cancelledAt: $cancelledAt, ')
+          ..write('dispatchId: $dispatchId, ')
+          ..write('driverId: $driverId, ')
+          ..write('driverName: $driverName, ')
+          ..write('driverPhone: $driverPhone, ')
+          ..write('dispatchedDate: $dispatchedDate, ')
+          ..write('claimNote: $claimNote, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -973,8 +1485,11 @@ class Parcel extends DataClass implements Insertable<Parcel> {
   @override
   int get hashCode => Object.hashAll([
     id,
+    clientParcelId,
     trackingId,
     createdAt,
+    deviceId,
+    branchId,
     fromTown,
     toTown,
     cityCode,
@@ -992,9 +1507,19 @@ class Parcel extends DataClass implements Insertable<Parcel> {
     remark,
     status,
     syncStatus,
+    syncError,
+    lastSyncAttemptAt,
+    dispatchedAt,
     syncedAt,
     arrivedAt,
     claimedAt,
+    cancelledAt,
+    dispatchId,
+    driverId,
+    driverName,
+    driverPhone,
+    dispatchedDate,
+    claimNote,
     updatedAt,
   ]);
   @override
@@ -1002,8 +1527,11 @@ class Parcel extends DataClass implements Insertable<Parcel> {
       identical(this, other) ||
       (other is Parcel &&
           other.id == this.id &&
+          other.clientParcelId == this.clientParcelId &&
           other.trackingId == this.trackingId &&
           other.createdAt == this.createdAt &&
+          other.deviceId == this.deviceId &&
+          other.branchId == this.branchId &&
           other.fromTown == this.fromTown &&
           other.toTown == this.toTown &&
           other.cityCode == this.cityCode &&
@@ -1021,16 +1549,29 @@ class Parcel extends DataClass implements Insertable<Parcel> {
           other.remark == this.remark &&
           other.status == this.status &&
           other.syncStatus == this.syncStatus &&
+          other.syncError == this.syncError &&
+          other.lastSyncAttemptAt == this.lastSyncAttemptAt &&
+          other.dispatchedAt == this.dispatchedAt &&
           other.syncedAt == this.syncedAt &&
           other.arrivedAt == this.arrivedAt &&
           other.claimedAt == this.claimedAt &&
+          other.cancelledAt == this.cancelledAt &&
+          other.dispatchId == this.dispatchId &&
+          other.driverId == this.driverId &&
+          other.driverName == this.driverName &&
+          other.driverPhone == this.driverPhone &&
+          other.dispatchedDate == this.dispatchedDate &&
+          other.claimNote == this.claimNote &&
           other.updatedAt == this.updatedAt);
 }
 
 class ParcelsCompanion extends UpdateCompanion<Parcel> {
   final Value<int> id;
+  final Value<String?> clientParcelId;
   final Value<String> trackingId;
   final Value<DateTime> createdAt;
+  final Value<String?> deviceId;
+  final Value<String?> branchId;
   final Value<String> fromTown;
   final Value<String> toTown;
   final Value<String> cityCode;
@@ -1048,14 +1589,27 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
   final Value<String?> remark;
   final Value<ParcelStatus> status;
   final Value<SyncStatus> syncStatus;
+  final Value<String?> syncError;
+  final Value<DateTime?> lastSyncAttemptAt;
+  final Value<DateTime?> dispatchedAt;
   final Value<DateTime?> syncedAt;
   final Value<DateTime?> arrivedAt;
   final Value<DateTime?> claimedAt;
+  final Value<DateTime?> cancelledAt;
+  final Value<String?> dispatchId;
+  final Value<String?> driverId;
+  final Value<String?> driverName;
+  final Value<String?> driverPhone;
+  final Value<DateTime?> dispatchedDate;
+  final Value<String?> claimNote;
   final Value<DateTime> updatedAt;
   const ParcelsCompanion({
     this.id = const Value.absent(),
+    this.clientParcelId = const Value.absent(),
     this.trackingId = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.branchId = const Value.absent(),
     this.fromTown = const Value.absent(),
     this.toTown = const Value.absent(),
     this.cityCode = const Value.absent(),
@@ -1073,15 +1627,28 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
     this.remark = const Value.absent(),
     this.status = const Value.absent(),
     this.syncStatus = const Value.absent(),
+    this.syncError = const Value.absent(),
+    this.lastSyncAttemptAt = const Value.absent(),
+    this.dispatchedAt = const Value.absent(),
     this.syncedAt = const Value.absent(),
     this.arrivedAt = const Value.absent(),
     this.claimedAt = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
+    this.dispatchId = const Value.absent(),
+    this.driverId = const Value.absent(),
+    this.driverName = const Value.absent(),
+    this.driverPhone = const Value.absent(),
+    this.dispatchedDate = const Value.absent(),
+    this.claimNote = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
   ParcelsCompanion.insert({
     this.id = const Value.absent(),
+    this.clientParcelId = const Value.absent(),
     required String trackingId,
     required DateTime createdAt,
+    this.deviceId = const Value.absent(),
+    this.branchId = const Value.absent(),
     required String fromTown,
     required String toTown,
     required String cityCode,
@@ -1099,9 +1666,19 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
     this.remark = const Value.absent(),
     this.status = const Value.absent(),
     this.syncStatus = const Value.absent(),
+    this.syncError = const Value.absent(),
+    this.lastSyncAttemptAt = const Value.absent(),
+    this.dispatchedAt = const Value.absent(),
     this.syncedAt = const Value.absent(),
     this.arrivedAt = const Value.absent(),
     this.claimedAt = const Value.absent(),
+    this.cancelledAt = const Value.absent(),
+    this.dispatchId = const Value.absent(),
+    this.driverId = const Value.absent(),
+    this.driverName = const Value.absent(),
+    this.driverPhone = const Value.absent(),
+    this.dispatchedDate = const Value.absent(),
+    this.claimNote = const Value.absent(),
     required DateTime updatedAt,
   }) : trackingId = Value(trackingId),
        createdAt = Value(createdAt),
@@ -1120,8 +1697,11 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
        updatedAt = Value(updatedAt);
   static Insertable<Parcel> custom({
     Expression<int>? id,
+    Expression<String>? clientParcelId,
     Expression<String>? trackingId,
     Expression<DateTime>? createdAt,
+    Expression<String>? deviceId,
+    Expression<String>? branchId,
     Expression<String>? fromTown,
     Expression<String>? toTown,
     Expression<String>? cityCode,
@@ -1139,15 +1719,28 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
     Expression<String>? remark,
     Expression<String>? status,
     Expression<String>? syncStatus,
+    Expression<String>? syncError,
+    Expression<DateTime>? lastSyncAttemptAt,
+    Expression<DateTime>? dispatchedAt,
     Expression<DateTime>? syncedAt,
     Expression<DateTime>? arrivedAt,
     Expression<DateTime>? claimedAt,
+    Expression<DateTime>? cancelledAt,
+    Expression<String>? dispatchId,
+    Expression<String>? driverId,
+    Expression<String>? driverName,
+    Expression<String>? driverPhone,
+    Expression<DateTime>? dispatchedDate,
+    Expression<String>? claimNote,
     Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (clientParcelId != null) 'client_parcel_id': clientParcelId,
       if (trackingId != null) 'tracking_id': trackingId,
       if (createdAt != null) 'created_at': createdAt,
+      if (deviceId != null) 'device_id': deviceId,
+      if (branchId != null) 'branch_id': branchId,
       if (fromTown != null) 'from_town': fromTown,
       if (toTown != null) 'to_town': toTown,
       if (cityCode != null) 'city_code': cityCode,
@@ -1165,17 +1758,30 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
       if (remark != null) 'remark': remark,
       if (status != null) 'status': status,
       if (syncStatus != null) 'sync_status': syncStatus,
+      if (syncError != null) 'sync_error': syncError,
+      if (lastSyncAttemptAt != null) 'last_sync_attempt_at': lastSyncAttemptAt,
+      if (dispatchedAt != null) 'dispatched_at': dispatchedAt,
       if (syncedAt != null) 'synced_at': syncedAt,
       if (arrivedAt != null) 'arrived_at': arrivedAt,
       if (claimedAt != null) 'claimed_at': claimedAt,
+      if (cancelledAt != null) 'cancelled_at': cancelledAt,
+      if (dispatchId != null) 'dispatch_id': dispatchId,
+      if (driverId != null) 'driver_id': driverId,
+      if (driverName != null) 'driver_name': driverName,
+      if (driverPhone != null) 'driver_phone': driverPhone,
+      if (dispatchedDate != null) 'dispatched_date': dispatchedDate,
+      if (claimNote != null) 'claim_note': claimNote,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
   ParcelsCompanion copyWith({
     Value<int>? id,
+    Value<String?>? clientParcelId,
     Value<String>? trackingId,
     Value<DateTime>? createdAt,
+    Value<String?>? deviceId,
+    Value<String?>? branchId,
     Value<String>? fromTown,
     Value<String>? toTown,
     Value<String>? cityCode,
@@ -1193,15 +1799,28 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
     Value<String?>? remark,
     Value<ParcelStatus>? status,
     Value<SyncStatus>? syncStatus,
+    Value<String?>? syncError,
+    Value<DateTime?>? lastSyncAttemptAt,
+    Value<DateTime?>? dispatchedAt,
     Value<DateTime?>? syncedAt,
     Value<DateTime?>? arrivedAt,
     Value<DateTime?>? claimedAt,
+    Value<DateTime?>? cancelledAt,
+    Value<String?>? dispatchId,
+    Value<String?>? driverId,
+    Value<String?>? driverName,
+    Value<String?>? driverPhone,
+    Value<DateTime?>? dispatchedDate,
+    Value<String?>? claimNote,
     Value<DateTime>? updatedAt,
   }) {
     return ParcelsCompanion(
       id: id ?? this.id,
+      clientParcelId: clientParcelId ?? this.clientParcelId,
       trackingId: trackingId ?? this.trackingId,
       createdAt: createdAt ?? this.createdAt,
+      deviceId: deviceId ?? this.deviceId,
+      branchId: branchId ?? this.branchId,
       fromTown: fromTown ?? this.fromTown,
       toTown: toTown ?? this.toTown,
       cityCode: cityCode ?? this.cityCode,
@@ -1219,9 +1838,19 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
       remark: remark ?? this.remark,
       status: status ?? this.status,
       syncStatus: syncStatus ?? this.syncStatus,
+      syncError: syncError ?? this.syncError,
+      lastSyncAttemptAt: lastSyncAttemptAt ?? this.lastSyncAttemptAt,
+      dispatchedAt: dispatchedAt ?? this.dispatchedAt,
       syncedAt: syncedAt ?? this.syncedAt,
       arrivedAt: arrivedAt ?? this.arrivedAt,
       claimedAt: claimedAt ?? this.claimedAt,
+      cancelledAt: cancelledAt ?? this.cancelledAt,
+      dispatchId: dispatchId ?? this.dispatchId,
+      driverId: driverId ?? this.driverId,
+      driverName: driverName ?? this.driverName,
+      driverPhone: driverPhone ?? this.driverPhone,
+      dispatchedDate: dispatchedDate ?? this.dispatchedDate,
+      claimNote: claimNote ?? this.claimNote,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -1232,11 +1861,20 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
+    if (clientParcelId.present) {
+      map['client_parcel_id'] = Variable<String>(clientParcelId.value);
+    }
     if (trackingId.present) {
       map['tracking_id'] = Variable<String>(trackingId.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (branchId.present) {
+      map['branch_id'] = Variable<String>(branchId.value);
     }
     if (fromTown.present) {
       map['from_town'] = Variable<String>(fromTown.value);
@@ -1295,6 +1933,15 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
         $ParcelsTable.$convertersyncStatus.toSql(syncStatus.value),
       );
     }
+    if (syncError.present) {
+      map['sync_error'] = Variable<String>(syncError.value);
+    }
+    if (lastSyncAttemptAt.present) {
+      map['last_sync_attempt_at'] = Variable<DateTime>(lastSyncAttemptAt.value);
+    }
+    if (dispatchedAt.present) {
+      map['dispatched_at'] = Variable<DateTime>(dispatchedAt.value);
+    }
     if (syncedAt.present) {
       map['synced_at'] = Variable<DateTime>(syncedAt.value);
     }
@@ -1303,6 +1950,27 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
     }
     if (claimedAt.present) {
       map['claimed_at'] = Variable<DateTime>(claimedAt.value);
+    }
+    if (cancelledAt.present) {
+      map['cancelled_at'] = Variable<DateTime>(cancelledAt.value);
+    }
+    if (dispatchId.present) {
+      map['dispatch_id'] = Variable<String>(dispatchId.value);
+    }
+    if (driverId.present) {
+      map['driver_id'] = Variable<String>(driverId.value);
+    }
+    if (driverName.present) {
+      map['driver_name'] = Variable<String>(driverName.value);
+    }
+    if (driverPhone.present) {
+      map['driver_phone'] = Variable<String>(driverPhone.value);
+    }
+    if (dispatchedDate.present) {
+      map['dispatched_date'] = Variable<DateTime>(dispatchedDate.value);
+    }
+    if (claimNote.present) {
+      map['claim_note'] = Variable<String>(claimNote.value);
     }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
@@ -1314,8 +1982,11 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
   String toString() {
     return (StringBuffer('ParcelsCompanion(')
           ..write('id: $id, ')
+          ..write('clientParcelId: $clientParcelId, ')
           ..write('trackingId: $trackingId, ')
           ..write('createdAt: $createdAt, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('branchId: $branchId, ')
           ..write('fromTown: $fromTown, ')
           ..write('toTown: $toTown, ')
           ..write('cityCode: $cityCode, ')
@@ -1333,9 +2004,19 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
           ..write('remark: $remark, ')
           ..write('status: $status, ')
           ..write('syncStatus: $syncStatus, ')
+          ..write('syncError: $syncError, ')
+          ..write('lastSyncAttemptAt: $lastSyncAttemptAt, ')
+          ..write('dispatchedAt: $dispatchedAt, ')
           ..write('syncedAt: $syncedAt, ')
           ..write('arrivedAt: $arrivedAt, ')
           ..write('claimedAt: $claimedAt, ')
+          ..write('cancelledAt: $cancelledAt, ')
+          ..write('dispatchId: $dispatchId, ')
+          ..write('driverId: $driverId, ')
+          ..write('driverName: $driverName, ')
+          ..write('driverPhone: $driverPhone, ')
+          ..write('dispatchedDate: $dispatchedDate, ')
+          ..write('claimNote: $claimNote, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -2039,8 +2720,11 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$ParcelsTableCreateCompanionBuilder =
     ParcelsCompanion Function({
       Value<int> id,
+      Value<String?> clientParcelId,
       required String trackingId,
       required DateTime createdAt,
+      Value<String?> deviceId,
+      Value<String?> branchId,
       required String fromTown,
       required String toTown,
       required String cityCode,
@@ -2058,16 +2742,29 @@ typedef $$ParcelsTableCreateCompanionBuilder =
       Value<String?> remark,
       Value<ParcelStatus> status,
       Value<SyncStatus> syncStatus,
+      Value<String?> syncError,
+      Value<DateTime?> lastSyncAttemptAt,
+      Value<DateTime?> dispatchedAt,
       Value<DateTime?> syncedAt,
       Value<DateTime?> arrivedAt,
       Value<DateTime?> claimedAt,
+      Value<DateTime?> cancelledAt,
+      Value<String?> dispatchId,
+      Value<String?> driverId,
+      Value<String?> driverName,
+      Value<String?> driverPhone,
+      Value<DateTime?> dispatchedDate,
+      Value<String?> claimNote,
       required DateTime updatedAt,
     });
 typedef $$ParcelsTableUpdateCompanionBuilder =
     ParcelsCompanion Function({
       Value<int> id,
+      Value<String?> clientParcelId,
       Value<String> trackingId,
       Value<DateTime> createdAt,
+      Value<String?> deviceId,
+      Value<String?> branchId,
       Value<String> fromTown,
       Value<String> toTown,
       Value<String> cityCode,
@@ -2085,9 +2782,19 @@ typedef $$ParcelsTableUpdateCompanionBuilder =
       Value<String?> remark,
       Value<ParcelStatus> status,
       Value<SyncStatus> syncStatus,
+      Value<String?> syncError,
+      Value<DateTime?> lastSyncAttemptAt,
+      Value<DateTime?> dispatchedAt,
       Value<DateTime?> syncedAt,
       Value<DateTime?> arrivedAt,
       Value<DateTime?> claimedAt,
+      Value<DateTime?> cancelledAt,
+      Value<String?> dispatchId,
+      Value<String?> driverId,
+      Value<String?> driverName,
+      Value<String?> driverPhone,
+      Value<DateTime?> dispatchedDate,
+      Value<String?> claimNote,
       Value<DateTime> updatedAt,
     });
 
@@ -2128,6 +2835,11 @@ class $$ParcelsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get clientParcelId => $composableBuilder(
+    column: $table.clientParcelId,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get trackingId => $composableBuilder(
     column: $table.trackingId,
     builder: (column) => ColumnFilters(column),
@@ -2135,6 +2847,16 @@ class $$ParcelsTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get branchId => $composableBuilder(
+    column: $table.branchId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2226,6 +2948,21 @@ class $$ParcelsTableFilterComposer
     builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
+  ColumnFilters<String> get syncError => $composableBuilder(
+    column: $table.syncError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSyncAttemptAt => $composableBuilder(
+    column: $table.lastSyncAttemptAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get dispatchedAt => $composableBuilder(
+    column: $table.dispatchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get syncedAt => $composableBuilder(
     column: $table.syncedAt,
     builder: (column) => ColumnFilters(column),
@@ -2238,6 +2975,41 @@ class $$ParcelsTableFilterComposer
 
   ColumnFilters<DateTime> get claimedAt => $composableBuilder(
     column: $table.claimedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dispatchId => $composableBuilder(
+    column: $table.dispatchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get driverId => $composableBuilder(
+    column: $table.driverId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get driverName => $composableBuilder(
+    column: $table.driverName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get driverPhone => $composableBuilder(
+    column: $table.driverPhone,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get dispatchedDate => $composableBuilder(
+    column: $table.dispatchedDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get claimNote => $composableBuilder(
+    column: $table.claimNote,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2286,6 +3058,11 @@ class $$ParcelsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get clientParcelId => $composableBuilder(
+    column: $table.clientParcelId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get trackingId => $composableBuilder(
     column: $table.trackingId,
     builder: (column) => ColumnOrderings(column),
@@ -2293,6 +3070,16 @@ class $$ParcelsTableOrderingComposer
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get branchId => $composableBuilder(
+    column: $table.branchId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2381,6 +3168,21 @@ class $$ParcelsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get syncError => $composableBuilder(
+    column: $table.syncError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSyncAttemptAt => $composableBuilder(
+    column: $table.lastSyncAttemptAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get dispatchedAt => $composableBuilder(
+    column: $table.dispatchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get syncedAt => $composableBuilder(
     column: $table.syncedAt,
     builder: (column) => ColumnOrderings(column),
@@ -2393,6 +3195,41 @@ class $$ParcelsTableOrderingComposer
 
   ColumnOrderings<DateTime> get claimedAt => $composableBuilder(
     column: $table.claimedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dispatchId => $composableBuilder(
+    column: $table.dispatchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get driverId => $composableBuilder(
+    column: $table.driverId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get driverName => $composableBuilder(
+    column: $table.driverName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get driverPhone => $composableBuilder(
+    column: $table.driverPhone,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get dispatchedDate => $composableBuilder(
+    column: $table.dispatchedDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get claimNote => $composableBuilder(
+    column: $table.claimNote,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -2414,6 +3251,11 @@ class $$ParcelsTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<String> get clientParcelId => $composableBuilder(
+    column: $table.clientParcelId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get trackingId => $composableBuilder(
     column: $table.trackingId,
     builder: (column) => column,
@@ -2421,6 +3263,12 @@ class $$ParcelsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<String> get branchId =>
+      $composableBuilder(column: $table.branchId, builder: (column) => column);
 
   GeneratedColumn<String> get fromTown =>
       $composableBuilder(column: $table.fromTown, builder: (column) => column);
@@ -2499,6 +3347,19 @@ class $$ParcelsTableAnnotationComposer
         builder: (column) => column,
       );
 
+  GeneratedColumn<String> get syncError =>
+      $composableBuilder(column: $table.syncError, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncAttemptAt => $composableBuilder(
+    column: $table.lastSyncAttemptAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get dispatchedAt => $composableBuilder(
+    column: $table.dispatchedAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get syncedAt =>
       $composableBuilder(column: $table.syncedAt, builder: (column) => column);
 
@@ -2507,6 +3368,37 @@ class $$ParcelsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get claimedAt =>
       $composableBuilder(column: $table.claimedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get cancelledAt => $composableBuilder(
+    column: $table.cancelledAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get dispatchId => $composableBuilder(
+    column: $table.dispatchId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get driverId =>
+      $composableBuilder(column: $table.driverId, builder: (column) => column);
+
+  GeneratedColumn<String> get driverName => $composableBuilder(
+    column: $table.driverName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get driverPhone => $composableBuilder(
+    column: $table.driverPhone,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get dispatchedDate => $composableBuilder(
+    column: $table.dispatchedDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get claimNote =>
+      $composableBuilder(column: $table.claimNote, builder: (column) => column);
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -2566,8 +3458,11 @@ class $$ParcelsTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String?> clientParcelId = const Value.absent(),
                 Value<String> trackingId = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> deviceId = const Value.absent(),
+                Value<String?> branchId = const Value.absent(),
                 Value<String> fromTown = const Value.absent(),
                 Value<String> toTown = const Value.absent(),
                 Value<String> cityCode = const Value.absent(),
@@ -2585,14 +3480,27 @@ class $$ParcelsTableTableManager
                 Value<String?> remark = const Value.absent(),
                 Value<ParcelStatus> status = const Value.absent(),
                 Value<SyncStatus> syncStatus = const Value.absent(),
+                Value<String?> syncError = const Value.absent(),
+                Value<DateTime?> lastSyncAttemptAt = const Value.absent(),
+                Value<DateTime?> dispatchedAt = const Value.absent(),
                 Value<DateTime?> syncedAt = const Value.absent(),
                 Value<DateTime?> arrivedAt = const Value.absent(),
                 Value<DateTime?> claimedAt = const Value.absent(),
+                Value<DateTime?> cancelledAt = const Value.absent(),
+                Value<String?> dispatchId = const Value.absent(),
+                Value<String?> driverId = const Value.absent(),
+                Value<String?> driverName = const Value.absent(),
+                Value<String?> driverPhone = const Value.absent(),
+                Value<DateTime?> dispatchedDate = const Value.absent(),
+                Value<String?> claimNote = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => ParcelsCompanion(
                 id: id,
+                clientParcelId: clientParcelId,
                 trackingId: trackingId,
                 createdAt: createdAt,
+                deviceId: deviceId,
+                branchId: branchId,
                 fromTown: fromTown,
                 toTown: toTown,
                 cityCode: cityCode,
@@ -2610,16 +3518,29 @@ class $$ParcelsTableTableManager
                 remark: remark,
                 status: status,
                 syncStatus: syncStatus,
+                syncError: syncError,
+                lastSyncAttemptAt: lastSyncAttemptAt,
+                dispatchedAt: dispatchedAt,
                 syncedAt: syncedAt,
                 arrivedAt: arrivedAt,
                 claimedAt: claimedAt,
+                cancelledAt: cancelledAt,
+                dispatchId: dispatchId,
+                driverId: driverId,
+                driverName: driverName,
+                driverPhone: driverPhone,
+                dispatchedDate: dispatchedDate,
+                claimNote: claimNote,
                 updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String?> clientParcelId = const Value.absent(),
                 required String trackingId,
                 required DateTime createdAt,
+                Value<String?> deviceId = const Value.absent(),
+                Value<String?> branchId = const Value.absent(),
                 required String fromTown,
                 required String toTown,
                 required String cityCode,
@@ -2637,14 +3558,27 @@ class $$ParcelsTableTableManager
                 Value<String?> remark = const Value.absent(),
                 Value<ParcelStatus> status = const Value.absent(),
                 Value<SyncStatus> syncStatus = const Value.absent(),
+                Value<String?> syncError = const Value.absent(),
+                Value<DateTime?> lastSyncAttemptAt = const Value.absent(),
+                Value<DateTime?> dispatchedAt = const Value.absent(),
                 Value<DateTime?> syncedAt = const Value.absent(),
                 Value<DateTime?> arrivedAt = const Value.absent(),
                 Value<DateTime?> claimedAt = const Value.absent(),
+                Value<DateTime?> cancelledAt = const Value.absent(),
+                Value<String?> dispatchId = const Value.absent(),
+                Value<String?> driverId = const Value.absent(),
+                Value<String?> driverName = const Value.absent(),
+                Value<String?> driverPhone = const Value.absent(),
+                Value<DateTime?> dispatchedDate = const Value.absent(),
+                Value<String?> claimNote = const Value.absent(),
                 required DateTime updatedAt,
               }) => ParcelsCompanion.insert(
                 id: id,
+                clientParcelId: clientParcelId,
                 trackingId: trackingId,
                 createdAt: createdAt,
+                deviceId: deviceId,
+                branchId: branchId,
                 fromTown: fromTown,
                 toTown: toTown,
                 cityCode: cityCode,
@@ -2662,9 +3596,19 @@ class $$ParcelsTableTableManager
                 remark: remark,
                 status: status,
                 syncStatus: syncStatus,
+                syncError: syncError,
+                lastSyncAttemptAt: lastSyncAttemptAt,
+                dispatchedAt: dispatchedAt,
                 syncedAt: syncedAt,
                 arrivedAt: arrivedAt,
                 claimedAt: claimedAt,
+                cancelledAt: cancelledAt,
+                dispatchId: dispatchId,
+                driverId: driverId,
+                driverName: driverName,
+                driverPhone: driverPhone,
+                dispatchedDate: dispatchedDate,
+                claimNote: claimNote,
                 updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0

@@ -19,6 +19,22 @@ void main() {
     expect(preset, 'balanced');
   });
 
+  test('generates and reuses a stable device ID', () async {
+    final firstDeviceId = await repository.getOrCreateDeviceId();
+    final secondDeviceId = await repository.getOrCreateDeviceId();
+
+    expect(firstDeviceId, isNotEmpty);
+    expect(firstDeviceId, startsWith('device_'));
+    expect(secondDeviceId, firstDeviceId);
+  });
+
+  test('maps source city codes to stable branch IDs', () {
+    expect(repository.branchIdForCityCode('TGI'), 'source_tgi');
+    expect(repository.branchIdForCityCode('lso'), 'source_lso');
+    expect(repository.branchIdForCityCode('TCL'), 'source_tcl');
+    expect(repository.branchIdForCityCode('NYG'), 'source_nyg');
+  });
+
   test('saves and loads default source town name', () async {
     await repository.saveDefaultSourceTownName('လားရှိုး');
 

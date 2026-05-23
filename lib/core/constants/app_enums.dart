@@ -1,6 +1,1 @@
-enum ParcelStatus {
-  received,
-  dispatched,
-  arrived,
-  claimed,
-}
+enum ParcelStatus { received, dispatched, arrived, claimed, cancelled }

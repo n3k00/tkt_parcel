@@ -7,8 +7,11 @@ class ParcelMapper {
   static ParcelModel toModel(Parcel row) {
     return ParcelModel(
       id: row.id,
+      clientParcelId: row.clientParcelId,
       trackingId: row.trackingId,
       createdAt: row.createdAt,
+      deviceId: row.deviceId,
+      branchId: row.branchId,
       fromTown: row.fromTown,
       toTown: row.toTown,
       cityCode: row.cityCode,
@@ -26,9 +29,19 @@ class ParcelMapper {
       remark: row.remark,
       status: row.status,
       syncStatus: row.syncStatus,
+      syncError: row.syncError,
+      lastSyncAttemptAt: row.lastSyncAttemptAt,
+      dispatchedAt: row.dispatchedAt,
       syncedAt: row.syncedAt,
       arrivedAt: row.arrivedAt,
       claimedAt: row.claimedAt,
+      cancelledAt: row.cancelledAt,
+      dispatchId: row.dispatchId,
+      driverId: row.driverId,
+      driverName: row.driverName,
+      driverPhone: row.driverPhone,
+      dispatchedDate: row.dispatchedDate,
+      claimNote: row.claimNote,
       updatedAt: row.updatedAt,
     );
   }

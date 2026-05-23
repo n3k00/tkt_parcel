@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class ParcelStatusChip extends StatelessWidget {
-  const ParcelStatusChip({
-    super.key,
-    required this.status,
-  });
+  const ParcelStatusChip({super.key, required this.status});
 
   final String status;
 
@@ -17,6 +14,7 @@ class ParcelStatusChip extends StatelessWidget {
       'dispatched' => AppColors.dispatched,
       'arrived' => AppColors.arrived,
       'claimed' => AppColors.claimed,
+      'cancelled' => AppColors.cancelled,
       _ => AppColors.textSecondary,
     };
 
