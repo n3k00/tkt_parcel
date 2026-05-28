@@ -6,14 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/voucher_layout.dart';
 import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../data/models/parcel.dart';
 import '../../../../providers/parcel_repository_provider.dart';
 import '../../../../providers/printer_provider.dart';
+import '../../../../shared/helpers/printer_connect_navigation.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../parcel/presentation/screens/home_screen.dart';
 import '../../../parcel/presentation/providers/parcel_form_provider.dart';
-import '../../../printing/presentation/screens/printer_connect_screen.dart';
 import '../models/voucher_preview_args.dart';
 import '../providers/voucher_preview_provider.dart';
 import '../widgets/parcel_image_preview_card.dart';
@@ -34,6 +35,7 @@ class VoucherPreviewScreen extends ConsumerStatefulWidget {
 class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
   final GlobalKey _printBoundaryKey = GlobalKey();
   bool _isSaving = false;
+  ParcelModel? _officialParcel;
 
   Future<void> _handlePrintAndSave(VoucherPreviewData preview) async {
     if (_isSaving) {
@@ -42,6 +44,7 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
 
     setState(() {
       _isSaving = true;
+      _officialParcel = null;
     });
 
     final printerNotifier = ref.read(printerStateProvider.notifier);
@@ -50,15 +53,31 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
 
     try {
       if (!printerState.isConnected) {
-        await Navigator.of(context).pushNamed(PrinterConnectScreen.routeName);
+        await openPrinterConnectPage(context, ref);
         if (!mounted || !ref.read(printerStateProvider).isConnected) {
           return;
         }
       }
 
+      final syncRepository = await ref.read(syncRepositoryProvider.future);
+      final officialParcel = await syncRepository.createParcelWithServerCounter(
+        preview.parcel,
+      );
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _officialParcel = officialParcel;
+      });
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) {
+        return;
+      }
+
       savedParcelId = await ref
           .read(parcelRepositoryProvider)
-          .createParcel(preview.parcel);
+          .createParcel(officialParcel, preserveSyncState: true);
       if (!mounted) {
         return;
       }
@@ -103,7 +122,7 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
         await _finishAfterSave();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(_messageForSaveError(error))),
+          SnackBar(content: Text(_messageForOfficialVoucherError(error))),
         );
       }
     } finally {
@@ -113,6 +132,30 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
         });
       }
     }
+  }
+
+  String _messageForOfficialVoucherError(Object error) {
+    final message = error.toString().toLowerCase();
+    debugPrint('Official voucher save failed: $error');
+    if (message.contains('jwt') ||
+        message.contains('session') ||
+        message.contains('sign in') ||
+        message.contains('authenticated')) {
+      return 'Please sign in before printing official vouchers.';
+    }
+    if (message.contains('network') ||
+        message.contains('socket') ||
+        message.contains('failed host lookup') ||
+        message.contains('connection')) {
+      return 'Cannot reach server. Official voucher was not saved or printed.';
+    }
+    if (message.contains('branch') || message.contains('city code')) {
+      return 'This account cannot create a parcel for the selected branch.';
+    }
+    if (message.contains('foreign key') || message.contains('device_id')) {
+      return 'Server rejected this device. Please try again after updating the app.';
+    }
+    return _messageForSaveError(error);
   }
 
   String _messageForSaveError(Object error) {
@@ -185,49 +228,54 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
         },
       ),
       body: previewAsync.when(
-        data: (preview) => LayoutBuilder(
-          builder: (context, constraints) {
-            final previewWidth = math.min(
-              AppResponsive.centeredContentWidth(
-                context,
-                horizontalPadding: AppSpacing.lg,
-              ),
-              VoucherLayout.previewPaperWidth,
-            );
-            return ListView(
-              padding: AppSpacing.screenPadding,
-              children: [
-                Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: previewWidth,
-                    ),
-                    child: FittedBox(
-                      fit: BoxFit.contain,
-                      alignment: Alignment.topCenter,
-                      child: RepaintBoundary(
-                        key: _printBoundaryKey,
-                        child: VoucherCard(
-                          parcel: preview.parcel,
-                          qrPayload: preview.qrPayload,
-                          setup: preview.setup,
-                          isPrintable: true,
+        data: (preview) {
+          final displayParcel = _officialParcel ?? preview.parcel;
+          final displayQrPayload = ref
+              .read(qrServiceProvider)
+              .buildParcelPayload(trackingId: displayParcel.trackingId);
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final previewWidth = math.min(
+                AppResponsive.centeredContentWidth(
+                  context,
+                  horizontalPadding: AppSpacing.lg,
+                ),
+                VoucherLayout.previewPaperWidth,
+              );
+              return ListView(
+                padding: AppSpacing.screenPadding,
+                children: [
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: previewWidth),
+                      child: FittedBox(
+                        fit: BoxFit.contain,
+                        alignment: Alignment.topCenter,
+                        child: RepaintBoundary(
+                          key: _printBoundaryKey,
+                          child: VoucherCard(
+                            parcel: displayParcel,
+                            qrPayload: displayQrPayload,
+                            setup: preview.setup,
+                            isPrintable: true,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                if ((preview.parcel.parcelImagePath ?? '').isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.md),
-                  ParcelImagePreviewCard(
-                    imagePath: preview.parcel.parcelImagePath!,
-                  ),
+                  if ((displayParcel.parcelImagePath ?? '').isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    ParcelImagePreviewCard(
+                      imagePath: displayParcel.parcelImagePath!,
+                    ),
+                  ],
+                  const SizedBox(height: 104),
                 ],
-                const SizedBox(height: 104),
-              ],
-            );
-          },
-        ),
+              );
+            },
+          );
+        },
         loading: () => const Padding(
           padding: AppSpacing.screenPadding,
           child: AppLoading(),

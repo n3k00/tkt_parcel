@@ -1,22 +1,14 @@
 abstract final class AppStrings {
   static const settingsTitle = 'Settings';
-  static const profileTitle = 'Profile';
-  static const profileSubtitle =
-      'Edit account code and future profile settings.';
   static const fromTownTitle = 'From Town';
   static const fromTownSubtitle =
       'Choose the default source town for the form.';
-  static const voucherHeaderTitle = 'Voucher Header';
-  static const voucherHeaderSubtitle =
-      'Edit the address and phone shown on the voucher header.';
   static const receiptSettingsTitle = 'Receipt Settings';
   static const receiptSettingsSubtitle =
       'Live preview, font size, and receipt padding controls.';
   static const labelSettingsTitle = 'Label Settings';
   static const labelSettingsSubtitle =
       'Adjust the 70x50 parcel label preview and spacing.';
-  static const toTownTitle = 'To Town';
-  static const toTownSubtitle = 'Add or remove destination towns.';
   static const printerSettingsTitle = 'Printer Settings';
   static const printerSettingsSubtitle =
       'Choose the printer preset used for receipt output.';
@@ -59,17 +51,11 @@ abstract final class AppStrings {
   static const rowGapLabel = 'Row Gap';
   static const bodyLabel = 'Body';
 
-  static const voucherHeaderSaved = 'Voucher header settings saved.';
   static const saveChanges = 'Save Changes';
   static const requiredField = 'Required.';
-  static const accountCodeLabel = 'Account Code';
-  static const profileSaved = 'Profile settings saved.';
 
   static const noSourceTowns = 'No source towns available.';
   static const defaultFromTownUpdated = 'Default from town updated.';
-  static const newDestinationTownLabel = 'New destination town';
-  static const addAction = 'Add';
-  static const deleteToTownTitle = 'Delete To Town';
   static const cancelAction = 'Cancel';
   static const deleteAction = 'Delete';
 

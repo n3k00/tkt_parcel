@@ -9,9 +9,8 @@ import '../../../../shared/models/label_settings_config.dart';
 import '../../../../shared/models/label_printer_selection.dart';
 
 class SettingsViewData {
-  const SettingsViewData({required this.setup, required this.appInfo});
+  const SettingsViewData({required this.appInfo});
 
-  final AppSetupConfig setup;
   final AppVersionInfo appInfo;
 }
 
@@ -53,7 +52,9 @@ final backupRestoreServiceProvider = Provider<BackupRestoreService>((ref) {
   return const BackupRestoreService();
 });
 
-final storagePermissionServiceProvider = Provider<StoragePermissionService>((ref) {
+final storagePermissionServiceProvider = Provider<StoragePermissionService>((
+  ref,
+) {
   return const StoragePermissionService();
 });
 
@@ -72,11 +73,12 @@ final labelSettingsProvider =
       LabelSettingsNotifier.new,
     );
 
-final lastLabelPrinterProvider =
-    FutureProvider<LabelPrinterSelection?>((ref) async {
-      final repository = await ref.watch(settingsRepositoryProvider.future);
-      return repository.getLastLabelPrinter();
-    });
+final lastLabelPrinterProvider = FutureProvider<LabelPrinterSelection?>((
+  ref,
+) async {
+  final repository = await ref.watch(settingsRepositoryProvider.future);
+  return repository.getLastLabelPrinter();
+});
 
 Future<void> saveLastLabelPrinter(
   WidgetRef ref,
@@ -98,8 +100,7 @@ final printerPresetProvider = FutureProvider<String>((ref) async {
 });
 
 final settingsDataProvider = FutureProvider<SettingsViewData>((ref) async {
-  final setup = await ref.watch(settingsSetupProvider.future);
   final appInfo = await ref.watch(appVersionInfoProvider.future);
 
-  return SettingsViewData(setup: setup, appInfo: appInfo);
+  return SettingsViewData(appInfo: appInfo);
 });

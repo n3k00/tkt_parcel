@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../data/models/enums/parcel_status.dart';
+import '../../../../providers/parcel_repository_provider.dart';
+import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
-import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../voucher/presentation/screens/voucher_reprint_preview_screen.dart';
@@ -24,16 +26,19 @@ class ParcelListScreen extends ConsumerStatefulWidget {
 
 class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
   late final TextEditingController _searchController;
+  late final FocusNode _searchFocusNode;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    _searchFocusNode = FocusNode();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -67,8 +72,34 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
         ),
       ),
       actions: [
+        PopupMenuButton<ParcelStatus?>(
+          tooltip: filters.status == null
+              ? 'Filter by status'
+              : 'Status: ${_statusLabel(filters.status!)}',
+          initialValue: filters.status,
+          onSelected: filterNotifier.updateStatus,
+          icon: Icon(
+            filters.status == null
+                ? Icons.filter_list_rounded
+                : Icons.filter_alt_rounded,
+          ),
+          itemBuilder: (context) => [
+            const PopupMenuItem<ParcelStatus?>(
+              value: null,
+              child: Text('All statuses'),
+            ),
+            ..._statusFilterOptions.map(
+              (status) => PopupMenuItem<ParcelStatus?>(
+                value: status,
+                child: Text(_statusLabel(status)),
+              ),
+            ),
+          ],
+        ),
         IconButton(
-          tooltip: selectedDate == null ? 'Filter by date' : 'Change date filter',
+          tooltip: selectedDate == null
+              ? 'Filter by date'
+              : 'Change date filter',
           onPressed: () => _pickDate(context, filterNotifier, selectedDate),
           icon: Icon(
             selectedDate == null
@@ -76,7 +107,9 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
                 : Icons.event_available_rounded,
           ),
         ),
-        if (selectedDate != null || filters.query.isNotEmpty)
+        if (selectedDate != null ||
+            filters.query.isNotEmpty ||
+            filters.status != null)
           IconButton(
             tooltip: 'Clear filters',
             onPressed: filterNotifier.clearFilters,
@@ -88,11 +121,14 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
           final searchCard = SectionCard(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
-               child: TextField(
-                 controller: _searchController,
-                 onChanged: filterNotifier.updateQuery,
-                 decoration: InputDecoration(
-                   hintText: selectedDate == null
+              child: TextField(
+                key: const Key('parcel-history-search-field'),
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                onChanged: filterNotifier.updateQuery,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  hintText: selectedDate == null
                       ? 'Search tracking, receiver, phone'
                       : 'Search in filtered date results',
                   prefixIcon: const Icon(Icons.search),
@@ -112,56 +148,71 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
             ),
           );
 
-          if (parcels.isEmpty) {
-            return Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.md,
-                  ),
-                  child: SizedBox(width: double.infinity, child: searchCard),
-                ),
-                const Expanded(
-                  child: AppEmptyState(
-                    title: 'No parcels yet',
-                    message:
-                        'Create your first parcel voucher to start operations.',
-                  ),
-                ),
-              ],
-            );
-          }
+          return RefreshIndicator(
+            onRefresh: _refreshParcels,
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: AppSpacing.screenPadding,
+              itemCount: parcels.isEmpty ? 2 : parcels.length + 1,
+              separatorBuilder: (_, index) =>
+                  const SizedBox(height: AppSpacing.sm),
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return searchCard;
+                }
 
-          return ListView.separated(
-            padding: AppSpacing.screenPadding,
-            itemCount: parcels.length + 1,
-            separatorBuilder: (_, index) =>
-                const SizedBox(height: AppSpacing.sm),
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return searchCard;
-              }
+                if (parcels.isEmpty) {
+                  final hasFilters =
+                      filters.query.isNotEmpty ||
+                      selectedDate != null ||
+                      filters.status != null;
+                  return SizedBox(
+                    height: 360,
+                    child: AppEmptyState(
+                      title: hasFilters ? 'No parcels found' : 'No parcels yet',
+                      message: hasFilters
+                          ? 'Try a different tracking ID, receiver name, phone, date, or status filter.'
+                          : 'Create your first parcel voucher to start operations.',
+                    ),
+                  );
+                }
 
-              final parcel = parcels[index - 1];
-              return ParcelListItem(
-                parcel: parcel,
-                onTap: () {
-                  if (parcel.id != null) {
-                    Navigator.of(context).pushNamed(
-                      VoucherReprintPreviewScreen.routeName,
-                      arguments: parcel.id,
-                    );
-                  }
-                },
-              );
-            },
+                final parcel = parcels[index - 1];
+                return ParcelListItem(
+                  parcel: parcel,
+                  onTap: () {
+                    if (parcel.id != null) {
+                      Navigator.of(context).pushNamed(
+                        VoucherReprintPreviewScreen.routeName,
+                        arguments: parcel.id,
+                      );
+                    }
+                  },
+                );
+              },
+            ),
           );
         },
         loading: () => const AppLoading(),
         error: (error, _) => AppErrorView(message: error.toString()),
       ),
     );
+  }
+
+  Future<void> _refreshParcels() async {
+    try {
+      final syncRepository = await ref.read(syncRepositoryProvider.future);
+      await syncRepository.pullParcelsFromServer();
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Parcel refresh failed. Check login and internet.'),
+        ),
+      );
+    }
   }
 
   Future<void> _pickDate(
@@ -181,20 +232,25 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
     }
 
     filterNotifier.updateDateRange(
-      startDate: DateTime(
-        picked.year,
-        picked.month,
-        picked.day,
-      ),
-      endDate: DateTime(
-        picked.year,
-        picked.month,
-        picked.day,
-        23,
-        59,
-        59,
-        999,
-      ),
+      startDate: DateTime(picked.year, picked.month, picked.day),
+      endDate: DateTime(picked.year, picked.month, picked.day, 23, 59, 59, 999),
     );
   }
+}
+
+const _statusFilterOptions = [
+  ParcelStatus.received,
+  ParcelStatus.dispatched,
+  ParcelStatus.arrived,
+  ParcelStatus.claimed,
+];
+
+String _statusLabel(ParcelStatus status) {
+  return switch (status) {
+    ParcelStatus.received => 'Received',
+    ParcelStatus.dispatched => 'Dispatched',
+    ParcelStatus.arrived => 'Arrived',
+    ParcelStatus.claimed => 'Claimed',
+    ParcelStatus.cancelled => 'Cancelled',
+  };
 }

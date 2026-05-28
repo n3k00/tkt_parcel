@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/services/image_picker_service.dart';
 import '../../../../data/models/enums/payment_status.dart';
 import '../../../../data/models/town.dart';
+import '../../../../data/repositories/town_repository.dart';
 import '../../../../providers/parcel_repository_provider.dart';
 
 final imagePickerServiceProvider = Provider<ImagePickerService>((ref) {
@@ -34,10 +35,12 @@ class ParcelFormState {
     this.isSaving = false,
     this.errorMessage,
     String? numberOfParcelsText,
+    String? totalChargesText,
     Map<String, String>? fieldErrors,
     String? printerWarning,
   }) : _fieldErrors = fieldErrors,
        _numberOfParcelsText = numberOfParcelsText,
+       _totalChargesText = totalChargesText,
        _printerWarning = printerWarning;
 
   final List<TownModel> sourceTownOptions;
@@ -53,6 +56,7 @@ class ParcelFormState {
   final String parcelType;
   final String? _numberOfParcelsText;
   final int numberOfParcels;
+  final String? _totalChargesText;
   final double totalCharges;
   final PaymentStatus paymentStatus;
   final double cashAdvance;
@@ -66,6 +70,8 @@ class ParcelFormState {
   Map<String, String> get fieldErrors => _fieldErrors ?? const {};
 
   String get numberOfParcelsText => _numberOfParcelsText ?? '';
+
+  String get totalChargesText => _totalChargesText ?? '';
 
   String? get printerWarning => _printerWarning;
 
@@ -83,6 +89,7 @@ class ParcelFormState {
     String? parcelType,
     String? numberOfParcelsText,
     int? numberOfParcels,
+    String? totalChargesText,
     double? totalCharges,
     PaymentStatus? paymentStatus,
     double? cashAdvance,
@@ -112,6 +119,7 @@ class ParcelFormState {
       parcelType: parcelType ?? this.parcelType,
       numberOfParcelsText: numberOfParcelsText ?? this.numberOfParcelsText,
       numberOfParcels: numberOfParcels ?? this.numberOfParcels,
+      totalChargesText: totalChargesText ?? this.totalChargesText,
       totalCharges: totalCharges ?? this.totalCharges,
       paymentStatus: paymentStatus ?? this.paymentStatus,
       cashAdvance: cashAdvance ?? this.cashAdvance,
@@ -151,9 +159,11 @@ class ParcelFormNotifier extends AsyncNotifier<ParcelFormState> {
 
   Future<ParcelFormState> _createInitialState() async {
     final townRepository = ref.read(townRepositoryProvider);
-    final settingsRepository = await ref.read(settingsRepositoryProvider.future);
+    final settingsRepository = await ref.read(
+      settingsRepositoryProvider.future,
+    );
     final sourceTowns = await townRepository.getSourceTowns();
-    final destinationTowns = await townRepository.getDestinationTowns();
+    final destinationTowns = await _loadDestinationTowns(townRepository);
     final defaultSourceTownName = await settingsRepository
         .getDefaultSourceTownName();
     final selectedSourceTown = sourceTowns.firstWhere(
@@ -181,6 +191,23 @@ class ParcelFormNotifier extends AsyncNotifier<ParcelFormState> {
       fromTownCityCode: fromTownCityCode,
       formVersion: _formVersion,
     );
+  }
+
+  Future<List<TownModel>> _loadDestinationTowns(
+    TownRepository townRepository,
+  ) async {
+    try {
+      final serverTownRepository = await ref.read(
+        serverTownRepositoryProvider.future,
+      );
+      final serverTowns = await serverTownRepository.getDestinationTowns();
+      if (serverTowns.isNotEmpty) {
+        return serverTowns;
+      }
+    } catch (_) {
+      // Fall back to local seeded towns so the form can still open offline.
+    }
+    return townRepository.getDestinationTowns();
   }
 
   void _update(ParcelFormState Function(ParcelFormState state) updater) {
@@ -289,10 +316,12 @@ class ParcelFormNotifier extends AsyncNotifier<ParcelFormState> {
     );
   }
 
-  void updateTotalCharges(double value) {
+  void updateTotalCharges(String value) {
+    final parsedValue = double.tryParse(value.trim()) ?? 0;
     _update(
       (form) => form.copyWith(
-        totalCharges: value < 0 ? 0 : value,
+        totalChargesText: value,
+        totalCharges: parsedValue < 0 ? 0 : parsedValue,
         fieldErrors: Map<String, String>.from(form.fieldErrors)
           ..remove('totalCharges'),
         clearPrinterWarning: true,
@@ -323,10 +352,7 @@ class ParcelFormNotifier extends AsyncNotifier<ParcelFormState> {
     final existingPath = state.value?.parcelImagePath;
     final path = await ref
         .read(imagePickerServiceProvider)
-        .pickAndStoreImagePath(
-          source: source,
-          previousPath: existingPath,
-        );
+        .pickAndStoreImagePath(source: source, previousPath: existingPath);
     if (path == null) {
       return;
     }
@@ -387,8 +413,14 @@ class ParcelFormNotifier extends AsyncNotifier<ParcelFormState> {
         current.numberOfParcels < 1) {
       errors['numberOfParcels'] = 'Enter parcel count.';
     }
-    if (current.totalCharges <= 0) {
+    final totalChargesText = current.totalChargesText.trim();
+    final parsedTotalCharges = double.tryParse(totalChargesText);
+    if (totalChargesText.isEmpty) {
       errors['totalCharges'] = 'Enter total charges.';
+    } else if (parsedTotalCharges == null) {
+      errors['totalCharges'] = 'Enter a valid amount.';
+    } else if (parsedTotalCharges < 0) {
+      errors['totalCharges'] = 'Total charges cannot be negative.';
     }
 
     final printerWarning = isPrinterConnected

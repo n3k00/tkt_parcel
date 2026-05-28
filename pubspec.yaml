@@ -1,5 +1,5 @@
 name: tkt_parcel
-description: "A new Flutter project."
+description: "Offline-first parcel voucher and branch counter app for TKT Transport."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.4+7
+version: 1.0.10+13
 
 environment:
   sdk: ^3.11.0
@@ -45,13 +45,15 @@ dependencies:
   pos_printer_kit:
     git:
       url: https://github.com/n3k00/pos_printer_kit.git
-      ref: main
+      ref: codex/fix-printer-connection-hangs
+      path: packages/pos_printer_kit
   image_picker: ^1.2.1
   package_info_plus: ^9.0.0
   permission_handler: ^11.4.0
   image: ^4.5.4
   archive: ^4.0.7
   file_picker: ^10.3.3
+  supabase_flutter: ^2.12.4
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../core/config/app_config.dart';
+import '../../features/auth/presentation/screens/account_screen.dart';
+import '../../features/auth/presentation/screens/auth_gate.dart';
+import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/parcel/presentation/screens/create_parcel_screen.dart';
 import '../../features/parcel/presentation/screens/home_screen.dart';
 import '../../features/parcel/presentation/screens/parcel_list_screen.dart';
@@ -8,10 +12,7 @@ import '../../features/printing/presentation/screens/printer_connect_screen.dart
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/receipt_settings_screen.dart';
 import '../../features/settings/presentation/screens/label_settings_screen.dart';
-import '../../features/settings/presentation/screens/profile_screen.dart';
-import '../../features/settings/presentation/screens/staff_account_info_screen.dart';
 import '../../features/settings/presentation/screens/from_town_settings_screen.dart';
-import '../../features/settings/presentation/screens/to_town_settings_screen.dart';
 import '../../features/settings/presentation/screens/backup_restore_screen.dart';
 import '../../features/voucher/presentation/models/voucher_preview_args.dart';
 import '../../features/voucher/presentation/screens/voucher_preview_screen.dart';
@@ -21,8 +22,26 @@ import '../../shared/widgets/app_error_view.dart';
 class AppRouter {
   const AppRouter._();
 
-  static Route<dynamic> onGenerateRoute(RouteSettings settings) {
+  static Route<dynamic> onGenerateRoute(
+    RouteSettings settings,
+    AppConfig config,
+  ) {
     switch (settings.name) {
+      case AuthGate.routeName:
+        return MaterialPageRoute(
+          builder: (_) => AuthGate(config: config),
+          settings: settings,
+        );
+      case LoginScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const LoginScreen(),
+          settings: settings,
+        );
+      case AccountScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const AccountScreen(),
+          settings: settings,
+        );
       case HomeScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const HomeScreen(),
@@ -72,24 +91,9 @@ class AppRouter {
           builder: (_) => const SettingsScreen(),
           settings: settings,
         );
-      case StaffAccountInfoScreen.routeName:
-        return MaterialPageRoute(
-          builder: (_) => const StaffAccountInfoScreen(),
-          settings: settings,
-        );
-      case ProfileScreen.routeName:
-        return MaterialPageRoute(
-          builder: (_) => const ProfileScreen(),
-          settings: settings,
-        );
       case FromTownSettingsScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const FromTownSettingsScreen(),
-          settings: settings,
-        );
-      case ToTownSettingsScreen.routeName:
-        return MaterialPageRoute(
-          builder: (_) => const ToTownSettingsScreen(),
           settings: settings,
         );
       case BackupRestoreScreen.routeName:
@@ -114,7 +118,7 @@ class AppRouter {
         );
       default:
         return MaterialPageRoute(
-          builder: (_) => const HomeScreen(),
+          builder: (_) => AuthGate(config: config),
           settings: settings,
         );
     }

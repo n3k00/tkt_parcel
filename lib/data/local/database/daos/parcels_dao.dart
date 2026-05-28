@@ -17,21 +17,22 @@ class ParcelsDao extends DatabaseAccessor<AppDatabase> with _$ParcelsDaoMixin {
   }
 
   Future<Parcel?> getParcelById(int id) {
-    return (select(parcels)..where((table) => table.id.equals(id))).getSingleOrNull();
+    return (select(
+      parcels,
+    )..where((table) => table.id.equals(id))).getSingleOrNull();
   }
 
   Future<Parcel?> getParcelByTrackingId(String trackingId) {
-    return (select(parcels)..where((table) => table.trackingId.equals(trackingId)))
-        .getSingleOrNull();
+    return (select(
+      parcels,
+    )..where((table) => table.trackingId.equals(trackingId))).getSingleOrNull();
   }
 
   Future<List<Parcel>> getAllParcels() {
     final query = select(parcels)
       ..orderBy([
-        (table) => OrderingTerm(
-              expression: table.createdAt,
-              mode: OrderingMode.desc,
-            ),
+        (table) =>
+            OrderingTerm(expression: table.createdAt, mode: OrderingMode.desc),
       ]);
     return query.get();
   }
@@ -39,10 +40,8 @@ class ParcelsDao extends DatabaseAccessor<AppDatabase> with _$ParcelsDaoMixin {
   Stream<List<Parcel>> watchAllParcels() {
     final query = select(parcels)
       ..orderBy([
-        (table) => OrderingTerm(
-              expression: table.createdAt,
-              mode: OrderingMode.desc,
-            ),
+        (table) =>
+            OrderingTerm(expression: table.createdAt, mode: OrderingMode.desc),
       ]);
     return query.watch();
   }
@@ -64,10 +63,8 @@ class ParcelsDao extends DatabaseAccessor<AppDatabase> with _$ParcelsDaoMixin {
             table.receiverPhone.lower().like(pattern),
       )
       ..orderBy([
-        (table) => OrderingTerm(
-              expression: table.createdAt,
-              mode: OrderingMode.desc,
-            ),
+        (table) =>
+            OrderingTerm(expression: table.createdAt, mode: OrderingMode.desc),
       ]);
 
     return searchQuery.get();
@@ -77,10 +74,8 @@ class ParcelsDao extends DatabaseAccessor<AppDatabase> with _$ParcelsDaoMixin {
     final query = select(parcels)
       ..where((table) => table.status.equalsValue(status))
       ..orderBy([
-        (table) => OrderingTerm(
-              expression: table.createdAt,
-              mode: OrderingMode.desc,
-            ),
+        (table) =>
+            OrderingTerm(expression: table.createdAt, mode: OrderingMode.desc),
       ]);
 
     return query.get();
@@ -101,10 +96,8 @@ class ParcelsDao extends DatabaseAccessor<AppDatabase> with _$ParcelsDaoMixin {
     }
 
     query.orderBy([
-      (table) => OrderingTerm(
-            expression: table.createdAt,
-            mode: OrderingMode.desc,
-          ),
+      (table) =>
+          OrderingTerm(expression: table.createdAt, mode: OrderingMode.desc),
     ]);
 
     return query.get();
@@ -114,15 +107,13 @@ class ParcelsDao extends DatabaseAccessor<AppDatabase> with _$ParcelsDaoMixin {
     required DateTime startDate,
     required DateTime endDate,
     required String cityCode,
-    required String accountCode,
   }) async {
     final countExpression = parcels.id.count();
     final query = selectOnly(parcels)
       ..addColumns([countExpression])
       ..where(parcels.createdAt.isBiggerOrEqualValue(startDate))
       ..where(parcels.createdAt.isSmallerOrEqualValue(endDate))
-      ..where(parcels.cityCode.equals(cityCode))
-      ..where(parcels.accountCode.equals(accountCode));
+      ..where(parcels.cityCode.equals(cityCode));
 
     final row = await query.getSingle();
     return row.read(countExpression) ?? 0;

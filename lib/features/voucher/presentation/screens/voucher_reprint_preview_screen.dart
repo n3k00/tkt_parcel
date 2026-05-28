@@ -8,17 +8,28 @@ import '../../../../core/constants/voucher_layout.dart';
 import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../providers/printer_provider.dart';
+import '../../../../shared/helpers/printer_connect_navigation.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../parcel/presentation/screens/parcel_list_screen.dart';
-import '../../../printing/presentation/screens/printer_connect_screen.dart';
 import '../../../printing/presentation/widgets/parcel_label_print_widgets.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
 import '../providers/voucher_preview_provider.dart';
 import '../widgets/dispatch_info_section.dart';
 import '../widgets/parcel_image_preview_card.dart';
 import '../widgets/voucher_card.dart';
+
+void _logLabelPrint(String message) {
+  assert(() {
+    debugPrint('[label_print] $message');
+    return true;
+  }());
+}
+
+Duration _labelPrintTimeout(int copies) {
+  return Duration(seconds: 8 + copies.clamp(1, 20));
+}
 
 class VoucherReprintPreviewScreen extends ConsumerStatefulWidget {
   const VoucherReprintPreviewScreen({super.key, required this.parcelId});
@@ -95,7 +106,7 @@ class _VoucherReprintPreviewScreenState
         return;
       }
       if (selectedPrinter == null) {
-        await Navigator.of(context).pushNamed(PrinterConnectScreen.routeName);
+        await openPrinterConnectPage(context, ref);
         if (!mounted || !ref.read(printerStateProvider).isConnected) {
           return;
         }
@@ -104,6 +115,12 @@ class _VoucherReprintPreviewScreenState
       }
 
       final isIdle = await _waitForPrinterIdle();
+      _logLabelPrint(
+        'before tspl print '
+        'connected=${ref.read(printerStateProvider).connectedPrinterName} '
+        'busy=${ref.read(printerStateProvider).isBusy} idle=$isIdle '
+        'copies=${request.quantity}',
+      );
       if (!isIdle) {
         throw StateError('Printer is busy. Please try again.');
       }
@@ -111,7 +128,11 @@ class _VoucherReprintPreviewScreenState
       final success = await printerNotifier.printTsplLabelImage(
         imageBytes,
         copies: request.quantity,
-      );
+      ).timeout(_labelPrintTimeout(request.quantity));
+      _logLabelPrint('tspl print result=$success');
+      if (success) {
+        await _waitForLabelOutput(request.quantity);
+      }
 
       if (!mounted) {
         return;
@@ -155,6 +176,7 @@ class _VoucherReprintPreviewScreenState
 
     if (_receiptPrinterBeforeLabelPrint?.id == labelPrinter.id) {
       await _waitForPrinterIdle();
+      await Future<void>.delayed(_printerSwitchDelay);
       return;
     }
 
@@ -249,6 +271,11 @@ class _VoucherReprintPreviewScreenState
     return false;
   }
 
+  Future<void> _waitForLabelOutput(int copies) {
+    final extraMs = copies.clamp(1, 20) * 350;
+    return Future<void>.delayed(Duration(milliseconds: 900 + extraMs));
+  }
+
   Future<void> _handleReprint(VoucherPreviewData preview) async {
     if (_isReprinting) {
       return;
@@ -263,7 +290,7 @@ class _VoucherReprintPreviewScreenState
 
     try {
       if (!printerState.isConnected) {
-        await Navigator.of(context).pushNamed(PrinterConnectScreen.routeName);
+        await openPrinterConnectPage(context, ref);
         if (!mounted || !ref.read(printerStateProvider).isConnected) {
           return;
         }

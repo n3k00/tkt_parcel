@@ -19,6 +19,15 @@ class ParcelListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final statusColor = switch (parcel.status.value) {
+      'received' => AppColors.received,
+      'dispatched' => AppColors.dispatched,
+      'arrived' => AppColors.arrived,
+      'claimed' => AppColors.claimed,
+      'cancelled' => AppColors.cancelled,
+      _ => AppColors.primary,
+    };
+
     return Material(
       color: Colors.white,
       borderRadius: AppRadius.large,
@@ -47,9 +56,11 @@ class ParcelListItem extends StatelessWidget {
                 Container(
                   width: 4,
                   height: 44,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.all(Radius.circular(999)),
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: const BorderRadius.all(
+                      Radius.circular(999),
+                    ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),

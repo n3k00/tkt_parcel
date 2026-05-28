@@ -67,7 +67,17 @@ storeFile=../../keystores/tkt-parcel-release.jks
 flutter build apk --release --flavor prod -t lib/main_prod.dart
 ```
 
-If `android/key.properties` is missing, release builds currently fall back to debug signing so local testing can continue.
+Release builds fail if `android/key.properties` is missing, incomplete, or points to a missing keystore. Do not ship a production APK signed with the debug key.
+
+## Supabase Configuration
+
+The app reads Supabase config from dart defines and currently defaults to the production project used by this repository.
+
+```powershell
+flutter build apk --release --flavor prod -t lib/main_prod.dart --dart-define=SUPABASE_URL=https://bcfxcbkezjopwlgsaszb.supabase.co --dart-define=SUPABASE_ANON_KEY=YOUR_PROD_ANON_KEY
+```
+
+Only the public anon key belongs in the app. Never add a Supabase service-role key to Flutter source, dart defines, assets, or release scripts.
 
 ## Notes
 
@@ -75,6 +85,13 @@ If `android/key.properties` is missing, release builds currently fall back to de
 - `prod` app name: `TKT Parcel`
 - Android dev flavor uses application id suffix `.dev`
 - After major widget/config changes, prefer `Hot Restart` over `Hot Reload`
+- Database safety rule: never delete/drop/remove database objects or data without explicit approval. Avoid destructive SQL such as `DROP TABLE`, `DROP COLUMN`, `TRUNCATE`, or broad `DELETE`.
+- Official tracking IDs are server-generated only. New parcel print/save must call Supabase `create_parcel_with_counter(...)`, repaint the voucher with the returned tracking ID, save locally, then print.
+- If Supabase parcel creation succeeds but local save or print fails, keep the server parcel. Refresh Parcel History and reprint the existing official tracking ID instead of deleting or recreating it.
+- Tracking ID prefix is the issuing branch/account city code, not the selected From Town. Example: Lashio account printing Taunggyi From Town uses `LSO-YYMMDD-NNNN`.
+- Do not blind-sync old local-only printed parcels. Old local-only parcels remain local history unless a separate legacy import plan is approved.
+- Printer connection uses the default `pos_printer_kit` connect page. Open it through the app permission helper; do not replace the connect UI without explicit approval.
+- `pos_printer_kit` is currently pinned to Git branch `codex/fix-printer-connection-hangs` at package path `packages/pos_printer_kit` so connection retry/disconnect-before-connect behavior stays in the package/core layer.
 
 ## Verification
 

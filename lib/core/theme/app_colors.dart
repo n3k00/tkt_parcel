@@ -30,10 +30,10 @@ class AppColors {
   static const divider = Color(0xFFE5E7EB);
   static const inputBorder = Color(0xFFC7CDD6);
   static const focusedBorder = Color(0xFF0F4C81);
-  static const received = Color(0xFF2563EB);
-  static const dispatched = Color(0xFFD97706);
+  static const received = Color(0xFFDC2626);
+  static const dispatched = Color(0xFFF59E0B);
   static const arrived = Color(0xFF2E8B57);
-  static const claimed = Color(0xFF374151);
+  static const claimed = Color(0xFF2563EB);
   static const cancelled = Color(0xFFC62828);
   static const syncPending = Color(0xFFD97706);
   static const syncSynced = Color(0xFF2E8B57);

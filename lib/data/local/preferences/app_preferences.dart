@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppPreferences {
@@ -31,6 +33,9 @@ class AppPreferences {
   static const _labelRowGapKey = 'label_row_gap';
   static const _lastLabelPrinterIdKey = 'last_label_printer_id';
   static const _lastLabelPrinterNameKey = 'last_label_printer_name';
+  static const _parcelPullLastSyncedAtKey = 'parcel_pull_last_synced_at';
+  static const _cachedStaffProfileKey = 'cached_staff_profile';
+  static const _cachedDestinationTownsKey = 'cached_destination_towns';
 
   final SharedPreferences _preferences;
 
@@ -148,6 +153,46 @@ class AppPreferences {
     return _preferences.getString(_lastLabelPrinterNameKey);
   }
 
+  DateTime? getParcelPullLastSyncedAt() {
+    final value = _preferences.getString(_parcelPullLastSyncedAtKey);
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse(value);
+  }
+
+  Map<String, dynamic>? getCachedStaffProfile() {
+    final value = _preferences.getString(_cachedStaffProfileKey);
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    try {
+      final decoded = jsonDecode(value);
+      return decoded is Map ? Map<String, dynamic>.from(decoded) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<Map<String, dynamic>> getCachedDestinationTowns() {
+    final value = _preferences.getString(_cachedDestinationTownsKey);
+    if (value == null || value.isEmpty) {
+      return const [];
+    }
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is! List) {
+        return const [];
+      }
+      return decoded
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
   Future<bool> setBusinessName(String value) {
     return _preferences.setString(_businessNameKey, value);
   }
@@ -246,5 +291,23 @@ class AppPreferences {
       name,
     );
     return savedId && savedName;
+  }
+
+  Future<bool> setParcelPullLastSyncedAt(DateTime value) {
+    return _preferences.setString(
+      _parcelPullLastSyncedAtKey,
+      value.toUtc().toIso8601String(),
+    );
+  }
+
+  Future<bool> setCachedStaffProfile(Map<String, dynamic> value) {
+    return _preferences.setString(_cachedStaffProfileKey, jsonEncode(value));
+  }
+
+  Future<bool> setCachedDestinationTowns(List<Map<String, dynamic>> value) {
+    return _preferences.setString(
+      _cachedDestinationTownsKey,
+      jsonEncode(value),
+    );
   }
 }

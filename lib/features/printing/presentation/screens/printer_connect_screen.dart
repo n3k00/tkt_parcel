@@ -16,19 +16,9 @@ class PrinterConnectScreen extends ConsumerStatefulWidget {
 
 class _PrinterConnectScreenState extends ConsumerState<PrinterConnectScreen> {
   @override
-  void initState() {
-    super.initState();
-    Future.microtask(() async {
-      await ref.read(printerCoreProvider).initialize();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final core = ref.watch(printerCoreProvider);
 
-    return PrinterConnectPage(
-      core: core,
-    );
+    return PrinterConnectPage(core: core);
   }
 }

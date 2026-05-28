@@ -65,11 +65,7 @@ class ParcelRepository {
     return rows.length;
   }
 
-  Future<int> countParcelsCreatedOnForCounter(
-    DateTime date,
-    String cityCode,
-    String accountCode,
-  ) {
+  Future<int> countParcelsCreatedOnForCounter(DateTime date, String cityCode) {
     final startDate = DateTime(date.year, date.month, date.day);
     final endDate = startDate
         .add(const Duration(days: 1))
@@ -79,19 +75,23 @@ class ParcelRepository {
       startDate: startDate,
       endDate: endDate,
       cityCode: cityCode,
-      accountCode: accountCode,
     );
   }
 
-  Future<int> createParcel(ParcelModel parcel) {
+  Future<int> createParcel(
+    ParcelModel parcel, {
+    bool preserveSyncState = false,
+  }) {
     final now = DateTime.now();
-    final parcelToCreate = parcel.copyWith(
-      updatedAt: now,
-      status: ParcelStatus.received,
-      syncStatus: SyncStatus.pending,
-      syncedAt: null,
-      clearSyncedAt: true,
-    );
+    final parcelToCreate = preserveSyncState
+        ? parcel.copyWith(updatedAt: now)
+        : parcel.copyWith(
+            updatedAt: now,
+            status: ParcelStatus.received,
+            syncStatus: SyncStatus.pending,
+            syncedAt: null,
+            clearSyncedAt: true,
+          );
     return _parcelsDao.insertParcel(
       ParcelsCompanion.insert(
         clientParcelId: Value(parcelToCreate.clientParcelId),
@@ -132,6 +132,35 @@ class ParcelRepository {
         updatedAt: parcelToCreate.updatedAt,
       ),
     );
+  }
+
+  Future<bool> upsertSyncedParcel(ParcelModel parcel) async {
+    final existing = await getParcelByTrackingId(parcel.trackingId);
+    if (existing != null &&
+        existing.syncStatus != SyncStatus.synced &&
+        existing.clientParcelId != parcel.clientParcelId) {
+      return false;
+    }
+
+    final syncedParcel = parcel.copyWith(
+      id: existing?.id,
+      accountCode: parcel.accountCode.isEmpty
+          ? existing?.accountCode
+          : parcel.accountCode,
+      parcelImagePath: parcel.parcelImagePath ?? existing?.parcelImagePath,
+      syncStatus: SyncStatus.synced,
+      clearSyncError: true,
+      lastSyncAttemptAt: DateTime.now(),
+      syncedAt: parcel.syncedAt ?? DateTime.now(),
+    );
+
+    if (existing == null) {
+      await createParcel(syncedParcel, preserveSyncState: true);
+      return true;
+    }
+
+    await updateParcel(syncedParcel);
+    return true;
   }
 
   Future<bool> updateParcel(ParcelModel parcel) {

@@ -188,10 +188,12 @@ class BackupRestoreService {
 
     final tempPath = '${targetDatabase.path}.restore';
     final tempFile = await sourceDatabase.copy(tempPath);
+    await _deleteSqliteSidecars(targetDatabase);
     if (await targetDatabase.exists()) {
       await targetDatabase.delete();
     }
     await tempFile.rename(targetDatabase.path);
+    await _deleteSqliteSidecars(targetDatabase);
   }
 
   void _validateBackupDatabase(File databaseFile) {
@@ -214,7 +216,7 @@ class BackupRestoreService {
           .toSet();
       final missingTables = <String>[
         if (!existingTables.contains('parcels')) 'parcels',
-        if (!existingTables.contains('towns')) 'towns',
+        if (schemaVersion >= 2 && !existingTables.contains('towns')) 'towns',
       ];
       if (missingTables.isNotEmpty) {
         throw StateError(
@@ -225,6 +227,20 @@ class BackupRestoreService {
       throw StateError('Invalid backup database file: ${error.message}');
     } finally {
       database?.close();
+    }
+  }
+
+  Future<void> _deleteSqliteSidecars(File databaseFile) async {
+    final sidecarPaths = [
+      '${databaseFile.path}-wal',
+      '${databaseFile.path}-shm',
+      '${databaseFile.path}-journal',
+    ];
+    for (final sidecarPath in sidecarPaths) {
+      final sidecarFile = File(sidecarPath);
+      if (await sidecarFile.exists()) {
+        await sidecarFile.delete();
+      }
     }
   }
 

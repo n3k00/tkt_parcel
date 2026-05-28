@@ -1,0 +1,96 @@
+# Task Log
+
+## Current Status
+TKT Parcel is an offline-first Flutter parcel voucher app focused on Android counter operations. It uses Riverpod for state management and Drift/SQLite for local parcel data. The project has durable context documentation in `PROJECT_CONTEXT.md` and database-specific notes in `DATABASE_NOTES.md`.
+
+Latest full product/release status: Unknown / needs confirmation.
+
+## Completed Work
+- Created `PROJECT_CONTEXT.md` for future Codex threads.
+- Created `DATABASE_NOTES.md` for Drift schema and migration guidance.
+- Created `RELEASE_CHECKLIST.md` for final MVP release readiness checks.
+- Updated release readiness basics: `pubspec.yaml` description now describes TKT Parcel, release builds no longer fall back to debug signing, and README documents Supabase dart-define usage plus the no-service-role-key rule.
+- Bumped production release version to `1.0.10+13`.
+- Fixed backup restore reliability by deleting SQLite sidecar files (`-wal`, `-shm`, `-journal`) during database replacement and allowing older schema v1 backups to restore so Drift can migrate them.
+- Fixed Total Charges UI validation to accept `0` while still rejecting empty, invalid, or negative values.
+- Created Supabase project `tkt-transport-system` / `bcfxcbkezjopwlgsaszb` in `ap-southeast-1`.
+- Applied Supabase backend schema and verified initial branch/counter prototype.
+- Hardened live Supabase table grants for production readiness: removed `anon` table privileges and removed destructive/broad table privileges from `authenticated`, leaving only app-required SELECT/INSERT/UPDATE grants under RLS.
+- Added Supabase Auth/RLS backend model with `staff_profiles`, branch-scoped policies, admin access policies, private RLS helper functions, and authenticated parcel counter RPC.
+- Changed Supabase tracking ID format to server-generated `CITY-YYMMDD-NNNN`; counters are scoped by `city_code + service_date`.
+- Updated local tracking ID helper and local counter preview logic to match `CITY-YYMMDD-NNNN` and city/date scope.
+- Changed tracking prefix semantics: `CITY` now means issuing branch/account city code, not selected From Town. Example: Lashio account + Taunggyi From Town prints `LSO-YYMMDD-NNNN`.
+- Added Flutter Supabase client initialization, staff login gate, account screen/sign out flow, and branch profile fetch.
+- Fixed login/sign-out navigation so successful authentication returns to the root `AuthGate` instead of bypassing staff profile checks by opening Home directly. Added a simple auth splash/loading screen and polished the staff login UI.
+- Added Supabase branch contact fields (`branches.address`, `branches.phone_numbers`), allowed staff to update their own branch contact fields, moved voucher header contact editing into Account / Branch Profile, and made voucher header setup prefer branch contact fields.
+- Added Supabase `towns` master schema and seed list for 33 active route towns. `ခိုလန်` is normalized to `ခိုလမ်`; town master data is separate from `branches`.
+- Updated Android To Town handling to fetch active Supabase towns ordered by `sort_order` and cache them in SharedPreferences for offline fallback. Removed Settings > To Town management entirely.
+- Added Account / Branch Profile refresh/status UX: it shows last server load time, supports manual refresh, and save success now means branch contact data was saved and refreshed from the server.
+- Hid local voucher header text editing from Settings; local `businessAddress` and `businessPhone` remain fallback/legacy values only. Receipt settings preview and label settings test print now prefer branch contact fields when available.
+- Implemented server-first official voucher creation: `Print and Save` calls Supabase `create_parcel_with_counter(...)`, receives the official `tracking_id`, repaints the voucher, saves the synced parcel locally, and then prints.
+- Decided that if server parcel creation succeeds but local save/print fails, the server-created parcel remains the source of truth; the operator should refresh Parcel History and reprint the same official tracking ID.
+- Implemented server-to-local pull sync for visible Supabase parcels. Home silently refreshes from server, and Parcel List supports pull-to-refresh. Pull sync does not upload old local-only parcels.
+- Changed pull sync to incremental mode: first sync fetches all RLS-visible parcels, stores max successful server `updated_at` in SharedPreferences key `parcel_pull_last_synced_at`, and later pulls fetch only rows where `updated_at` is newer than that cursor.
+- Fixed Parcel History search focus loss when a query returns no results. Search supports tracking ID, receiver name, and receiver phone, and the search field stays focused while the result list changes.
+- Fixed To Town settings refresh behavior so adding/deleting destination towns refreshes the Parcel Create form town picker.
+- Updated Parcel History status indicators: list item status bar now uses `received = red`, `dispatched = amber/yellow`, `arrived = green`, and `claimed = blue`; `cancelled` remains deferred for a later workflow.
+- Added Parcel List AppBar status filtering for `All`, `Received`, `Dispatched`, `Arrived`, and `Claimed`. `Cancelled` is intentionally not exposed yet.
+- Made saved parcel history/detail/reprint more offline-friendly: staff profile is cached after a successful load for local branch filtering, and voucher reprint falls back to local setup if branch profile refresh is unavailable.
+- Printer connection uses the package default `PrinterConnectPage`; custom connect UI was tried and rejected. Keep the default UI unless explicitly requested.
+- Updated `pos_printer_kit` dependency to Git branch `codex/fix-printer-connection-hangs` with path `packages/pos_printer_kit`; the package/core layer handles connection retry and disconnect-before-connect behavior.
+- Existing app structure includes parcel creation, voucher preview/reprint flows, settings, sync placeholders, and printer/printing feature areas.
+- Existing database structure includes parcels, parcel events, and towns with `schemaVersion = 3`.
+- Existing commands are documented for Flutter run/build/test and Drift code generation.
+- Prepared production release `1.0.10+13` after moving To Town choices to Supabase town master and removing Settings To Town management.
+
+## Known Issues
+- Requested Gradle Groovy files `android/app/build.gradle` and `android/build.gradle` are not present; project appears to use Kotlin DSL Gradle files.
+- Manual/background sync for existing pending local parcels is not implemented by design; old local-only parcels should not be blind-synced.
+- Current production APK readiness: Unknown / needs confirmation.
+- Authenticated parcel RPC still needs real-device verification from the Flutter print/save flow.
+- Bluetooth printer connect should be retested on a real Android device after the `pos_printer_kit` branch update; if it still returns native `connect_failed` / `result status connect: false`, next investigation should stay in package/native connection behavior without replacing the package connect UI.
+
+## Next Tasks
+- Confirm current release goal: local APK, internal testing, Play Store, or continued MVP development.
+- Decide whether to create `CODEX_RULES.md` as a separate permanent rules file.
+- Fix project metadata such as `pubspec.yaml` description.
+- Review release signing behavior before any production APK release.
+- For database changes, follow `DATABASE_NOTES.md`: update schemaVersion, add migrations, regenerate Drift code, and run tests.
+- Real-device test new parcel print/save against Supabase and confirm server row, local row, printed tracking ID, and counter increments.
+- Test two devices printing at the same time and confirm server tracking IDs do not duplicate.
+- Test second-device login and confirm pulling down on Parcel List downloads the branch/admin-visible server parcels into local history.
+- Test offline Parcel History, parcel detail, and reprint after at least one successful login/profile load and server pull.
+- Verify login on a real Android device for admin, Taunggyi, Lashio, and Tachileik accounts.
+- Retest login with an Auth user that has no active `staff_profiles` row and confirm it stays on the account setup/no-access view instead of reaching Home.
+- Review Windows `TKT Transport Ledger` Beta 1 before depending on it operationally: Inventory and Reports are still placeholder/mock-backed areas, while Home/Main Ledger and Driver are the main Supabase-backed beta workflows.
+
+## Decisions
+- Use Riverpod/provider/repository/service patterns for new work unless architecture changes are explicitly requested.
+- Keep Codex changes minimal and task-focused.
+- Do not refactor unrelated files.
+- Do not inspect the whole project for routine tasks; inspect only relevant files.
+- Do not edit generated Drift files manually; use build_runner generation.
+- Never delete/drop/remove database objects or data without explicit approval. Do not run destructive SQL such as `DROP TABLE`, `DROP COLUMN`, `TRUNCATE`, broad `DELETE`, or destructive migration steps unless the user specifically approves the exact operation.
+- Architecture, database schema, and release process changes require confirmation before broad edits.
+- Supabase Auth/RLS model: staff users see their own branch, admins see all branches, one staff account may be used on two devices.
+- Supabase public app tables must not grant app roles destructive table privileges such as `DELETE` or `TRUNCATE`; app access should remain minimal and RLS-scoped.
+- Branch voucher header contact fields live on Supabase `branches.address` and `branches.phone_numbers`; staff update their own branch profile from Account. Local voucher header address/phone remains fallback/legacy data only.
+- Town master data belongs in Supabase `towns`, not `branches`. Branches remain login/account/counter/voucher-header offices; towns are parcel route/destination choices.
+- Android To Town choices must come from Supabase `towns` sorted by `sort_order`; do not reintroduce device-local To Town add/delete/read-only management UI in Settings.
+- Login success must return to the root `AuthGate`; do not navigate directly from `LoginScreen` to `HomeScreen`, because staff profile access must be checked first.
+- Server-side tracking IDs must be generated by the authenticated `create_parcel_with_counter` RPC to avoid duplicate counters across devices.
+- Tracking ID format is `CITY-YYMMDD-NNNN`; `CITY` is the issuing branch/account city code, not necessarily selected From Town. Do not use account code in new server-generated tracking IDs.
+- `parcels.cityCode` / Supabase `parcels.city_code` stores the issuing branch city code for new official parcels. Use `fromTown` for the selected parcel origin town.
+- Official voucher printing requires a server-issued tracking ID. The app should repaint the voucher with the server ID before capture/print.
+- New official parcel creation remains online-only. Saved Parcel History, detail, and reprint should use local Drift data and work offline where possible.
+- If save/print fails after server creation, do not delete the Supabase parcel and do not create a replacement ID. Recover by pulling Parcel History and reprinting the existing official parcel.
+- Do not blind-sync old local-only printed parcels. Old printed/local-only parcels remain local history only.
+- Server official tracking starts with new parcels created through `create_parcel_with_counter(...)`.
+- Pull sync direction is server -> local only. It may insert/update server-created parcels on a device, but it must not upload old local-only history.
+- Pull sync cursor updates only after server rows are parsed and local upserts complete. If fetch/parse/upsert fails, keep the previous cursor so the next refresh can retry the same server changes.
+- Real-time sync is deferred. Prefer manual/silent pull refresh first; add realtime later only if operations need live dispatch/status updates across devices.
+- Parcel History status colors are UI-only indicators; do not change database status values just to change colors. Current active filters are search text, date, and status.
+- Printer connect page should remain the `pos_printer_kit` default `PrinterConnectPage`; use app permission helper before opening it.
+- Printer connection retry/disconnect-before-connect logic belongs in `pos_printer_kit` core/native layer, not in a custom app connect UI.
+- Release builds must use a real release keystore. Do not ship a production APK signed with the debug key.
+- Never put a Supabase service-role key in Flutter source, dart defines, assets, or release scripts.

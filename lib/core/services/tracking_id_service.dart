@@ -3,7 +3,6 @@ class TrackingIdService {
 
   String generate({
     required String cityCode,
-    required String accountCode,
     required DateTime now,
     required int runningNumber,
   }) {
@@ -11,7 +10,7 @@ class TrackingIdService {
     final dateSegment = '$shortYear${_two(now.month)}${_two(now.day)}';
     final serial = runningNumber.toString().padLeft(4, '0');
 
-    return '${cityCode.toUpperCase()}-${accountCode.toUpperCase()}-$dateSegment-$serial';
+    return '${cityCode.toUpperCase()}-$dateSegment-$serial';
   }
 
   String _two(int value) => value.toString().padLeft(2, '0');

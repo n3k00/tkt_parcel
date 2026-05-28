@@ -135,54 +135,51 @@ void main() {
     expect(reloaded.claimNote, 'Receiver came with ID card.');
   });
 
-  test(
-    'counts parcels by city code, account code, and date for tracking IDs',
-    () async {
-      await repository.createParcel(
-        _buildParcel(
-          trackingId: 'TGI-A1-250317-0001',
-          cityCode: 'TGI',
-          accountCode: 'A1',
-        ),
-      );
-      await repository.createParcel(
-        _buildParcel(
-          trackingId: 'TGI-A1-250317-0002',
-          cityCode: 'TGI',
-          accountCode: 'A1',
-        ),
-      );
-      await repository.createParcel(
-        _buildParcel(
-          trackingId: 'LSO-A1-250317-0001',
-          cityCode: 'LSO',
-          accountCode: 'A1',
-        ),
-      );
-      await repository.createParcel(
-        _buildParcel(
-          trackingId: 'TGI-B2-250317-0001',
-          cityCode: 'TGI',
-          accountCode: 'B2',
-        ),
-      );
-      await repository.createParcel(
-        _buildParcel(
-          trackingId: 'TGI-A1-250318-0001',
-          cityCode: 'TGI',
-          accountCode: 'A1',
-        ),
-      );
+  test('counts parcels by city code and date for tracking IDs', () async {
+    await repository.createParcel(
+      _buildParcel(
+        trackingId: 'TGI-A1-250317-0001',
+        cityCode: 'TGI',
+        accountCode: 'A1',
+      ),
+    );
+    await repository.createParcel(
+      _buildParcel(
+        trackingId: 'TGI-A1-250317-0002',
+        cityCode: 'TGI',
+        accountCode: 'A1',
+      ),
+    );
+    await repository.createParcel(
+      _buildParcel(
+        trackingId: 'LSO-A1-250317-0001',
+        cityCode: 'LSO',
+        accountCode: 'A1',
+      ),
+    );
+    await repository.createParcel(
+      _buildParcel(
+        trackingId: 'TGI-B2-250317-0001',
+        cityCode: 'TGI',
+        accountCode: 'B2',
+      ),
+    );
+    await repository.createParcel(
+      _buildParcel(
+        trackingId: 'TGI-A1-250318-0001',
+        cityCode: 'TGI',
+        accountCode: 'A1',
+        now: DateTime(2025, 3, 18, 9),
+      ),
+    );
 
-      final count = await repository.countParcelsCreatedOnForCounter(
-        DateTime(2025, 3, 17),
-        'TGI',
-        'A1',
-      );
+    final count = await repository.countParcelsCreatedOnForCounter(
+      DateTime(2025, 3, 17),
+      'TGI',
+    );
 
-      expect(count, 3);
-    },
-  );
+    expect(count, 3);
+  });
 }
 
 ParcelModel _buildParcel({

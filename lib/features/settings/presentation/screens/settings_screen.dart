@@ -9,16 +9,14 @@ import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
+import '../../../auth/presentation/screens/account_screen.dart';
 import '../../../parcel/presentation/screens/home_screen.dart';
 import '../../../printer/presentation/screens/printer_settings_screen.dart';
 import '../providers/settings_provider.dart';
 import 'from_town_settings_screen.dart';
 import 'label_settings_screen.dart';
-import 'profile_screen.dart';
 import 'receipt_settings_screen.dart';
-import 'staff_account_info_screen.dart';
 import 'backup_restore_screen.dart';
-import 'to_town_settings_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -62,11 +60,11 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 children: [
                   _SettingsListTile(
-                    icon: Icons.person_outline_rounded,
-                    title: AppStrings.profileTitle,
-                    subtitle: AppStrings.profileSubtitle,
+                    icon: Icons.account_circle_outlined,
+                    title: 'Account',
+                    subtitle: 'View branch access and sign out.',
                     onTap: () {
-                      Navigator.of(context).pushNamed(ProfileScreen.routeName);
+                      Navigator.of(context).pushNamed(AccountScreen.routeName);
                     },
                   ),
                   const Divider(height: 1, indent: AppSpacing.xl),
@@ -78,17 +76,6 @@ class SettingsScreen extends ConsumerWidget {
                       Navigator.of(
                         context,
                       ).pushNamed(FromTownSettingsScreen.routeName);
-                    },
-                  ),
-                  const Divider(height: 1, indent: AppSpacing.xl),
-                  _SettingsListTile(
-                    icon: Icons.edit_location_alt_outlined,
-                    title: AppStrings.voucherHeaderTitle,
-                    subtitle: AppStrings.voucherHeaderSubtitle,
-                    onTap: () {
-                      Navigator.of(
-                        context,
-                      ).pushNamed(StaffAccountInfoScreen.routeName);
                     },
                   ),
                   const Divider(height: 1, indent: AppSpacing.xl),
@@ -115,17 +102,6 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const Divider(height: 1, indent: AppSpacing.xl),
                   _SettingsListTile(
-                    icon: Icons.add_location_alt_outlined,
-                    title: AppStrings.toTownTitle,
-                    subtitle: AppStrings.toTownSubtitle,
-                    onTap: () {
-                      Navigator.of(
-                        context,
-                      ).pushNamed(ToTownSettingsScreen.routeName);
-                    },
-                  ),
-                  const Divider(height: 1, indent: AppSpacing.xl),
-                  _SettingsListTile(
                     icon: Icons.print_outlined,
                     title: AppStrings.printerSettingsTitle,
                     subtitle: AppStrings.printerSettingsSubtitle,
@@ -146,6 +122,7 @@ class SettingsScreen extends ConsumerWidget {
                       ).pushNamed(BackupRestoreScreen.routeName);
                     },
                   ),
+                  const Divider(height: 1, indent: AppSpacing.xl),
                   _SettingsInfoTile(
                     icon: Icons.info_outline,
                     title: AppStrings.appVersionTitle,

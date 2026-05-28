@@ -4,6 +4,8 @@ import '../../../../core/services/tracking_id_service.dart';
 import '../../../../data/models/parcel.dart';
 import '../../../../providers/parcel_repository_provider.dart';
 import '../../../../shared/models/app_setup_config.dart';
+import '../../../auth/providers/auth_provider.dart';
+import '../../../auth/data/models/staff_profile.dart';
 import '../models/voucher_preview_args.dart';
 
 final trackingIdServiceProvider = Provider<TrackingIdService>((ref) {
@@ -40,32 +42,47 @@ final voucherPreviewProvider = FutureProvider.autoDispose
       if (sourceCityCode == null || sourceCityCode.isEmpty) {
         throw StateError('Selected source town is missing a city code.');
       }
+      final staffProfile = await ref.read(staffProfileProvider.future);
+      if (staffProfile == null) {
+        throw StateError('Please sign in before creating a voucher.');
+      }
+
+      final issuingCityCode = staffProfile.branchCityCode ?? sourceCityCode;
+      final issuingBranchId =
+          staffProfile.branchId ??
+          settingsRepository.branchIdForCityCode(sourceCityCode);
+      if (issuingBranchId.isEmpty) {
+        throw StateError('This account is missing an issuing branch.');
+      }
+      if (issuingCityCode.isEmpty) {
+        throw StateError('This account is missing an issuing city code.');
+      }
+
       final deviceId = await settingsRepository.getOrCreateDeviceId();
-      final branchId = settingsRepository.branchIdForCityCode(sourceCityCode);
+      final clientParcelId = '${deviceId}_${now.microsecondsSinceEpoch}';
       final runningNumber =
           await repository.countParcelsCreatedOnForCounter(
             now,
-            sourceCityCode,
-            setup.accountCode,
+            issuingCityCode,
           ) +
           1;
 
       final trackingId = ref
           .read(trackingIdServiceProvider)
           .generate(
-            cityCode: sourceCityCode,
-            accountCode: setup.accountCode,
+            cityCode: issuingCityCode,
             now: now,
             runningNumber: runningNumber,
           );
 
       final parcel = ParcelModel.create(
+        clientParcelId: clientParcelId,
         trackingId: trackingId,
         deviceId: deviceId,
-        branchId: branchId,
+        branchId: issuingBranchId,
         fromTown: args.form.fromTown,
         toTown: args.form.toTown,
-        cityCode: sourceCityCode,
+        cityCode: issuingCityCode,
         accountCode: setup.accountCode,
         senderName: args.form.senderName,
         senderPhone: args.form.senderPhone,
@@ -85,10 +102,12 @@ final voucherPreviewProvider = FutureProvider.autoDispose
           .read(qrServiceProvider)
           .buildParcelPayload(trackingId: trackingId);
 
+      final voucherSetup = _setupWithBranchProfile(setup, staffProfile);
+
       return VoucherPreviewData(
         parcel: parcel,
         qrPayload: qrPayload,
-        setup: setup,
+        setup: voucherSetup,
       );
     });
 
@@ -104,6 +123,18 @@ final voucherReprintPreviewProvider = FutureProvider.autoDispose
       if (parcel == null) {
         throw StateError('Parcel not found.');
       }
+      var voucherSetup = setup;
+      final branchId = parcel.branchId;
+      if (branchId != null && branchId.isNotEmpty) {
+        try {
+          final branch = await ref
+              .read(authRepositoryProvider)
+              .fetchBranchProfile(branchId);
+          voucherSetup = _setupWithBranchProfile(setup, branch);
+        } catch (_) {
+          voucherSetup = setup;
+        }
+      }
 
       final qrPayload = ref
           .read(qrServiceProvider)
@@ -112,6 +143,31 @@ final voucherReprintPreviewProvider = FutureProvider.autoDispose
       return VoucherPreviewData(
         parcel: parcel,
         qrPayload: qrPayload,
-        setup: setup,
+        setup: voucherSetup,
       );
     });
+
+AppSetupConfig _setupWithBranchProfile(
+  AppSetupConfig setup,
+  Object? branchProfile,
+) {
+  String? address;
+  String? phoneNumbers;
+
+  if (branchProfile is StaffProfile) {
+    address = branchProfile.branchAddress;
+    phoneNumbers = branchProfile.branchPhoneNumbers;
+  } else if (branchProfile is BranchProfile) {
+    address = branchProfile.address;
+    phoneNumbers = branchProfile.phoneNumbers;
+  }
+
+  return setup.copyWith(
+    businessAddress: address?.trim().isNotEmpty == true
+        ? address!.trim()
+        : setup.businessAddress,
+    businessPhone: phoneNumbers?.trim().isNotEmpty == true
+        ? phoneNumbers!.trim()
+        : setup.businessPhone,
+  );
+}

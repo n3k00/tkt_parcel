@@ -146,22 +146,12 @@ class ParcelFormView extends ConsumerWidget {
                               ),
                         ),
                         right: TextFormField(
-                          initialValue: form.totalCharges == 0
-                              ? ''
-                              : form.totalCharges.toStringAsFixed(
-                                  form.totalCharges.truncateToDouble() ==
-                                          form.totalCharges
-                                      ? 0
-                                      : 2,
-                                ),
+                          initialValue: form.totalChargesText,
                           keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
+                            signed: true,
                           ),
-                          onChanged: (value) {
-                            controller.updateTotalCharges(
-                              double.tryParse(value) ?? 0,
-                            );
-                          },
+                          onChanged: controller.updateTotalCharges,
                           decoration:
                               AppInputDecoration.basic(
                                 label: 'Total Charges',

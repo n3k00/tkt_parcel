@@ -47,9 +47,10 @@ class ParcelNextActionButton extends ConsumerWidget {
               return;
             }
 
+            final latestForm = ref.read(parcelFormProvider).value ?? form;
             Navigator.of(context).pushNamed(
               VoucherPreviewScreen.routeName,
-              arguments: VoucherPreviewArgs(form: form),
+              arguments: VoucherPreviewArgs(form: latestForm),
             );
           },
           child: const Text('Next'),

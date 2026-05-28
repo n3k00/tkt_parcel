@@ -16,6 +16,7 @@ import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/section_card.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../../../voucher/presentation/widgets/voucher_card.dart';
 import '../constants/receipt_settings_dimens.dart';
 import '../providers/settings_provider.dart';
@@ -36,6 +37,7 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final setupAsync = ref.watch(settingsSetupProvider);
+    final staffProfileAsync = ref.watch(staffProfileProvider);
 
     return AppScaffold(
       title: AppStrings.receiptSettingsTitle,
@@ -43,6 +45,12 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
         data: (setup) {
           _draft ??= setup;
           final draft = _draft!;
+          final previewSetup = _withBranchContact(
+            draft,
+            branchAddress: staffProfileAsync.asData?.value?.branchAddress,
+            branchPhoneNumbers:
+                staffProfileAsync.asData?.value?.branchPhoneNumbers,
+          );
           final sampleParcel = ParcelModel.create(
             trackingId: ReceiptStrings.sampleTrackingId,
             fromTown: ReceiptStrings.sampleFromTown,
@@ -201,14 +209,16 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                             );
                             return Center(
                               child: ConstrainedBox(
-                                constraints: BoxConstraints(maxWidth: previewWidth),
+                                constraints: BoxConstraints(
+                                  maxWidth: previewWidth,
+                                ),
                                 child: FittedBox(
                                   fit: BoxFit.contain,
                                   alignment: Alignment.topCenter,
                                   child: VoucherCard(
                                     parcel: sampleParcel,
                                     qrPayload: ReceiptStrings.sampleQrPayload,
-                                    setup: draft,
+                                    setup: previewSetup,
                                     isPrintable: true,
                                   ),
                                 ),
@@ -233,7 +243,10 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                         )
                       else
                         ...controlCards.expand(
-                          (card) => [card, const SizedBox(height: AppSpacing.md)],
+                          (card) => [
+                            card,
+                            const SizedBox(height: AppSpacing.md),
+                          ],
                         ),
                       const SizedBox(height: AppSpacing.md),
                       SizedBox(
@@ -270,11 +283,23 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
   }
 }
 
+AppSetupConfig _withBranchContact(
+  AppSetupConfig setup, {
+  required String? branchAddress,
+  required String? branchPhoneNumbers,
+}) {
+  return setup.copyWith(
+    businessAddress: branchAddress?.trim().isNotEmpty == true
+        ? branchAddress!.trim()
+        : setup.businessAddress,
+    businessPhone: branchPhoneNumbers?.trim().isNotEmpty == true
+        ? branchPhoneNumbers!.trim()
+        : setup.businessPhone,
+  );
+}
+
 class _SettingsSection extends StatelessWidget {
-  const _SettingsSection({
-    required this.title,
-    required this.child,
-  });
+  const _SettingsSection({required this.title, required this.child});
 
   final String title;
   final Widget child;

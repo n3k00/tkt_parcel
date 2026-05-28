@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../data/models/enums/parcel_status.dart';
 import '../../../../data/models/parcel.dart';
 import '../../../../providers/parcel_repository_provider.dart';
+import '../../../auth/data/models/staff_profile.dart';
+import '../../../auth/providers/auth_provider.dart';
 
 class ParcelListFilterState {
   const ParcelListFilterState({
@@ -47,10 +49,7 @@ class ParcelListFilterNotifier extends Notifier<ParcelListFilterState> {
     state = state.copyWith(status: value, clearStatus: value == null);
   }
 
-  void updateDateRange({
-    DateTime? startDate,
-    DateTime? endDate,
-  }) {
+  void updateDateRange({DateTime? startDate, DateTime? endDate}) {
     state = state.copyWith(
       startDate: startDate,
       clearStartDate: startDate == null,
@@ -65,30 +64,67 @@ class ParcelListFilterNotifier extends Notifier<ParcelListFilterState> {
 }
 
 final parcelListFilterProvider =
-    NotifierProvider.autoDispose<ParcelListFilterNotifier, ParcelListFilterState>(
-  ParcelListFilterNotifier.new,
-);
+    NotifierProvider.autoDispose<
+      ParcelListFilterNotifier,
+      ParcelListFilterState
+    >(ParcelListFilterNotifier.new);
 
-final parcelHistoryProvider = StreamProvider.autoDispose<List<ParcelModel>>((ref) {
+final parcelHistoryProvider = StreamProvider.autoDispose<List<ParcelModel>>((
+  ref,
+) {
   final repository = ref.watch(parcelRepositoryProvider);
   return repository.watchParcels();
 });
 
-final parcelListProvider = Provider.autoDispose<AsyncValue<List<ParcelModel>>>((ref) {
+final parcelListProvider = Provider.autoDispose<AsyncValue<List<ParcelModel>>>((
+  ref,
+) {
   final filters = ref.watch(parcelListFilterProvider);
   final parcelsAsync = ref.watch(parcelHistoryProvider);
+  final profileAsync = ref.watch(staffProfileProvider);
 
-  return parcelsAsync.whenData(
-    (parcels) => parcels.where((parcel) => _matchesFilter(parcel, filters)).toList(),
+  return parcelsAsync.when(
+    data: (parcels) => profileAsync.when(
+      data: (profile) => AsyncValue.data(
+        parcels
+            .where((parcel) => _matchesBranchAccess(parcel, profile))
+            .where((parcel) => _matchesFilter(parcel, filters))
+            .toList(),
+      ),
+      loading: AsyncValue.loading,
+      error: AsyncValue.error,
+    ),
+    loading: AsyncValue.loading,
+    error: AsyncValue.error,
   );
 });
+
+bool _matchesBranchAccess(ParcelModel parcel, StaffProfile? profile) {
+  if (profile == null) {
+    return false;
+  }
+  if (profile.isAdmin) {
+    return true;
+  }
+
+  final branchId = profile.branchId;
+  if (branchId != null && branchId.isNotEmpty && parcel.branchId == branchId) {
+    return true;
+  }
+
+  final cityCode = profile.branchCityCode;
+  return cityCode != null &&
+      cityCode.isNotEmpty &&
+      parcel.cityCode.toUpperCase() == cityCode.toUpperCase();
+}
 
 bool _matchesFilter(ParcelModel parcel, ParcelListFilterState filters) {
   if (filters.status != null && parcel.status != filters.status) {
     return false;
   }
 
-  if (filters.startDate != null && parcel.createdAt.isBefore(filters.startDate!)) {
+  if (filters.startDate != null &&
+      parcel.createdAt.isBefore(filters.startDate!)) {
     return false;
   }
 

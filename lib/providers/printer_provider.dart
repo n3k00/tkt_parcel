@@ -24,9 +24,7 @@ final printerCoreProvider = Provider<PrinterCore>((ref) {
 });
 
 final printerObserverServiceProvider = Provider<PrinterObserverService>((ref) {
-  final service = PrinterObserverService(
-    logWriter: defaultPrinterLogWriter(),
-  );
+  final service = PrinterObserverService(logWriter: defaultPrinterLogWriter());
   ref.onDispose(service.dispose);
   return service;
 });
@@ -115,8 +113,12 @@ class PrinterState {
       isScanning: isScanning ?? this.isScanning,
       isBusy: isBusy ?? this.isBusy,
       statusText: statusText ?? this.statusText,
-      errorMessage: clearErrorMessage ? null : errorMessage ?? this.errorMessage,
-      printProgress: clearPrintProgress ? null : printProgress ?? this.printProgress,
+      errorMessage: clearErrorMessage
+          ? null
+          : errorMessage ?? this.errorMessage,
+      printProgress: clearPrintProgress
+          ? null
+          : printProgress ?? this.printProgress,
       observedConnectionState:
           observedConnectionState ?? this.observedConnectionState,
       latestError: clearLatestError ? null : latestError ?? this.latestError,
@@ -142,17 +144,11 @@ class PrinterNotifier extends Notifier<PrinterState> {
       state = _fromCore(previous: state);
     }
 
-    _observer.attach(
-      _core,
-      onChanged: syncCoreState,
-    );
+    _observer.attach(_core, onChanged: syncCoreState);
     _core.addListener(syncCoreState);
     final stateSub = _core.onStateChanged.listen((_) => syncCoreState());
     final progressSub = _core.onPrintProgress.listen((progress) {
-      state = _fromCore(
-        previous: state,
-        printProgress: progress,
-      );
+      state = _fromCore(previous: state, printProgress: progress);
     });
     final errorSub = _core.onError.listen((error) {
       state = _fromCore(
@@ -193,16 +189,17 @@ class PrinterNotifier extends Notifier<PrinterState> {
       isScanning: _core.isScanning,
       isBusy: _core.busy,
       statusText: _core.status,
-      errorMessage: clearErrorMessage ? null : errorMessage ?? previous?.errorMessage,
+      errorMessage: clearErrorMessage
+          ? null
+          : errorMessage ?? previous?.errorMessage,
       printProgress: printProgress ?? previous?.printProgress,
       observedConnectionState: _observer.snapshot.connectionState,
-      latestError: clearErrorMessage
-          ? null
-          : _observer.snapshot.latestError,
+      latestError: clearErrorMessage ? null : _observer.snapshot.latestError,
       debugLogs: List<String>.unmodifiable(_observer.snapshot.logs),
       lastPrintableImageBytes:
           lastPrintableImageBytes ?? previous?.lastPrintableImageBytes,
-      lastPrintSucceeded: lastPrintSucceeded ?? previous?.lastPrintSucceeded ?? false,
+      lastPrintSucceeded:
+          lastPrintSucceeded ?? previous?.lastPrintSucceeded ?? false,
     );
   }
 
@@ -254,18 +251,28 @@ class PrinterNotifier extends Notifier<PrinterState> {
     Uint8List imageBytes, {
     int copies = 1,
   }) async {
-    final success = await _repository.printTsplLabelImage(
-      imageBytes,
-      copies: copies,
-    );
-    state = _fromCore(
-      previous: state,
-      errorMessage: success ? null : _core.lastError?.message,
-      clearErrorMessage: success,
-      lastPrintableImageBytes: imageBytes,
-      lastPrintSucceeded: success,
-    );
-    return success;
+    try {
+      final success = await _repository.printTsplLabelImage(
+        imageBytes,
+        copies: copies,
+      );
+      state = _fromCore(
+        previous: state,
+        errorMessage: success ? null : _core.lastError?.message,
+        clearErrorMessage: success,
+        lastPrintableImageBytes: imageBytes,
+        lastPrintSucceeded: success,
+      );
+      return success;
+    } catch (error) {
+      state = _fromCore(
+        previous: state,
+        errorMessage: 'Label print failed: $error',
+        lastPrintableImageBytes: imageBytes,
+        lastPrintSucceeded: false,
+      );
+      rethrow;
+    }
   }
 
   Future<bool> retryLastPrint() async {

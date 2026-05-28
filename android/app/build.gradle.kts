@@ -67,17 +67,22 @@ android {
         release {
             isMinifyEnabled = false
             isShrinkResources = false
+            val storeFilePath = keystoreProperties.getProperty("storeFile")
             val hasReleaseSigning =
-                keystoreProperties.getProperty("storeFile")?.isNotBlank() == true &&
+                storeFilePath != null &&
+                storeFilePath.isNotBlank() &&
                 keystoreProperties.getProperty("storePassword")?.isNotBlank() == true &&
                 keystoreProperties.getProperty("keyAlias")?.isNotBlank() == true &&
-                keystoreProperties.getProperty("keyPassword")?.isNotBlank() == true
+                keystoreProperties.getProperty("keyPassword")?.isNotBlank() == true &&
+                file(storeFilePath).exists()
 
-            signingConfig = if (hasReleaseSigning) {
-                signingConfigs.getByName("release")
-            } else {
-                signingConfigs.getByName("debug")
+            if (!hasReleaseSigning) {
+                throw GradleException(
+                    "Release signing is not configured. Create android/key.properties with valid storeFile, storePassword, keyAlias, and keyPassword before building a release APK."
+                )
             }
+
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }

@@ -59,7 +59,13 @@ class AppDrawer extends StatelessWidget {
     if (currentRoute == routeName) {
       return;
     }
-    Navigator.of(context).pushReplacementNamed(routeName);
+    if (routeName == HomeScreen.routeName) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
+      return;
+    }
+    Navigator.of(
+      context,
+    ).pushNamedAndRemoveUntil(routeName, (route) => route.isFirst);
   }
 }
 

@@ -8,16 +8,28 @@ import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../providers/printer_provider.dart';
+import '../../../../shared/helpers/printer_connect_navigation.dart';
 import '../../../../shared/models/label_printer_selection.dart';
 import '../../../../shared/models/label_settings_config.dart';
 import '../../../../shared/widgets/app_error_view.dart';
 import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/section_card.dart';
-import '../../../printing/presentation/screens/printer_connect_screen.dart';
 import '../../../printing/presentation/widgets/label_shared_widgets.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../constants/label_settings_dimens.dart';
 import '../providers/settings_provider.dart';
+
+void _logLabelPrint(String message) {
+  assert(() {
+    debugPrint('[label_print] $message');
+    return true;
+  }());
+}
+
+Duration _labelPrintTimeout(int copies) {
+  return Duration(seconds: 8 + copies.clamp(1, 20));
+}
 
 class LabelSettingsScreen extends ConsumerStatefulWidget {
   const LabelSettingsScreen({super.key});
@@ -57,8 +69,8 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
     if (request == null) {
       return;
     }
-    debugPrint(
-      '[label_print] request received printer='
+    _logLabelPrint(
+      'request received printer='
       '${request.printer?.name ?? 'none'} qty=${request.quantity}',
     );
 
@@ -77,7 +89,7 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
       await WidgetsBinding.instance.endOfFrame;
       await Future<void>.delayed(const Duration(milliseconds: 120));
 
-      debugPrint('[label_print] capture started');
+      _logLabelPrint('capture started');
       final imageBytes = await ref
           .read(printServiceProvider)
           .captureWidgetAsPng(_labelPrintKey, pixelRatio: 1)
@@ -87,7 +99,7 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
               throw StateError('Label image capture timed out.');
             },
           );
-      debugPrint('[label_print] captured ${imageBytes.length} bytes');
+      _logLabelPrint('captured ${imageBytes.length} bytes');
 
       if (!mounted) {
         return;
@@ -105,7 +117,7 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
         return;
       }
       if (selectedPrinter == null) {
-        await Navigator.of(context).pushNamed(PrinterConnectScreen.routeName);
+        await openPrinterConnectPage(context, ref);
         if (!mounted || !ref.read(printerStateProvider).isConnected) {
           return;
         }
@@ -114,8 +126,8 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
       }
 
       final isIdle = await _waitForPrinterIdle();
-      debugPrint(
-        '[label_print] before tspl print '
+      _logLabelPrint(
+        'before tspl print '
         'connected=${ref.read(printerStateProvider).connectedPrinterName} '
         'busy=${ref.read(printerStateProvider).isBusy} idle=$isIdle',
       );
@@ -126,8 +138,11 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
       final success = await printerNotifier.printTsplLabelImage(
         imageBytes,
         copies: request.quantity,
-      );
-      debugPrint('[label_print] tspl print result=$success');
+      ).timeout(_labelPrintTimeout(request.quantity));
+      _logLabelPrint('tspl print result=$success');
+      if (success) {
+        await _waitForLabelOutput(request.quantity);
+      }
 
       if (!mounted) {
         return;
@@ -170,18 +185,18 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
     _shouldRestoreReceiptPrinter = false;
 
     if (_receiptPrinterBeforeLabelPrint?.id == labelPrinter.id) {
-      debugPrint(
-        '[label_print] selected printer is already connected: '
-        '${labelPrinter.name}',
+      _logLabelPrint(
+        'selected printer is already connected: ${labelPrinter.name}',
       );
       await _waitForPrinterIdle();
+      await Future<void>.delayed(_printerSwitchDelay);
       return;
     }
 
     if (_receiptPrinterBeforeLabelPrint != null) {
       _shouldRestoreReceiptPrinter = true;
-      debugPrint(
-        '[label_print] disconnecting receipt printer: '
+      _logLabelPrint(
+        'disconnecting receipt printer: '
         '${_receiptPrinterBeforeLabelPrint!.name}',
       );
       await printerNotifier.disconnect();
@@ -189,7 +204,7 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
       await Future<void>.delayed(_printerSwitchDelay);
     }
 
-    debugPrint('[label_print] connecting label printer: ${labelPrinter.name}');
+    _logLabelPrint('connecting label printer: ${labelPrinter.name}');
     await printerNotifier.connect(labelPrinter);
     final isReady = await _waitForPrinterConnection(labelPrinter.id);
     if (!isReady) {
@@ -218,9 +233,7 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
     }
 
     try {
-      debugPrint(
-        '[label_print] restoring receipt printer: ${receiptPrinter.name}',
-      );
+      _logLabelPrint('restoring receipt printer: ${receiptPrinter.name}');
       await printerNotifier.disconnect();
       await _waitForPrinterDisconnected(connectedPrinter?.id);
       await Future<void>.delayed(_printerSwitchDelay);
@@ -277,10 +290,16 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
     return false;
   }
 
+  Future<void> _waitForLabelOutput(int copies) {
+    final extraMs = copies.clamp(1, 20) * 350;
+    return Future<void>.delayed(Duration(milliseconds: 900 + extraMs));
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(labelSettingsProvider);
     final setupAsync = ref.watch(settingsSetupProvider);
+    final staffProfileAsync = ref.watch(staffProfileProvider);
     final printerState = ref.watch(printerStateProvider);
     final isProcessing = _isTestPrinting || printerState.isBusy;
 
@@ -295,7 +314,12 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
             context,
             horizontalPadding: AppSpacing.lg,
           );
-          final businessPhone = setupAsync.asData?.value.businessPhone;
+          final branchPhone =
+              staffProfileAsync.asData?.value?.branchPhoneNumbers;
+          final localPhone = setupAsync.asData?.value.businessPhone;
+          final businessPhone = branchPhone?.trim().isNotEmpty == true
+              ? branchPhone!.trim()
+              : localPhone;
           final isSetupReady = businessPhone != null;
 
           return Stack(
@@ -718,8 +742,8 @@ class _LabelTestPrintDialogState extends ConsumerState<_LabelTestPrintDialog> {
           onPressed: selectedPrinter == null
               ? null
               : () async {
-                  debugPrint(
-                    '[label_print] dialog print requested '
+                  _logLabelPrint(
+                    'dialog print requested '
                     'printer=${selectedPrinter.name} qty=$_quantity',
                   );
                   await saveLastLabelPrinter(

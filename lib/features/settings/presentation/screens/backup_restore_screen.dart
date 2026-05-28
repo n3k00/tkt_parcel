@@ -154,7 +154,7 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
 
         try {
           final result = await service.restoreBackup(selectedPath);
-          return '${result.message}\n${result.usedBackupPath}';
+          return '${result.message}\n${result.usedBackupPath}\nRestart the app before using restored data.';
         } finally {
           ref.invalidate(databaseProvider);
           ref.invalidate(parcelRepositoryProvider);
