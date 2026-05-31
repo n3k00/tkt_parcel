@@ -31,6 +31,7 @@ Latest full product/release status: Unknown / needs confirmation.
 - Decided that if server parcel creation succeeds but local save/print fails, the server-created parcel remains the source of truth; the operator should refresh Parcel History and reprint the same official tracking ID.
 - Implemented server-to-local pull sync for visible Supabase parcels. Home silently refreshes from server, and Parcel List supports pull-to-refresh. Pull sync does not upload old local-only parcels.
 - Changed pull sync to incremental mode: first sync fetches all RLS-visible parcels, stores max successful server `updated_at` in SharedPreferences key `parcel_pull_last_synced_at`, and later pulls fetch only rows where `updated_at` is newer than that cursor.
+- Fixed branch-account switching on one device by scoping the incremental parcel pull cursor per signed-in Supabase user. A Tachileik sync cursor no longer prevents the first Lashio pull from downloading older Lashio parcels.
 - Fixed Parcel History search focus loss when a query returns no results. Search supports tracking ID, receiver name, and receiver phone, and the search field stays focused while the result list changes.
 - Fixed To Town settings refresh behavior so adding/deleting destination towns refreshes the Parcel Create form town picker.
 - Updated Parcel History status indicators: list item status bar now uses `received = red`, `dispatched = amber/yellow`, `arrived = green`, and `claimed = blue`; `cancelled` remains deferred for a later workflow.
@@ -87,7 +88,7 @@ Latest full product/release status: Unknown / needs confirmation.
 - Do not blind-sync old local-only printed parcels. Old printed/local-only parcels remain local history only.
 - Server official tracking starts with new parcels created through `create_parcel_with_counter(...)`.
 - Pull sync direction is server -> local only. It may insert/update server-created parcels on a device, but it must not upload old local-only history.
-- Pull sync cursor updates only after server rows are parsed and local upserts complete. If fetch/parse/upsert fails, keep the previous cursor so the next refresh can retry the same server changes.
+- Pull sync cursor is account-scoped and updates only after server rows are parsed and local upserts complete. If fetch/parse/upsert fails, keep the previous account cursor so the next refresh can retry the same server changes.
 - Real-time sync is deferred. Prefer manual/silent pull refresh first; add realtime later only if operations need live dispatch/status updates across devices.
 - Parcel History status colors are UI-only indicators; do not change database status values just to change colors. Current active filters are search text, date, and status.
 - Printer connect page should remain the `pos_printer_kit` default `PrinterConnectPage`; use app permission helper before opening it.

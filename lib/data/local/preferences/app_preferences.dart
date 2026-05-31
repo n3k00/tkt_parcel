@@ -153,8 +153,8 @@ class AppPreferences {
     return _preferences.getString(_lastLabelPrinterNameKey);
   }
 
-  DateTime? getParcelPullLastSyncedAt() {
-    final value = _preferences.getString(_parcelPullLastSyncedAtKey);
+  DateTime? getParcelPullLastSyncedAt({required String scope}) {
+    final value = _preferences.getString(_parcelPullCursorKey(scope));
     if (value == null || value.isEmpty) {
       return null;
     }
@@ -293,11 +293,18 @@ class AppPreferences {
     return savedId && savedName;
   }
 
-  Future<bool> setParcelPullLastSyncedAt(DateTime value) {
+  Future<bool> setParcelPullLastSyncedAt({
+    required String scope,
+    required DateTime value,
+  }) {
     return _preferences.setString(
-      _parcelPullLastSyncedAtKey,
+      _parcelPullCursorKey(scope),
       value.toUtc().toIso8601String(),
     );
+  }
+
+  String _parcelPullCursorKey(String scope) {
+    return '${_parcelPullLastSyncedAtKey}_${scope.trim()}';
   }
 
   Future<bool> setCachedStaffProfile(Map<String, dynamic> value) {

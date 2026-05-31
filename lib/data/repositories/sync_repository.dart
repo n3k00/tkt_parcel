@@ -20,11 +20,12 @@ class SyncRepository {
   }
 
   Future<int> pullParcelsFromServer() async {
-    if (_client.auth.currentSession == null) {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null || userId.isEmpty) {
       throw StateError('Please sign in before refreshing parcels.');
     }
 
-    final lastSyncedAt = _preferences.getParcelPullLastSyncedAt();
+    final lastSyncedAt = _preferences.getParcelPullLastSyncedAt(scope: userId);
     final response = lastSyncedAt == null
         ? await _client
               .from('parcels')
@@ -52,7 +53,10 @@ class SyncRepository {
     }
 
     if (maxServerUpdatedAt != null) {
-      await _preferences.setParcelPullLastSyncedAt(maxServerUpdatedAt);
+      await _preferences.setParcelPullLastSyncedAt(
+        scope: userId,
+        value: maxServerUpdatedAt,
+      );
     }
 
     return updatedCount;

@@ -48,7 +48,7 @@ Official voucher printing is server-first for new parcels: the app must call Sup
 
 If Supabase parcel creation succeeds but local save or physical print fails, do not delete the server parcel or reuse the tracking ID. The recovery workflow is to refresh/pull Parcel History, find the server-created official parcel, and reprint that same tracking ID.
 
-Server-to-local parcel pull sync is incremental after the first successful pull. The first sync fetches all RLS-visible Supabase parcels, then stores the max successful server `updated_at` in SharedPreferences key `parcel_pull_last_synced_at`. Later pulls fetch `updated_at > last cursor` only, then update the cursor only after local upserts finish.
+Server-to-local parcel pull sync is incremental after the first successful pull. The first sync for each signed-in account fetches all RLS-visible Supabase parcels, then stores the max successful server `updated_at` in an account-scoped SharedPreferences cursor key derived from `parcel_pull_last_synced_at`. Later pulls for that account fetch `updated_at > last cursor` only, then update its cursor only after local upserts finish. Never share one cursor across branch accounts on the same device.
 
 Parcel History supports local filtering by tracking ID, receiver name, and receiver phone. Keep the search field mounted across empty/non-empty result states so typing a query that returns no rows does not drop keyboard focus.
 
