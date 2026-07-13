@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_text_styles.dart';
+import '../../features/auth/providers/auth_provider.dart';
+import '../../features/gate/presentation/screens/gate_incoming_screen.dart';
+import '../../features/gate/presentation/screens/gate_ledger_screen.dart';
 import '../../features/parcel/presentation/screens/home_screen.dart';
 import '../../features/parcel/presentation/screens/parcel_list_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 
-class AppDrawer extends StatelessWidget {
+class AppDrawer extends ConsumerWidget {
   const AppDrawer({super.key, required this.currentRoute});
 
   final String currentRoute;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isGate =
+        ref.watch(staffProfileProvider).asData?.value?.isGate ?? false;
+
     return Drawer(
       child: SafeArea(
         child: Column(
@@ -42,6 +49,20 @@ class AppDrawer extends StatelessWidget {
               selected: currentRoute == ParcelListScreen.routeName,
               onTap: () => _navigate(context, ParcelListScreen.routeName),
             ),
+            if (isGate)
+              _DrawerItem(
+                title: 'Main Ledger',
+                icon: Icons.local_shipping_outlined,
+                selected: currentRoute == GateLedgerScreen.routeName,
+                onTap: () => _navigate(context, GateLedgerScreen.routeName),
+              ),
+            if (isGate)
+              _DrawerItem(
+                title: 'Incoming Parcels',
+                icon: Icons.move_to_inbox_outlined,
+                selected: currentRoute == GateIncomingScreen.routeName,
+                onTap: () => _navigate(context, GateIncomingScreen.routeName),
+              ),
             _DrawerItem(
               title: 'Settings',
               icon: Icons.settings_outlined,

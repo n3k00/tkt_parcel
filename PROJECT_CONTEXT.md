@@ -60,9 +60,38 @@ Voucher header branch contact information is server-owned: `branches.address` an
 
 Account / Branch Profile shows when branch contact data was last loaded from the server. Staff can manually refresh branch profile data, and saving branch address/phone now refreshes the server profile before showing success.
 
-Supabase `towns` is the central town master for parcel From/To choices. It is separate from `branches`; branches are login/account/counter/voucher-header offices, while towns are route/destination master data. Android pulls active destination towns from Supabase ordered by `sort_order` and caches them in SharedPreferences for offline fallback. Settings does not expose To Town add/edit/read-only management; Android users should not manage To Town values locally.
+Supabase `branches` is the source of truth for parcel From Town choices because
+these are voucher-issuing offices/gates. Android pulls active branches and
+caches them in SharedPreferences for offline fallback. The signed-in account's
+branch town is auto-selected when the form opens, but users may choose another
+active branch when needed.
+
+Supabase `towns` is the central master for parcel To Town choices. It is
+separate from `branches`; branches are login/account/counter/voucher-header
+offices, while towns are route/destination master data. Android pulls active
+destination towns ordered by `sort_order` and caches them in SharedPreferences
+for offline fallback. Settings does not expose local From Town or To Town
+management; Android users should not manage these values locally.
 
 Tracking ID prefix is the issuing branch/account city code, not necessarily the selected `fromTown`. Example: a Lashio branch account printing a parcel with `fromTown = Taunggyi` should receive an `LSO-YYMMDD-NNNN` tracking ID.
+
+Supabase `branches.id` is a stable text key used by related software and foreign
+keys. Do not replace or rename existing IDs such as `source_tgi`, `source_lso`,
+and `source_tcl`. `branches.branch_type` distinguishes `main` and `gate`.
+Current gate branches are `gate_llm` / `LLM` / လွိုင်လင် and
+`gate_kgt` / `KGT` / ကျိုင်းတုံ. Gate accounts can create vouchers using their
+issuing branch city-code prefix. Android shows gate-only Drawer entries for
+Main Ledger and Incoming Parcels.
+
+Android gate operations are server-backed and intentionally separate from the
+Windows ledger tables. Gate Main Ledger uses `gate_ledger_mains` and
+`gate_ledger_entries`; it accepts existing tracking IDs only and settle marks
+parcels as dispatched. Gate Incoming uses `gate_incoming_mains` and
+`gate_incoming_entries`; it supports dispatched parcel tracking IDs and manual
+roadside entries, claim-note-required pickup, manual-entry payment updates at
+claim time, editable unpaid manual entries, and an irreversible gate-user
+driver payment lock from unpaid to paid. Gate mutations use authenticated RPC wrappers from
+`supabase/gate_operations.sql`.
 
 ## Current Known Issues
 - Requested Gradle paths `android/app/build.gradle` and `android/build.gradle` do not exist; this project appears to use Kotlin DSL Gradle files instead.
@@ -86,6 +115,9 @@ Tracking ID prefix is the issuing branch/account city code, not necessarily the 
 - Treat `parcels.cityCode` / Supabase `parcels.city_code` as the issuing branch city code for new official parcels. Do not infer parcel origin from the tracking prefix; use `fromTown` for the selected origin town.
 - Keep printer connection UX on the package default connect page unless the user approves a custom UI.
 - Keep branch and town concepts separate: do not store non-branch destination towns in `branches`.
+- Use active Supabase `branches` for From Town choices and active Supabase `towns` for To Town choices. Keep both caches as offline fallbacks.
+- Treat `branches.id` as an integration-stable text key. Never rename existing branch IDs without an explicit cross-software migration plan.
+- Keep Android gate operation tables separate from Windows ledger/incoming tables unless an explicit cross-app migration is approved.
 
 ## Useful Commands
 Run dev flavor:

@@ -4,6 +4,8 @@ import '../../core/config/app_config.dart';
 import '../../features/auth/presentation/screens/account_screen.dart';
 import '../../features/auth/presentation/screens/auth_gate.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/gate/presentation/screens/gate_incoming_screen.dart';
+import '../../features/gate/presentation/screens/gate_ledger_screen.dart';
 import '../../features/parcel/presentation/screens/create_parcel_screen.dart';
 import '../../features/parcel/presentation/screens/home_screen.dart';
 import '../../features/parcel/presentation/screens/parcel_list_screen.dart';
@@ -12,7 +14,6 @@ import '../../features/printing/presentation/screens/printer_connect_screen.dart
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/receipt_settings_screen.dart';
 import '../../features/settings/presentation/screens/label_settings_screen.dart';
-import '../../features/settings/presentation/screens/from_town_settings_screen.dart';
 import '../../features/settings/presentation/screens/backup_restore_screen.dart';
 import '../../features/voucher/presentation/models/voucher_preview_args.dart';
 import '../../features/voucher/presentation/screens/voucher_preview_screen.dart';
@@ -45,6 +46,16 @@ class AppRouter {
       case HomeScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const HomeScreen(),
+          settings: settings,
+        );
+      case GateLedgerScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const GateLedgerScreen(),
+          settings: settings,
+        );
+      case GateIncomingScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const GateIncomingScreen(),
           settings: settings,
         );
       case CreateParcelScreen.routeName:
@@ -89,11 +100,6 @@ class AppRouter {
       case SettingsScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const SettingsScreen(),
-          settings: settings,
-        );
-      case FromTownSettingsScreen.routeName:
-        return MaterialPageRoute(
-          builder: (_) => const FromTownSettingsScreen(),
           settings: settings,
         );
       case BackupRestoreScreen.routeName:

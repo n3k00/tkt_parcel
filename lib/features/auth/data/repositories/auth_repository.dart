@@ -33,7 +33,7 @@ class AuthRepository {
     final row = await _client
         .from('staff_profiles')
         .select(
-          'user_id, branch_id, role, is_active, branches(city_code, town_name, address, phone_numbers)',
+          'user_id, branch_id, role, is_active, branches(city_code, town_name, branch_type, address, phone_numbers)',
         )
         .eq('user_id', user.id)
         .eq('is_active', true)

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/services/qr_service.dart';
 import '../data/local/preferences/app_preferences.dart';
 import '../data/repositories/parcel_repository.dart';
+import '../data/repositories/server_branch_repository.dart';
 import '../data/repositories/settings_repository.dart';
 import '../data/repositories/server_town_repository.dart';
 import '../data/repositories/sync_repository.dart';
@@ -37,6 +38,14 @@ final serverTownRepositoryProvider = FutureProvider<ServerTownRepository>((
   final client = ref.watch(supabaseClientProvider);
   final preferences = await ref.watch(appPreferencesProvider.future);
   return ServerTownRepository(client, preferences);
+});
+
+final serverBranchRepositoryProvider = FutureProvider<ServerBranchRepository>((
+  ref,
+) async {
+  final client = ref.watch(supabaseClientProvider);
+  final preferences = await ref.watch(appPreferencesProvider.future);
+  return ServerBranchRepository(client, preferences);
 });
 
 final qrServiceProvider = Provider<QrService>((ref) {

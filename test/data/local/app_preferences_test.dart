@@ -69,4 +69,16 @@ void main() {
       {'townName': 'လားရှိုး', 'type': 'destination', 'sortOrder': 28},
     ]);
   });
+
+  test('stores cached source branches', () async {
+    final preferences = await AppPreferences.create();
+
+    await preferences.setCachedSourceBranches([
+      {'townName': 'Kyaing Tong', 'type': 'source', 'cityCode': 'KGT'},
+    ]);
+
+    expect(preferences.getCachedSourceBranches(), [
+      {'townName': 'Kyaing Tong', 'type': 'source', 'cityCode': 'KGT'},
+    ]);
+  });
 }

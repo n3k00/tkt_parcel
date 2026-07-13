@@ -7,7 +7,6 @@ import 'package:tkt_parcel/core/theme/app_theme.dart';
 import 'package:tkt_parcel/features/auth/presentation/screens/account_screen.dart';
 import 'package:tkt_parcel/features/printer/presentation/screens/printer_settings_screen.dart';
 import 'package:tkt_parcel/features/settings/presentation/providers/settings_provider.dart';
-import 'package:tkt_parcel/features/settings/presentation/screens/from_town_settings_screen.dart';
 import 'package:tkt_parcel/features/settings/presentation/screens/receipt_settings_screen.dart';
 import 'package:tkt_parcel/features/settings/presentation/screens/settings_screen.dart';
 import 'package:tkt_parcel/features/settings/presentation/screens/backup_restore_screen.dart';
@@ -36,8 +35,6 @@ void main() {
           routes: {
             AccountScreen.routeName: (_) =>
                 const Scaffold(body: Text('Account Page')),
-            FromTownSettingsScreen.routeName: (_) =>
-                const Scaffold(body: Text('From Town Page')),
             ReceiptSettingsScreen.routeName: (_) =>
                 const Scaffold(body: Text('Receipt Settings Page')),
             LabelSettingsScreen.routeName: (_) =>
@@ -55,7 +52,7 @@ void main() {
 
     expect(find.text('Account'), findsOneWidget);
     expect(find.text('Profile'), findsNothing);
-    expect(find.text(AppStrings.fromTownTitle), findsOneWidget);
+    expect(find.text('From Town'), findsNothing);
     expect(find.text('Voucher Header'), findsNothing);
     expect(find.text(AppStrings.receiptSettingsTitle), findsOneWidget);
     expect(find.text(AppStrings.labelSettingsTitle), findsOneWidget);

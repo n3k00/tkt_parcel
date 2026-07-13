@@ -1,8 +1,5 @@
 abstract final class AppStrings {
   static const settingsTitle = 'Settings';
-  static const fromTownTitle = 'From Town';
-  static const fromTownSubtitle =
-      'Choose the default source town for the form.';
   static const receiptSettingsTitle = 'Receipt Settings';
   static const receiptSettingsSubtitle =
       'Live preview, font size, and receipt padding controls.';
@@ -54,8 +51,6 @@ abstract final class AppStrings {
   static const saveChanges = 'Save Changes';
   static const requiredField = 'Required.';
 
-  static const noSourceTowns = 'No source towns available.';
-  static const defaultFromTownUpdated = 'Default from town updated.';
   static const cancelAction = 'Cancel';
   static const deleteAction = 'Delete';
 

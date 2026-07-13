@@ -32,15 +32,9 @@ void main() {
     expect(repository.branchIdForCityCode('TGI'), 'source_tgi');
     expect(repository.branchIdForCityCode('lso'), 'source_lso');
     expect(repository.branchIdForCityCode('TCL'), 'source_tcl');
+    expect(repository.branchIdForCityCode('LLM'), 'gate_llm');
+    expect(repository.branchIdForCityCode('kgt'), 'gate_kgt');
     expect(repository.branchIdForCityCode('NYG'), 'source_nyg');
-  });
-
-  test('saves and loads default source town name', () async {
-    await repository.saveDefaultSourceTownName('လားရှိုး');
-
-    final value = await repository.getDefaultSourceTownName();
-
-    expect(value, 'လားရှိုး');
   });
 
   test('returns default address font size in app setup', () async {

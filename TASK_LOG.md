@@ -43,6 +43,20 @@ Latest full product/release status: Unknown / needs confirmation.
 - Existing database structure includes parcels, parcel events, and towns with `schemaVersion = 3`.
 - Existing commands are documented for Flutter run/build/test and Drift code generation.
 - Prepared production release `1.0.10+13` after moving To Town choices to Supabase town master and removing Settings To Town management.
+- Added the Supabase gate-branch foundation without deleting or renaming existing branch data: `branches.branch_type` (`main | gate`), `gate_llm` / `LLM` / လွိုင်လင်, and `gate_kgt` / `KGT` / ကျိုင်းတုံ. Seeded current-day zero counters for `LLM` and `KGT`; future daily counters are created automatically by the existing voucher RPC.
+- Updated Android staff profile fetch/cache mapping with `branches.branch_type`. Gate accounts now see Drawer entries for Main Ledger and Incoming Parcels. These screens are routed empty states only; gate transaction RPCs and operational UI remain a separate implementation phase.
+- Changed Android From Town handling to use active Supabase `branches`, cached in SharedPreferences for offline fallback. The signed-in account branch is auto-selected on form load. Removed Settings > From Town local-default management; To Town continues to use Supabase `towns`.
+- Implemented Android gate operations as separate Supabase-backed workflows: `gate_ledger_mains`, `gate_ledger_entries`, `gate_incoming_mains`, and `gate_incoming_entries`, with own-branch RLS and authenticated transactional RPCs. Gate Main Ledger supports driver selection, tracking-ID attach, soft remove, and settle-to-dispatched. Gate Incoming supports driver selection, existing dispatched parcel attach-to-arrived, manual parcel entry, unpaid manual-entry edit, soft remove, claim-note-required pickup, and irreversible gate-user driver-payment locking.
+- Fixed gate tracking-ID prompt dialog controller lifecycle. Incoming and Main Ledger prompts now own and dispose their `TextEditingController` inside the dialog widget after route removal, avoiding the Flutter `TextEditingController was used after being disposed` assertion.
+- Updated Gate Incoming list scanning UX: list rows now lead with receiver name and receiver phone instead of tracking ID. Tapping any row, including claimed rows, opens details for tracking ID/manual source, destination, payment, charges, cash advance, status, note, and claim note. Remove stays in the action menu and requires confirmation before the backend call.
+- Polished Gate Incoming payment display without changing backend values: UI labels show `ငွေတောင်းရန်` for `unpaid` and `ငွေရှင်းပြီး` for `paid`. Entry details now show Receiver Name as an explicit field and hide the internal Entry Type field.
+- Fixed Gate Incoming existing-parcel remove semantics: removing an unclaimed existing parcel from an unpaid incoming list soft-removes the entry and rolls the parcel master status back from `arrived` to `dispatched`, allowing the tracking ID to be attached again. Manual parcel removal remains entry-only.
+- Added Gate Incoming tracking-ID confirmation flow: a read-only authenticated preview RPC validates the parcel and returns receiver/payment details without changing status. Android shows those details and calls the attach RPC only after the operator presses `Confirm Attach`.
+- Gate Incoming tracking-ID lookup and confirm-attach failures now use blocking error dialogs instead of transient snackbars, so operators can read why a parcel was not found or could not be attached.
+- Replaced raw Supabase/PostgREST text in Gate Incoming tracking-ID dialogs with operator-friendly Myanmar messages for missing parcels, invalid lifecycle status, claimed parcels, duplicates, paid-list locks, missing lists, and gate-account access errors. Unknown failures show a retry/network-check message.
+- Polished the Gate Incoming Manual Parcel dialog: grouped receiver/payment/note sections, added field icons and spacing, made amount inputs responsive on narrow screens, and added visible required/non-negative validation feedback.
+- Fixed Manual Parcel dialog runtime assertions introduced during polish: removed `LayoutBuilder` from AlertDialog intrinsic sizing, kept amount inputs in a stable vertical layout, and set the multiline note field to `TextInputType.multiline`.
+- Polished the Gate Incoming Driver Payment dialog to match the manual-entry form: added a payment icon and short prompt, spaced inputs, multiline optional note, visible non-negative amount validation, constrained dialog width, and an icon-backed confirm action.
 
 ## Known Issues
 - Requested Gradle Groovy files `android/app/build.gradle` and `android/build.gradle` are not present; project appears to use Kotlin DSL Gradle files.
@@ -64,6 +78,8 @@ Latest full product/release status: Unknown / needs confirmation.
 - Verify login on a real Android device for admin, Taunggyi, Lashio, and Tachileik accounts.
 - Retest login with an Auth user that has no active `staff_profiles` row and confirm it stays on the account setup/no-access view instead of reaching Home.
 - Review Windows `TKT Transport Ledger` Beta 1 before depending on it operationally: Inventory and Reports are still placeholder/mock-backed areas, while Home/Main Ledger and Driver are the main Supabase-backed beta workflows.
+- Create Supabase Auth users and `staff_profiles` rows for `gate_llm` and `gate_kgt`, then real-device test gate login and `LLM/KGT` voucher creation.
+- Real-device test Android gate Main Ledger and Incoming Parcels with `kyaingtong@tkt.com`, including attach guards, settle locks, manual entry, claim note, and driver payment lock.
 
 ## Decisions
 - Use Riverpod/provider/repository/service patterns for new work unless architecture changes are explicitly requested.
@@ -77,7 +93,10 @@ Latest full product/release status: Unknown / needs confirmation.
 - Supabase public app tables must not grant app roles destructive table privileges such as `DELETE` or `TRUNCATE`; app access should remain minimal and RLS-scoped.
 - Branch voucher header contact fields live on Supabase `branches.address` and `branches.phone_numbers`; staff update their own branch profile from Account. Local voucher header address/phone remains fallback/legacy data only.
 - Town master data belongs in Supabase `towns`, not `branches`. Branches remain login/account/counter/voucher-header offices; towns are parcel route/destination choices.
+- `branches.id` is a stable text integration key. Keep existing `source_tgi`, `source_lso`, and `source_tcl` IDs unchanged. Gate IDs are `gate_llm` and `gate_kgt`; no `parent_branch_id` is required.
 - Android To Town choices must come from Supabase `towns` sorted by `sort_order`; do not reintroduce device-local To Town add/delete/read-only management UI in Settings.
+- Android From Town choices must come from active Supabase `branches`; do not reintroduce device-local From Town management UI in Settings.
+- Android gate operation tables stay separate from Windows ledger tables. Gate users may read active drivers but add/edit drivers only from Windows/Admin.
 - Login success must return to the root `AuthGate`; do not navigate directly from `LoginScreen` to `HomeScreen`, because staff profile access must be checked first.
 - Server-side tracking IDs must be generated by the authenticated `create_parcel_with_counter` RPC to avoid duplicate counters across devices.
 - Tracking ID format is `CITY-YYMMDD-NNNN`; `CITY` is the issuing branch/account city code, not necessarily selected From Town. Do not use account code in new server-generated tracking IDs.

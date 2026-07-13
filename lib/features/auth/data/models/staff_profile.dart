@@ -6,6 +6,7 @@ class StaffProfile {
     this.branchId,
     this.branchCityCode,
     this.branchTownName,
+    this.branchType,
     this.branchAddress,
     this.branchPhoneNumbers,
   });
@@ -16,12 +17,15 @@ class StaffProfile {
   final bool isActive;
   final String? branchCityCode;
   final String? branchTownName;
+  final String? branchType;
   final String? branchAddress;
   final String? branchPhoneNumbers;
 
   bool get isAdmin => role == 'admin';
 
   bool get isStaff => role == 'staff';
+
+  bool get isGate => branchType == 'gate';
 
   String get accessLabel {
     if (isAdmin) {
@@ -44,6 +48,7 @@ class StaffProfile {
       isActive: map['is_active'] as bool? ?? false,
       branchCityCode: branchMap?['city_code'] as String?,
       branchTownName: branchMap?['town_name'] as String?,
+      branchType: branchMap?['branch_type'] as String?,
       branchAddress: branchMap?['address'] as String?,
       branchPhoneNumbers: branchMap?['phone_numbers'] as String?,
     );
@@ -58,6 +63,7 @@ class StaffProfile {
       'branches': {
         'city_code': branchCityCode,
         'town_name': branchTownName,
+        'branch_type': branchType,
         'address': branchAddress,
         'phone_numbers': branchPhoneNumbers,
       },

@@ -89,11 +89,6 @@ Future<void> saveLastLabelPrinter(
   ref.invalidate(lastLabelPrinterProvider);
 }
 
-final defaultSourceTownNameProvider = FutureProvider<String?>((ref) async {
-  final repository = await ref.watch(settingsRepositoryProvider.future);
-  return repository.getDefaultSourceTownName();
-});
-
 final printerPresetProvider = FutureProvider<String>((ref) async {
   final repository = await ref.watch(settingsRepositoryProvider.future);
   return repository.getPrinterPreset();

@@ -8,6 +8,7 @@ import '../../../../data/models/enums/payment_status.dart';
 import '../../../../data/models/town.dart';
 import '../../../../data/repositories/town_repository.dart';
 import '../../../../providers/parcel_repository_provider.dart';
+import '../../../auth/providers/auth_provider.dart';
 
 final imagePickerServiceProvider = Provider<ImagePickerService>((ref) {
   return ImagePickerService();
@@ -159,13 +160,9 @@ class ParcelFormNotifier extends AsyncNotifier<ParcelFormState> {
 
   Future<ParcelFormState> _createInitialState() async {
     final townRepository = ref.read(townRepositoryProvider);
-    final settingsRepository = await ref.read(
-      settingsRepositoryProvider.future,
-    );
-    final sourceTowns = await townRepository.getSourceTowns();
+    final sourceTowns = await _loadSourceTowns(townRepository);
     final destinationTowns = await _loadDestinationTowns(townRepository);
-    final defaultSourceTownName = await settingsRepository
-        .getDefaultSourceTownName();
+    final defaultSourceTownName = await _loadDefaultSourceTownName();
     final selectedSourceTown = sourceTowns.firstWhere(
       (town) => town.townName == defaultSourceTownName,
       orElse: () => sourceTowns.isEmpty
@@ -191,6 +188,31 @@ class ParcelFormNotifier extends AsyncNotifier<ParcelFormState> {
       fromTownCityCode: fromTownCityCode,
       formVersion: _formVersion,
     );
+  }
+
+  Future<String?> _loadDefaultSourceTownName() async {
+    try {
+      return (await ref.read(staffProfileProvider.future))?.branchTownName;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<List<TownModel>> _loadSourceTowns(
+    TownRepository townRepository,
+  ) async {
+    try {
+      final serverBranchRepository = await ref.read(
+        serverBranchRepositoryProvider.future,
+      );
+      final serverTowns = await serverBranchRepository.getSourceTowns();
+      if (serverTowns.isNotEmpty) {
+        return serverTowns;
+      }
+    } catch (_) {
+      // Fall back to local seeded source towns so the form can still open offline.
+    }
+    return townRepository.getSourceTowns();
   }
 
   Future<List<TownModel>> _loadDestinationTowns(

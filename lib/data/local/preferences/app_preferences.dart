@@ -8,7 +8,6 @@ class AppPreferences {
   static const _deviceIdKey = 'device_id';
   static const _cityCodeKey = 'setup_city_code';
   static const _accountCodeKey = 'setup_account_code';
-  static const _defaultSourceTownNameKey = 'default_source_town_name';
   static const _businessNameKey = 'business_name';
   static const _businessSubtitleKey = 'business_subtitle';
   static const _businessAddressKey = 'business_address';
@@ -35,6 +34,7 @@ class AppPreferences {
   static const _lastLabelPrinterNameKey = 'last_label_printer_name';
   static const _parcelPullLastSyncedAtKey = 'parcel_pull_last_synced_at';
   static const _cachedStaffProfileKey = 'cached_staff_profile';
+  static const _cachedSourceBranchesKey = 'cached_source_branches';
   static const _cachedDestinationTownsKey = 'cached_destination_towns';
 
   final SharedPreferences _preferences;
@@ -50,9 +50,6 @@ class AppPreferences {
 
   String? getDeviceId() => _preferences.getString(_deviceIdKey);
 
-  String? getDefaultSourceTownName() =>
-      _preferences.getString(_defaultSourceTownNameKey);
-
   Future<bool> setCityCode(String value) {
     return _preferences.setString(_cityCodeKey, value);
   }
@@ -63,10 +60,6 @@ class AppPreferences {
 
   Future<bool> setDeviceId(String value) {
     return _preferences.setString(_deviceIdKey, value);
-  }
-
-  Future<bool> setDefaultSourceTownName(String value) {
-    return _preferences.setString(_defaultSourceTownNameKey, value);
   }
 
   String? getBusinessName() => _preferences.getString(_businessNameKey);
@@ -176,6 +169,25 @@ class AppPreferences {
 
   List<Map<String, dynamic>> getCachedDestinationTowns() {
     final value = _preferences.getString(_cachedDestinationTownsKey);
+    if (value == null || value.isEmpty) {
+      return const [];
+    }
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is! List) {
+        return const [];
+      }
+      return decoded
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  List<Map<String, dynamic>> getCachedSourceBranches() {
+    final value = _preferences.getString(_cachedSourceBranchesKey);
     if (value == null || value.isEmpty) {
       return const [];
     }
@@ -316,5 +328,9 @@ class AppPreferences {
       _cachedDestinationTownsKey,
       jsonEncode(value),
     );
+  }
+
+  Future<bool> setCachedSourceBranches(List<Map<String, dynamic>> value) {
+    return _preferences.setString(_cachedSourceBranchesKey, jsonEncode(value));
   }
 }

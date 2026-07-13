@@ -14,6 +14,8 @@ class SettingsRepository {
     'TGI': 'source_tgi',
     'LSO': 'source_lso',
     'TCL': 'source_tcl',
+    'LLM': 'gate_llm',
+    'KGT': 'gate_kgt',
   };
 
   static const _defaultCityCode = 'TGI';
@@ -127,18 +129,6 @@ class SettingsRepository {
     await _preferences.setReceiptPaddingRight(config.receiptPaddingRight);
     await _preferences.setReceiptPaddingBottom(config.receiptPaddingBottom);
     await _preferences.setFooterMessage((config.footerMessage ?? '').trim());
-  }
-
-  Future<String?> getDefaultSourceTownName() async {
-    final townName = _preferences.getDefaultSourceTownName();
-    if (townName == null || townName.trim().isEmpty) {
-      return null;
-    }
-    return townName.trim();
-  }
-
-  Future<void> saveDefaultSourceTownName(String townName) async {
-    await _preferences.setDefaultSourceTownName(townName.trim());
   }
 
   Future<String> getPrinterPreset() async {

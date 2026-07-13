@@ -12,6 +12,8 @@ create table if not exists public.branches (
   id text primary key,
   town_name text not null,
   city_code text not null unique,
+  branch_type text not null default 'main'
+    check (branch_type in ('main', 'gate')),
   address text,
   phone_numbers text,
   is_active boolean not null default true,
@@ -46,8 +48,24 @@ create index if not exists towns_active_sort_order_idx
   on public.towns(active, sort_order);
 
 alter table public.branches
+  add column if not exists branch_type text not null default 'main',
   add column if not exists address text,
   add column if not exists phone_numbers text;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'branches_branch_type_check'
+      and conrelid = 'public.branches'::regclass
+  ) then
+    alter table public.branches
+      add constraint branches_branch_type_check
+      check (branch_type in ('main', 'gate'));
+  end if;
+end;
+$$;
 
 create table if not exists public.staff_profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
@@ -130,15 +148,24 @@ create index if not exists parcels_branch_id_idx
 create index if not exists parcels_created_by_idx
   on public.parcels(created_by);
 
-insert into public.branches (id, town_name, city_code)
+insert into public.branches (id, town_name, city_code, branch_type)
 values
-  ('source_tgi', U&'\1010\1031\102C\1004\103A\1000\103C\102E\1038', 'TGI'),
-  ('source_lso', U&'\101C\102C\1038\101B\103E\102D\102F\1038', 'LSO'),
-  ('source_tcl', U&'\1010\102C\1001\103B\102E\101C\102D\1010\103A', 'TCL')
+  ('source_tgi', U&'\1010\1031\102C\1004\103A\1000\103C\102E\1038', 'TGI', 'main'),
+  ('source_lso', U&'\101C\102C\1038\101B\103E\102D\102F\1038', 'LSO', 'main'),
+  ('source_tcl', U&'\1010\102C\1001\103B\102E\101C\102D\1010\103A', 'TCL', 'main'),
+  ('gate_llm', U&'\101C\103D\102D\102F\1004\103A\101C\1004\103A', 'LLM', 'gate'),
+  ('gate_kgt', U&'\1000\103B\102D\102F\1004\103A\1038\1010\102F\1036', 'KGT', 'gate')
 on conflict (id) do update set
   town_name = excluded.town_name,
   city_code = excluded.city_code,
+  branch_type = excluded.branch_type,
   updated_at = now();
+
+insert into public.parcel_counters (city_code, service_date, running_number)
+values
+  ('LLM', (now() at time zone 'Asia/Yangon')::date, 0),
+  ('KGT', (now() at time zone 'Asia/Yangon')::date, 0)
+on conflict (city_code, service_date) do nothing;
 
 insert into public.towns (name_mm, name_en, code, sort_order)
 values
@@ -329,6 +356,26 @@ using (
   app_private.is_admin()
   or app_private.current_user_branch_id() = id
 );
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_policies
+    where schemaname = 'public'
+      and tablename = 'branches'
+      and policyname = 'branches_select_active'
+  ) then
+    execute $policy$
+      create policy branches_select_active
+      on public.branches
+      for select
+      to authenticated
+      using (is_active = true)
+    $policy$;
+  end if;
+end;
+$$;
 
 drop policy if exists branches_admin_write on public.branches;
 create policy branches_admin_write

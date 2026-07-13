@@ -13,7 +13,6 @@ import '../../../auth/presentation/screens/account_screen.dart';
 import '../../../parcel/presentation/screens/home_screen.dart';
 import '../../../printer/presentation/screens/printer_settings_screen.dart';
 import '../providers/settings_provider.dart';
-import 'from_town_settings_screen.dart';
 import 'label_settings_screen.dart';
 import 'receipt_settings_screen.dart';
 import 'backup_restore_screen.dart';
@@ -65,17 +64,6 @@ class SettingsScreen extends ConsumerWidget {
                     subtitle: 'View branch access and sign out.',
                     onTap: () {
                       Navigator.of(context).pushNamed(AccountScreen.routeName);
-                    },
-                  ),
-                  const Divider(height: 1, indent: AppSpacing.xl),
-                  _SettingsListTile(
-                    icon: Icons.location_on_outlined,
-                    title: AppStrings.fromTownTitle,
-                    subtitle: AppStrings.fromTownSubtitle,
-                    onTap: () {
-                      Navigator.of(
-                        context,
-                      ).pushNamed(FromTownSettingsScreen.routeName);
                     },
                   ),
                   const Divider(height: 1, indent: AppSpacing.xl),

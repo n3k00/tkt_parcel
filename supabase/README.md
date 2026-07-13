@@ -16,6 +16,8 @@ This folder contains the first backend contract for future TKT Parcel sync.
 1. Create a Supabase project.
 2. Open `SQL Editor`.
 3. Run [`schema.sql`](schema.sql).
+4. Run [`gate_operations.sql`](gate_operations.sql) for Android gate Main
+   Ledger and Incoming Parcels workflows.
 4. Confirm seeded branches exist:
 
 Safety rule: never delete/drop/remove database objects or data without explicit approval. Do not run destructive SQL such as `DROP TABLE`, `DROP COLUMN`, `TRUNCATE`, broad `DELETE`, or destructive migration steps unless the exact operation has been approved.
@@ -29,6 +31,24 @@ Expected source branches:
 - `source_tgi` / `TGI`
 - `source_lso` / `LSO`
 - `source_tcl` / `TCL`
+
+Expected gate branches:
+
+- `gate_llm` / `LLM`
+- `gate_kgt` / `KGT`
+
+`branches.id` is an existing stable text key used by related software and
+foreign keys. Do not replace it with a generated ID. `branches.branch_type`
+distinguishes `main` and `gate` accounts. Gate branches can create vouchers;
+their server-generated tracking IDs use their own city code prefix.
+
+Authenticated app users can read active branch rows for the server-owned
+From Town picker. Staff updates remain restricted to their own branch contact
+fields.
+
+Current-day zero counter rows are seeded for `LLM` and `KGT`. After that,
+`create_parcel_with_counter(...)` creates each branch's new daily counter
+automatically on the first voucher of the day.
 
 ## Town Master
 
@@ -49,6 +69,13 @@ is treated as the same town as `ခိုလမ်`, so only `ခိုလမ်
 Authenticated app users have read-only access to active towns. Town creation,
 editing, and deactivation should be done from Supabase/admin tooling until a
 dedicated admin workflow is approved.
+
+## From Town Branches
+
+Parcel From Town choices come from active `public.branches` rows. This keeps
+voucher-issuing main branches and gates server-owned. Authenticated users may
+read active branches for the form picker, while staff contact-field updates
+remain restricted to their own branch.
 
 ## Server Counter
 
@@ -122,3 +149,31 @@ For a complete verification script, run [`verify.sql`](verify.sql) after `schema
 
 - Verify real Android print/save flow against Supabase for single-device and two-device counter behavior.
 - Pull dispatch/claimed updates back into Drift.
+
+## Android Gate Operations
+
+Gate-only Android screens use dedicated tables so they do not change the
+Windows ledger contract:
+
+- `gate_ledger_mains`, `gate_ledger_entries`
+- `gate_incoming_mains`, `gate_incoming_entries`
+
+Gate Main Ledger accepts existing tracking IDs only. Settling marks attached
+parcels as `dispatched` and locks the ledger. A parcel cannot be attached to a
+second active gate ledger entry.
+
+Gate Incoming accepts either an existing dispatched tracking ID or a manual
+parcel entry. Existing parcels become `arrived` when attached. Claim requires a
+note; existing parcels also become `claimed`. Manual parcel claim may update
+paid/unpaid status. Tracking-ID attach first calls a read-only preview RPC and
+shows parcel details; only operator confirmation performs the attach and
+changes the parcel to `arrived`. Before driver payment, manual entries can be edited.
+Removing an unclaimed existing parcel from an unpaid incoming list reverses its
+receipt state from `arrived` back to `dispatched`, so it can be attached again.
+Marking driver payment from `unpaid` to `paid` records the entered amount and
+locks entry add/remove/edit operations while leaving claim
+updates available.
+
+Gate tables are RLS-protected. Android reads its own branch rows directly and
+performs mutations through authenticated RPC wrappers only. Gate driver lists
+are read-only in Android; driver add/edit remains Windows/Admin work.
