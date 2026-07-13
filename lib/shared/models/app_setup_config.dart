@@ -12,6 +12,7 @@ class AppSetupConfig {
     required this.businessPhoneFontSize,
     required this.receiptLabelFontSize,
     required this.receiptValueFontSize,
+    required this.receiptTermsFontSize,
     required this.receiptPaddingTop,
     required this.receiptPaddingLeft,
     required this.receiptPaddingRight,
@@ -31,6 +32,7 @@ class AppSetupConfig {
   final double businessPhoneFontSize;
   final double receiptLabelFontSize;
   final double receiptValueFontSize;
+  final double receiptTermsFontSize;
   final double receiptPaddingTop;
   final double receiptPaddingLeft;
   final double receiptPaddingRight;
@@ -53,6 +55,7 @@ class AppSetupConfig {
     double? businessPhoneFontSize,
     double? receiptLabelFontSize,
     double? receiptValueFontSize,
+    double? receiptTermsFontSize,
     double? receiptPaddingTop,
     double? receiptPaddingLeft,
     double? receiptPaddingRight,
@@ -76,13 +79,14 @@ class AppSetupConfig {
           businessPhoneFontSize ?? this.businessPhoneFontSize,
       receiptLabelFontSize: receiptLabelFontSize ?? this.receiptLabelFontSize,
       receiptValueFontSize: receiptValueFontSize ?? this.receiptValueFontSize,
+      receiptTermsFontSize: receiptTermsFontSize ?? this.receiptTermsFontSize,
       receiptPaddingTop: receiptPaddingTop ?? this.receiptPaddingTop,
       receiptPaddingLeft: receiptPaddingLeft ?? this.receiptPaddingLeft,
       receiptPaddingRight: receiptPaddingRight ?? this.receiptPaddingRight,
-      receiptPaddingBottom:
-          receiptPaddingBottom ?? this.receiptPaddingBottom,
-      footerMessage:
-          clearFooterMessage ? null : footerMessage ?? this.footerMessage,
+      receiptPaddingBottom: receiptPaddingBottom ?? this.receiptPaddingBottom,
+      footerMessage: clearFooterMessage
+          ? null
+          : footerMessage ?? this.footerMessage,
     );
   }
 }

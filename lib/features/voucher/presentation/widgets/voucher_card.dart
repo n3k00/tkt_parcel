@@ -14,12 +14,14 @@ class VoucherCard extends StatelessWidget {
     required this.qrPayload,
     required this.setup,
     this.isPrintable = false,
+    this.showTerms = false,
   });
 
   final ParcelModel parcel;
   final String qrPayload;
   final AppSetupConfig setup;
   final bool isPrintable;
+  final bool showTerms;
 
   @override
   Widget build(BuildContext context) {
@@ -151,6 +153,12 @@ class VoucherCard extends StatelessWidget {
                 size: isPrintable ? 148 : 116,
               ),
             ),
+            if (showTerms) ...[
+              SizedBox(height: isPrintable ? 18 : 14),
+              const _DashedDivider(),
+              SizedBox(height: isPrintable ? 14 : 12),
+              _TermsSection(setup: setup, isPrintable: isPrintable),
+            ],
             SizedBox(height: isPrintable ? 18 : 12),
             Text(
               (setup.footerMessage ?? '').trim().isEmpty
@@ -242,18 +250,12 @@ class _MetaRow extends StatelessWidget {
       children: [
         Expanded(
           flex: 2,
-          child: Text(
-            label,
-            style: _ReceiptStyles.label(setup, isPrintable),
-          ),
+          child: Text(label, style: _ReceiptStyles.label(setup, isPrintable)),
         ),
         SizedBox(width: isPrintable ? 16 : 12),
         Expanded(
           flex: 3,
-          child: Text(
-            value,
-            style: _ReceiptStyles.value(setup, isPrintable),
-          ),
+          child: Text(value, style: _ReceiptStyles.value(setup, isPrintable)),
         ),
       ],
     );
@@ -280,18 +282,12 @@ class _LabelValueRow extends StatelessWidget {
       children: [
         Expanded(
           flex: 2,
-          child: Text(
-            label,
-            style: _ReceiptStyles.label(setup, isPrintable),
-          ),
+          child: Text(label, style: _ReceiptStyles.label(setup, isPrintable)),
         ),
         SizedBox(width: isPrintable ? 16 : 12),
         Expanded(
           flex: 3,
-          child: Text(
-            value,
-            style: _ReceiptStyles.value(setup, isPrintable),
-          ),
+          child: Text(value, style: _ReceiptStyles.value(setup, isPrintable)),
         ),
       ],
     );
@@ -411,15 +407,41 @@ class _DashedDivider extends StatelessWidget {
             count,
             (_) => const SizedBox(
               width: dashWidth,
-              child: Divider(
-                height: 1,
-                thickness: 2.4,
-                color: Colors.black87,
-              ),
+              child: Divider(height: 1, thickness: 2.4, color: Colors.black87),
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _TermsSection extends StatelessWidget {
+  const _TermsSection({required this.setup, required this.isPrintable});
+
+  final AppSetupConfig setup;
+  final bool isPrintable;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          ReceiptStrings.termsTitle,
+          textAlign: TextAlign.center,
+          style: _ReceiptStyles.termsTitle(setup, isPrintable),
+        ),
+        SizedBox(height: isPrintable ? 10 : 8),
+        for (var index = 0; index < ReceiptStrings.voucherTerms.length; index++)
+          Padding(
+            padding: EdgeInsets.only(bottom: isPrintable ? 6 : 4),
+            child: Text(
+              '${index + 1}. ${ReceiptStrings.voucherTerms[index]}',
+              style: _ReceiptStyles.terms(setup, isPrintable),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -444,39 +466,54 @@ class _ReceiptStyles {
       );
 
   static TextStyle address(AppSetupConfig setup, bool isPrintable) => TextStyle(
-        fontSize: _scale(setup.businessAddressFontSize, isPrintable, 1.08),
-        fontWeight: FontWeight.w500,
-        height: 1.2,
-        color: Colors.black,
-      );
+    fontSize: _scale(setup.businessAddressFontSize, isPrintable, 1.08),
+    fontWeight: FontWeight.w500,
+    height: 1.2,
+    color: Colors.black,
+  );
 
   static TextStyle phone(AppSetupConfig setup, bool isPrintable) => TextStyle(
-        fontSize: _scale(setup.businessPhoneFontSize, isPrintable, 1.18),
-        fontWeight: FontWeight.w600,
-        height: 1.15,
-        color: Colors.black,
-      );
+    fontSize: _scale(setup.businessPhoneFontSize, isPrintable, 1.18),
+    fontWeight: FontWeight.w600,
+    height: 1.15,
+    color: Colors.black,
+  );
 
   static TextStyle label(AppSetupConfig setup, bool isPrintable) => TextStyle(
-        fontSize: isPrintable ? setup.receiptLabelFontSize : 16,
-        fontWeight: FontWeight.w500,
-        height: 1.25,
-        color: Colors.black,
-      );
+    fontSize: isPrintable ? setup.receiptLabelFontSize : 16,
+    fontWeight: FontWeight.w500,
+    height: 1.25,
+    color: Colors.black,
+  );
 
   static TextStyle value(AppSetupConfig setup, bool isPrintable) => TextStyle(
-        fontSize: isPrintable ? setup.receiptValueFontSize : 16,
-        fontWeight: FontWeight.w500,
-        height: 1.28,
-        color: Colors.black,
-      );
+    fontSize: isPrintable ? setup.receiptValueFontSize : 16,
+    fontWeight: FontWeight.w500,
+    height: 1.28,
+    color: Colors.black,
+  );
 
   static TextStyle footer(bool isPrintable) => TextStyle(
-        fontSize: isPrintable ? 22 : 16,
-        fontWeight: FontWeight.w600,
+    fontSize: isPrintable ? 22 : 16,
+    fontWeight: FontWeight.w600,
+    height: 1.2,
+    color: Colors.black,
+  );
+
+  static TextStyle termsTitle(AppSetupConfig setup, bool isPrintable) =>
+      TextStyle(
+        fontSize: isPrintable ? setup.receiptTermsFontSize + 2 : 14,
+        fontWeight: FontWeight.w700,
         height: 1.2,
         color: Colors.black,
       );
+
+  static TextStyle terms(AppSetupConfig setup, bool isPrintable) => TextStyle(
+    fontSize: isPrintable ? setup.receiptTermsFontSize : 12,
+    fontWeight: FontWeight.w500,
+    height: 1.25,
+    color: Colors.black,
+  );
 
   static double _scale(double value, bool isPrintable, double factor) {
     return isPrintable ? value * factor : value;

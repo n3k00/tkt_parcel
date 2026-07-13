@@ -149,6 +149,15 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                           _draft = draft.copyWith(receiptValueFontSize: value);
                         }),
                       ),
+                      _SliderField(
+                        label: AppStrings.termsLabel,
+                        value: draft.receiptTermsFontSize,
+                        min: ReceiptSettingsDimens.termsFontMin,
+                        max: ReceiptSettingsDimens.termsFontMax,
+                        onChanged: (value) => setState(() {
+                          _draft = draft.copyWith(receiptTermsFontSize: value);
+                        }),
+                      ),
                     ],
                   ),
                 ),
@@ -220,6 +229,7 @@ class _ReceiptSettingsScreenState extends ConsumerState<ReceiptSettingsScreen> {
                                     qrPayload: ReceiptStrings.sampleQrPayload,
                                     setup: previewSetup,
                                     isPrintable: true,
+                                    showTerms: true,
                                   ),
                                 ),
                               ),

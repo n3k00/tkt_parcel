@@ -18,6 +18,7 @@ class AppPreferences {
   static const _businessPhoneFontSizeKey = 'business_phone_font_size';
   static const _receiptLabelFontSizeKey = 'receipt_label_font_size';
   static const _receiptValueFontSizeKey = 'receipt_value_font_size';
+  static const _receiptTermsFontSizeKey = 'receipt_terms_font_size';
   static const _receiptPaddingTopKey = 'receipt_padding_top';
   static const _receiptPaddingLeftKey = 'receipt_padding_left';
   static const _receiptPaddingRightKey = 'receipt_padding_right';
@@ -92,6 +93,10 @@ class AppPreferences {
 
   double? getReceiptValueFontSize() {
     return _preferences.getDouble(_receiptValueFontSizeKey);
+  }
+
+  double? getReceiptTermsFontSize() {
+    return _preferences.getDouble(_receiptTermsFontSizeKey);
   }
 
   double? getReceiptPaddingTop() {
@@ -243,6 +248,10 @@ class AppPreferences {
 
   Future<bool> setReceiptValueFontSize(double value) {
     return _preferences.setDouble(_receiptValueFontSizeKey, value);
+  }
+
+  Future<bool> setReceiptTermsFontSize(double value) {
+    return _preferences.setDouble(_receiptTermsFontSizeKey, value);
   }
 
   Future<bool> setReceiptPaddingTop(double value) {

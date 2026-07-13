@@ -31,6 +31,7 @@ class SettingsRepository {
   static const _defaultBusinessPhoneFontSize = 20.0;
   static const _defaultReceiptLabelFontSize = 28.0;
   static const _defaultReceiptValueFontSize = 30.0;
+  static const _defaultReceiptTermsFontSize = 18.0;
   static const _defaultReceiptPaddingTop = 20.0;
   static const _defaultReceiptPaddingLeft = 24.0;
   static const _defaultReceiptPaddingRight = 24.0;
@@ -94,6 +95,9 @@ class SettingsRepository {
       receiptValueFontSize:
           _preferences.getReceiptValueFontSize() ??
           _defaultReceiptValueFontSize,
+      receiptTermsFontSize:
+          _preferences.getReceiptTermsFontSize() ??
+          _defaultReceiptTermsFontSize,
       receiptPaddingTop:
           _preferences.getReceiptPaddingTop() ?? _defaultReceiptPaddingTop,
       receiptPaddingLeft:
@@ -124,6 +128,7 @@ class SettingsRepository {
     await _preferences.setBusinessPhoneFontSize(config.businessPhoneFontSize);
     await _preferences.setReceiptLabelFontSize(config.receiptLabelFontSize);
     await _preferences.setReceiptValueFontSize(config.receiptValueFontSize);
+    await _preferences.setReceiptTermsFontSize(config.receiptTermsFontSize);
     await _preferences.setReceiptPaddingTop(config.receiptPaddingTop);
     await _preferences.setReceiptPaddingLeft(config.receiptPaddingLeft);
     await _preferences.setReceiptPaddingRight(config.receiptPaddingRight);

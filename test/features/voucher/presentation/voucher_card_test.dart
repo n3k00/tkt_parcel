@@ -41,6 +41,7 @@ void main() {
       businessPhoneFontSize: 15,
       receiptLabelFontSize: 21,
       receiptValueFontSize: 22,
+      receiptTermsFontSize: 16,
       receiptPaddingTop: 18,
       receiptPaddingLeft: 2,
       receiptPaddingRight: 2,

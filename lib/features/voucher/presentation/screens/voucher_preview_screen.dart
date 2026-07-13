@@ -259,6 +259,7 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
                             qrPayload: displayQrPayload,
                             setup: preview.setup,
                             isPrintable: true,
+                            showTerms: true,
                           ),
                         ),
                       ),

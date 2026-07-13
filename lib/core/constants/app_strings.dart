@@ -42,6 +42,7 @@ abstract final class AppStrings {
   static const phoneNumbersLabel = 'Phone Numbers';
   static const labelLabel = 'Label';
   static const valueLabel = 'Value';
+  static const termsLabel = 'Terms';
   static const topLabel = 'Top';
   static const horizontalLabel = 'Horizontal';
   static const bottomLabel = 'Bottom';

@@ -14,6 +14,8 @@ class ReceiptSettingsDimens {
   static const double labelFontMax = 40;
   static const double valueFontMin = 14;
   static const double valueFontMax = 44;
+  static const double termsFontMin = 10;
+  static const double termsFontMax = 28;
 
   static const double receiptTopPaddingMin = 0;
   static const double receiptTopPaddingMax = 60;
