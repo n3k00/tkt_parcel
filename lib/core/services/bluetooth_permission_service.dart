@@ -59,8 +59,8 @@ class BluetoothPermissionService {
       isGranted: false,
       requiresSettings: permanentlyDenied,
       message: permanentlyDenied
-          ? 'Bluetooth or location permission is blocked. Enable Nearby devices and Location permission in Android settings first.'
-          : 'Bluetooth and location permission are required before opening printer connect page.',
+          ? 'Printer ရှာဖို့ permission ပိတ်ထားပါတယ်။ App Settings ထဲမှာ Nearby devices / Bluetooth နှင့် Location permission ကို Allow လုပ်ပေးပါ။'
+          : 'Printer ရှာဖို့ Nearby devices / Bluetooth နှင့် Location permission ကို Allow လုပ်ပေးပါ။',
     );
   }
 }

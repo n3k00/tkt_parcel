@@ -57,6 +57,7 @@ Latest full product/release status: Unknown / needs confirmation.
 - Polished the Gate Incoming Manual Parcel dialog: grouped receiver/payment/note sections, added field icons and spacing, made amount inputs responsive on narrow screens, and added visible required/non-negative validation feedback.
 - Fixed Manual Parcel dialog runtime assertions introduced during polish: removed `LayoutBuilder` from AlertDialog intrinsic sizing, kept amount inputs in a stable vertical layout, and set the multiline note field to `TextInputType.multiline`.
 - Polished the Gate Incoming Driver Payment dialog to match the manual-entry form: added a payment icon and short prompt, spaced inputs, multiline optional note, visible non-negative amount validation, constrained dialog width, and an icon-backed confirm action.
+- Improved printer connect preflight UX: before opening the package default `PrinterConnectPage`, the app now shows blocking dialogs for missing/blocked Bluetooth, Nearby devices, or Location permissions and for Bluetooth being turned off. Permission-blocked cases offer an App Settings button; Bluetooth-off cases tell the operator to enable Bluetooth first.
 
 ## Known Issues
 - Requested Gradle Groovy files `android/app/build.gradle` and `android/build.gradle` are not present; project appears to use Kotlin DSL Gradle files.

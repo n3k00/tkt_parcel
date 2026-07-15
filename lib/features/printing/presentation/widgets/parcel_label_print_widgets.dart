@@ -92,7 +92,7 @@ class _LabelPrintDialogState extends ConsumerState<LabelPrintDialog> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          Text(LabelStrings.quantityPrompt, style: AppTextStyles.label),
+          Text(LabelStrings.labelCopiesPrompt, style: AppTextStyles.label),
           const SizedBox(height: AppSpacing.xs),
           Row(
             children: [

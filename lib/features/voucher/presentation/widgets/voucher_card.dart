@@ -435,12 +435,44 @@ class _TermsSection extends StatelessWidget {
         SizedBox(height: isPrintable ? 10 : 8),
         for (var index = 0; index < ReceiptStrings.voucherTerms.length; index++)
           Padding(
-            padding: EdgeInsets.only(bottom: isPrintable ? 6 : 4),
-            child: Text(
-              '${index + 1}. ${ReceiptStrings.voucherTerms[index]}',
-              style: _ReceiptStyles.terms(setup, isPrintable),
+            padding: EdgeInsets.only(bottom: isPrintable ? 8 : 5),
+            child: _ReceiptTermLine(
+              number: index + 1,
+              text: ReceiptStrings.voucherTerms[index],
+              setup: setup,
+              isPrintable: isPrintable,
             ),
           ),
+      ],
+    );
+  }
+}
+
+class _ReceiptTermLine extends StatelessWidget {
+  const _ReceiptTermLine({
+    required this.number,
+    required this.text,
+    required this.setup,
+    required this.isPrintable,
+  });
+
+  final int number;
+  final String text;
+  final AppSetupConfig setup;
+  final bool isPrintable;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = _ReceiptStyles.terms(setup, isPrintable);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: isPrintable ? 34 : 24,
+          child: Text('$number.', style: style),
+        ),
+        SizedBox(width: isPrintable ? 5 : 4),
+        Expanded(child: Text(text, style: style)),
       ],
     );
   }
@@ -511,7 +543,7 @@ class _ReceiptStyles {
   static TextStyle terms(AppSetupConfig setup, bool isPrintable) => TextStyle(
     fontSize: isPrintable ? setup.receiptTermsFontSize : 12,
     fontWeight: FontWeight.w500,
-    height: 1.25,
+    height: isPrintable ? 1.34 : 1.28,
     color: Colors.black,
   );
 

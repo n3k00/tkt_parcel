@@ -125,10 +125,9 @@ class _VoucherReprintPreviewScreenState
         throw StateError('Printer is busy. Please try again.');
       }
 
-      final success = await printerNotifier.printTsplLabelImage(
-        imageBytes,
-        copies: request.quantity,
-      ).timeout(_labelPrintTimeout(request.quantity));
+      final success = await printerNotifier
+          .printTsplLabelImage(imageBytes, copies: request.quantity)
+          .timeout(_labelPrintTimeout(request.quantity));
       _logLabelPrint('tspl print result=$success');
       if (success) {
         await _waitForLabelOutput(request.quantity);
@@ -481,8 +480,7 @@ class _VoucherReprintPreviewScreenState
                       name: preview.parcel.receiverName,
                       phone: preview.parcel.receiverPhone,
                       address: preview.parcel.toTown,
-                      quantity:
-                          _labelQuantity ?? preview.parcel.numberOfParcels,
+                      quantity: preview.parcel.numberOfParcels,
                       includeShadow: false,
                       includeBorder: false,
                       maxWidth: 560,

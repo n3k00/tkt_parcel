@@ -7,4 +7,5 @@ abstract final class LabelStrings {
   static const sampleAddress = 'တာချီလိတ်';
 
   static const quantityPrompt = 'ပစ္စည်းအရေအတွက်';
+  static const labelCopiesPrompt = 'Label အရေအတွက်';
 }
