@@ -401,6 +401,39 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _parentParcelIdMeta = const VerificationMeta(
+    'parentParcelId',
+  );
+  @override
+  late final GeneratedColumn<String> parentParcelId = GeneratedColumn<String>(
+    'parent_parcel_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _splitIndexMeta = const VerificationMeta(
+    'splitIndex',
+  );
+  @override
+  late final GeneratedColumn<String> splitIndex = GeneratedColumn<String>(
+    'split_index',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _splitCountMeta = const VerificationMeta(
+    'splitCount',
+  );
+  @override
+  late final GeneratedColumn<int> splitCount = GeneratedColumn<int>(
+    'split_count',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _updatedAtMeta = const VerificationMeta(
     'updatedAt',
   );
@@ -450,6 +483,9 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
     driverPhone,
     dispatchedDate,
     claimNote,
+    parentParcelId,
+    splitIndex,
+    splitCount,
     updatedAt,
   ];
   @override
@@ -727,6 +763,27 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
         claimNote.isAcceptableOrUnknown(data['claim_note']!, _claimNoteMeta),
       );
     }
+    if (data.containsKey('parent_parcel_id')) {
+      context.handle(
+        _parentParcelIdMeta,
+        parentParcelId.isAcceptableOrUnknown(
+          data['parent_parcel_id']!,
+          _parentParcelIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('split_index')) {
+      context.handle(
+        _splitIndexMeta,
+        splitIndex.isAcceptableOrUnknown(data['split_index']!, _splitIndexMeta),
+      );
+    }
+    if (data.containsKey('split_count')) {
+      context.handle(
+        _splitCountMeta,
+        splitCount.isAcceptableOrUnknown(data['split_count']!, _splitCountMeta),
+      );
+    }
     if (data.containsKey('updated_at')) {
       context.handle(
         _updatedAtMeta,
@@ -898,6 +955,18 @@ class $ParcelsTable extends Parcels with TableInfo<$ParcelsTable, Parcel> {
         DriftSqlType.string,
         data['${effectivePrefix}claim_note'],
       ),
+      parentParcelId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_parcel_id'],
+      ),
+      splitIndex: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}split_index'],
+      ),
+      splitCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}split_count'],
+      ),
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -957,6 +1026,9 @@ class Parcel extends DataClass implements Insertable<Parcel> {
   final String? driverPhone;
   final DateTime? dispatchedDate;
   final String? claimNote;
+  final String? parentParcelId;
+  final String? splitIndex;
+  final int? splitCount;
   final DateTime updatedAt;
   const Parcel({
     required this.id,
@@ -995,6 +1067,9 @@ class Parcel extends DataClass implements Insertable<Parcel> {
     this.driverPhone,
     this.dispatchedDate,
     this.claimNote,
+    this.parentParcelId,
+    this.splitIndex,
+    this.splitCount,
     required this.updatedAt,
   });
   @override
@@ -1084,6 +1159,15 @@ class Parcel extends DataClass implements Insertable<Parcel> {
     if (!nullToAbsent || claimNote != null) {
       map['claim_note'] = Variable<String>(claimNote);
     }
+    if (!nullToAbsent || parentParcelId != null) {
+      map['parent_parcel_id'] = Variable<String>(parentParcelId);
+    }
+    if (!nullToAbsent || splitIndex != null) {
+      map['split_index'] = Variable<String>(splitIndex);
+    }
+    if (!nullToAbsent || splitCount != null) {
+      map['split_count'] = Variable<int>(splitCount);
+    }
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
@@ -1162,6 +1246,15 @@ class Parcel extends DataClass implements Insertable<Parcel> {
       claimNote: claimNote == null && nullToAbsent
           ? const Value.absent()
           : Value(claimNote),
+      parentParcelId: parentParcelId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentParcelId),
+      splitIndex: splitIndex == null && nullToAbsent
+          ? const Value.absent()
+          : Value(splitIndex),
+      splitCount: splitCount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(splitCount),
       updatedAt: Value(updatedAt),
     );
   }
@@ -1216,6 +1309,9 @@ class Parcel extends DataClass implements Insertable<Parcel> {
       driverPhone: serializer.fromJson<String?>(json['driverPhone']),
       dispatchedDate: serializer.fromJson<DateTime?>(json['dispatchedDate']),
       claimNote: serializer.fromJson<String?>(json['claimNote']),
+      parentParcelId: serializer.fromJson<String?>(json['parentParcelId']),
+      splitIndex: serializer.fromJson<String?>(json['splitIndex']),
+      splitCount: serializer.fromJson<int?>(json['splitCount']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -1265,6 +1361,9 @@ class Parcel extends DataClass implements Insertable<Parcel> {
       'driverPhone': serializer.toJson<String?>(driverPhone),
       'dispatchedDate': serializer.toJson<DateTime?>(dispatchedDate),
       'claimNote': serializer.toJson<String?>(claimNote),
+      'parentParcelId': serializer.toJson<String?>(parentParcelId),
+      'splitIndex': serializer.toJson<String?>(splitIndex),
+      'splitCount': serializer.toJson<int?>(splitCount),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -1306,6 +1405,9 @@ class Parcel extends DataClass implements Insertable<Parcel> {
     Value<String?> driverPhone = const Value.absent(),
     Value<DateTime?> dispatchedDate = const Value.absent(),
     Value<String?> claimNote = const Value.absent(),
+    Value<String?> parentParcelId = const Value.absent(),
+    Value<String?> splitIndex = const Value.absent(),
+    Value<int?> splitCount = const Value.absent(),
     DateTime? updatedAt,
   }) => Parcel(
     id: id ?? this.id,
@@ -1352,6 +1454,11 @@ class Parcel extends DataClass implements Insertable<Parcel> {
         ? dispatchedDate.value
         : this.dispatchedDate,
     claimNote: claimNote.present ? claimNote.value : this.claimNote,
+    parentParcelId: parentParcelId.present
+        ? parentParcelId.value
+        : this.parentParcelId,
+    splitIndex: splitIndex.present ? splitIndex.value : this.splitIndex,
+    splitCount: splitCount.present ? splitCount.value : this.splitCount,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   Parcel copyWithCompanion(ParcelsCompanion data) {
@@ -1434,6 +1541,15 @@ class Parcel extends DataClass implements Insertable<Parcel> {
           ? data.dispatchedDate.value
           : this.dispatchedDate,
       claimNote: data.claimNote.present ? data.claimNote.value : this.claimNote,
+      parentParcelId: data.parentParcelId.present
+          ? data.parentParcelId.value
+          : this.parentParcelId,
+      splitIndex: data.splitIndex.present
+          ? data.splitIndex.value
+          : this.splitIndex,
+      splitCount: data.splitCount.present
+          ? data.splitCount.value
+          : this.splitCount,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -1477,6 +1593,9 @@ class Parcel extends DataClass implements Insertable<Parcel> {
           ..write('driverPhone: $driverPhone, ')
           ..write('dispatchedDate: $dispatchedDate, ')
           ..write('claimNote: $claimNote, ')
+          ..write('parentParcelId: $parentParcelId, ')
+          ..write('splitIndex: $splitIndex, ')
+          ..write('splitCount: $splitCount, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -1520,6 +1639,9 @@ class Parcel extends DataClass implements Insertable<Parcel> {
     driverPhone,
     dispatchedDate,
     claimNote,
+    parentParcelId,
+    splitIndex,
+    splitCount,
     updatedAt,
   ]);
   @override
@@ -1562,6 +1684,9 @@ class Parcel extends DataClass implements Insertable<Parcel> {
           other.driverPhone == this.driverPhone &&
           other.dispatchedDate == this.dispatchedDate &&
           other.claimNote == this.claimNote &&
+          other.parentParcelId == this.parentParcelId &&
+          other.splitIndex == this.splitIndex &&
+          other.splitCount == this.splitCount &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -1602,6 +1727,9 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
   final Value<String?> driverPhone;
   final Value<DateTime?> dispatchedDate;
   final Value<String?> claimNote;
+  final Value<String?> parentParcelId;
+  final Value<String?> splitIndex;
+  final Value<int?> splitCount;
   final Value<DateTime> updatedAt;
   const ParcelsCompanion({
     this.id = const Value.absent(),
@@ -1640,6 +1768,9 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
     this.driverPhone = const Value.absent(),
     this.dispatchedDate = const Value.absent(),
     this.claimNote = const Value.absent(),
+    this.parentParcelId = const Value.absent(),
+    this.splitIndex = const Value.absent(),
+    this.splitCount = const Value.absent(),
     this.updatedAt = const Value.absent(),
   });
   ParcelsCompanion.insert({
@@ -1679,6 +1810,9 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
     this.driverPhone = const Value.absent(),
     this.dispatchedDate = const Value.absent(),
     this.claimNote = const Value.absent(),
+    this.parentParcelId = const Value.absent(),
+    this.splitIndex = const Value.absent(),
+    this.splitCount = const Value.absent(),
     required DateTime updatedAt,
   }) : trackingId = Value(trackingId),
        createdAt = Value(createdAt),
@@ -1732,6 +1866,9 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
     Expression<String>? driverPhone,
     Expression<DateTime>? dispatchedDate,
     Expression<String>? claimNote,
+    Expression<String>? parentParcelId,
+    Expression<String>? splitIndex,
+    Expression<int>? splitCount,
     Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
@@ -1771,6 +1908,9 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
       if (driverPhone != null) 'driver_phone': driverPhone,
       if (dispatchedDate != null) 'dispatched_date': dispatchedDate,
       if (claimNote != null) 'claim_note': claimNote,
+      if (parentParcelId != null) 'parent_parcel_id': parentParcelId,
+      if (splitIndex != null) 'split_index': splitIndex,
+      if (splitCount != null) 'split_count': splitCount,
       if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
@@ -1812,6 +1952,9 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
     Value<String?>? driverPhone,
     Value<DateTime?>? dispatchedDate,
     Value<String?>? claimNote,
+    Value<String?>? parentParcelId,
+    Value<String?>? splitIndex,
+    Value<int?>? splitCount,
     Value<DateTime>? updatedAt,
   }) {
     return ParcelsCompanion(
@@ -1851,6 +1994,9 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
       driverPhone: driverPhone ?? this.driverPhone,
       dispatchedDate: dispatchedDate ?? this.dispatchedDate,
       claimNote: claimNote ?? this.claimNote,
+      parentParcelId: parentParcelId ?? this.parentParcelId,
+      splitIndex: splitIndex ?? this.splitIndex,
+      splitCount: splitCount ?? this.splitCount,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -1972,6 +2118,15 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
     if (claimNote.present) {
       map['claim_note'] = Variable<String>(claimNote.value);
     }
+    if (parentParcelId.present) {
+      map['parent_parcel_id'] = Variable<String>(parentParcelId.value);
+    }
+    if (splitIndex.present) {
+      map['split_index'] = Variable<String>(splitIndex.value);
+    }
+    if (splitCount.present) {
+      map['split_count'] = Variable<int>(splitCount.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
@@ -2017,6 +2172,9 @@ class ParcelsCompanion extends UpdateCompanion<Parcel> {
           ..write('driverPhone: $driverPhone, ')
           ..write('dispatchedDate: $dispatchedDate, ')
           ..write('claimNote: $claimNote, ')
+          ..write('parentParcelId: $parentParcelId, ')
+          ..write('splitIndex: $splitIndex, ')
+          ..write('splitCount: $splitCount, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -2755,6 +2913,9 @@ typedef $$ParcelsTableCreateCompanionBuilder =
       Value<String?> driverPhone,
       Value<DateTime?> dispatchedDate,
       Value<String?> claimNote,
+      Value<String?> parentParcelId,
+      Value<String?> splitIndex,
+      Value<int?> splitCount,
       required DateTime updatedAt,
     });
 typedef $$ParcelsTableUpdateCompanionBuilder =
@@ -2795,6 +2956,9 @@ typedef $$ParcelsTableUpdateCompanionBuilder =
       Value<String?> driverPhone,
       Value<DateTime?> dispatchedDate,
       Value<String?> claimNote,
+      Value<String?> parentParcelId,
+      Value<String?> splitIndex,
+      Value<int?> splitCount,
       Value<DateTime> updatedAt,
     });
 
@@ -3010,6 +3174,21 @@ class $$ParcelsTableFilterComposer
 
   ColumnFilters<String> get claimNote => $composableBuilder(
     column: $table.claimNote,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get parentParcelId => $composableBuilder(
+    column: $table.parentParcelId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get splitIndex => $composableBuilder(
+    column: $table.splitIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get splitCount => $composableBuilder(
+    column: $table.splitCount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3233,6 +3412,21 @@ class $$ParcelsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get parentParcelId => $composableBuilder(
+    column: $table.parentParcelId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get splitIndex => $composableBuilder(
+    column: $table.splitIndex,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get splitCount => $composableBuilder(
+    column: $table.splitCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -3400,6 +3594,21 @@ class $$ParcelsTableAnnotationComposer
   GeneratedColumn<String> get claimNote =>
       $composableBuilder(column: $table.claimNote, builder: (column) => column);
 
+  GeneratedColumn<String> get parentParcelId => $composableBuilder(
+    column: $table.parentParcelId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get splitIndex => $composableBuilder(
+    column: $table.splitIndex,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get splitCount => $composableBuilder(
+    column: $table.splitCount,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
@@ -3493,6 +3702,9 @@ class $$ParcelsTableTableManager
                 Value<String?> driverPhone = const Value.absent(),
                 Value<DateTime?> dispatchedDate = const Value.absent(),
                 Value<String?> claimNote = const Value.absent(),
+                Value<String?> parentParcelId = const Value.absent(),
+                Value<String?> splitIndex = const Value.absent(),
+                Value<int?> splitCount = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
               }) => ParcelsCompanion(
                 id: id,
@@ -3531,6 +3743,9 @@ class $$ParcelsTableTableManager
                 driverPhone: driverPhone,
                 dispatchedDate: dispatchedDate,
                 claimNote: claimNote,
+                parentParcelId: parentParcelId,
+                splitIndex: splitIndex,
+                splitCount: splitCount,
                 updatedAt: updatedAt,
               ),
           createCompanionCallback:
@@ -3571,6 +3786,9 @@ class $$ParcelsTableTableManager
                 Value<String?> driverPhone = const Value.absent(),
                 Value<DateTime?> dispatchedDate = const Value.absent(),
                 Value<String?> claimNote = const Value.absent(),
+                Value<String?> parentParcelId = const Value.absent(),
+                Value<String?> splitIndex = const Value.absent(),
+                Value<int?> splitCount = const Value.absent(),
                 required DateTime updatedAt,
               }) => ParcelsCompanion.insert(
                 id: id,
@@ -3609,6 +3827,9 @@ class $$ParcelsTableTableManager
                 driverPhone: driverPhone,
                 dispatchedDate: dispatchedDate,
                 claimNote: claimNote,
+                parentParcelId: parentParcelId,
+                splitIndex: splitIndex,
+                splitCount: splitCount,
                 updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0

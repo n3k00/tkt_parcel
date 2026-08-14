@@ -29,7 +29,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -107,6 +107,23 @@ class AppDatabase extends _$AppDatabase {
           migrator,
           'claim_note',
           parcels.claimNote,
+        );
+      }
+      if (from < 4) {
+        await _addParcelColumnIfMissing(
+          migrator,
+          'parent_parcel_id',
+          parcels.parentParcelId,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'split_index',
+          parcels.splitIndex,
+        );
+        await _addParcelColumnIfMissing(
+          migrator,
+          'split_count',
+          parcels.splitCount,
         );
       }
     },

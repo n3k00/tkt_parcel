@@ -26,7 +26,7 @@ class BackupRestoreService {
   static const _databaseFileName = 'tkt_parcel.sqlite';
   static const _imageDirectoryName = 'parcel_images';
   static const _backupFolderName = 'TKT Parcel Backups';
-  static const _currentSchemaVersion = 3;
+  static const _currentSchemaVersion = 4;
 
   Future<BackupResult> createFullBackup() async {
     final databaseFile = await _databaseFile();

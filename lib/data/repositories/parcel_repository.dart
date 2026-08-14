@@ -129,6 +129,9 @@ class ParcelRepository {
         driverPhone: Value(parcelToCreate.driverPhone),
         dispatchedDate: Value(parcelToCreate.dispatchedDate),
         claimNote: Value(parcelToCreate.claimNote),
+        parentParcelId: Value(parcelToCreate.parentParcelId),
+        splitIndex: Value(parcelToCreate.splitIndex),
+        splitCount: Value(parcelToCreate.splitCount),
         updatedAt: parcelToCreate.updatedAt,
       ),
     );
@@ -203,6 +206,9 @@ class ParcelRepository {
         driverPhone: Value(parcelToUpdate.driverPhone),
         dispatchedDate: Value(parcelToUpdate.dispatchedDate),
         claimNote: Value(parcelToUpdate.claimNote),
+        parentParcelId: Value(parcelToUpdate.parentParcelId),
+        splitIndex: Value(parcelToUpdate.splitIndex),
+        splitCount: Value(parcelToUpdate.splitCount),
         updatedAt: Value(parcelToUpdate.updatedAt),
       ),
     );

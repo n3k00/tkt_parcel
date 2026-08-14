@@ -27,9 +27,9 @@ TKT Parcel is an offline-first Flutter parcel voucher app, currently focused on 
 This app uses Riverpod providers, not GetX. Repositories and services are exposed through providers, UI state is handled through Riverpod notifiers/providers, and feature screens consume state with Flutter/Riverpod widgets. Keep new state changes consistent with the existing provider/repository/service pattern unless architecture changes are explicitly requested.
 
 ## Database
-The local database is Drift-backed SQLite. The main database file is `lib/data/local/database/app_database.dart`, with table parts for parcels, parcel events, and towns plus DAO parts for database access. Current `schemaVersion` is `3`.
+The local database is Drift-backed SQLite. The main database file is `lib/data/local/database/app_database.dart`, with table parts for parcels, parcel events, and towns plus DAO parts for database access. Current `schemaVersion` is `4`.
 
-Migration rules are defined in `AppDatabase.migration`: new installs create all tables and seed default towns; upgrades from older versions create towns and add parcel sync/dispatch-related columns if missing. For any schema change, update `schemaVersion`, add an `onUpgrade` migration, update table definitions, and regenerate Drift code.
+Migration rules are defined in `AppDatabase.migration`: new installs create all tables and seed default towns; upgrades from older versions create towns, parcel sync/dispatch-related columns, and split voucher metadata columns if missing. For any schema change, update `schemaVersion`, add an `onUpgrade` migration, update table definitions, and regenerate Drift code.
 
 Backup restore replaces `tkt_parcel.sqlite` and must remove SQLite sidecar files (`-wal`, `-shm`, `-journal`). Older schema v1 backups may not contain `towns`; restore should allow them so Drift can migrate and seed towns on reopen.
 
@@ -82,6 +82,13 @@ status stays the same as the parent. Planned columns include
 `split_created_by`. This is server-side only, not local-only. Current SQL also
 rejects split parent tracking IDs in Android gate ledger/incoming flows; use
 child voucher tracking IDs instead.
+
+Android local model support is partially in place for server-created split
+vouchers. Local Drift `Parcels` has nullable `parent_parcel_id`,
+`split_index`, and `split_count` columns, `ParcelStatus.split` is supported,
+and Supabase pull sync maps those three fields into local history. Android must
+still call the server `split_parcel(...)` RPC for actual split creation; do not
+generate child tracking IDs locally.
 
 Server-to-local parcel pull sync is incremental after the first successful pull. The first sync for each signed-in account fetches all RLS-visible Supabase parcels, then stores the max successful server `updated_at` in an account-scoped SharedPreferences cursor key derived from `parcel_pull_last_synced_at`. Later pulls for that account fetch `updated_at > last cursor` only, then update its cursor only after local upserts finish. Never share one cursor across branch accounts on the same device.
 

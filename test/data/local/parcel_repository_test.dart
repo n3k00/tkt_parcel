@@ -109,6 +109,26 @@ void main() {
     expect(saved.claimNote, 'Waiting for receiver.');
   });
 
+  test('persists split parcel metadata fields', () async {
+    final id = await repository.createParcel(
+      _buildParcel(trackingId: 'TGI-260814-0001-A').copyWith(
+        status: ParcelStatus.split,
+        parentParcelId: 'parent-server-parcel-id',
+        splitIndex: 'A',
+        splitCount: 2,
+      ),
+      preserveSyncState: true,
+    );
+
+    final saved = await repository.getParcel(id);
+
+    expect(saved, isNotNull);
+    expect(saved!.status, ParcelStatus.split);
+    expect(saved.parentParcelId, 'parent-server-parcel-id');
+    expect(saved.splitIndex, 'A');
+    expect(saved.splitCount, 2);
+  });
+
   test('updates lifecycle timestamps and claim note metadata', () async {
     final id = await repository.createParcel(
       _buildParcel(trackingId: 'TGI-A1-250317-0005'),

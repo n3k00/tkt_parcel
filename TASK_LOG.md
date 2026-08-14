@@ -40,7 +40,7 @@ Latest full product/release status: Unknown / needs confirmation.
 - Printer connection uses the package default `PrinterConnectPage`; custom connect UI was tried and rejected. Keep the default UI unless explicitly requested.
 - Updated `pos_printer_kit` dependency to Git branch `codex/fix-printer-connection-hangs` with path `packages/pos_printer_kit`; the package/core layer handles connection retry and disconnect-before-connect behavior.
 - Existing app structure includes parcel creation, voucher preview/reprint flows, settings, sync placeholders, and printer/printing feature areas.
-- Existing database structure includes parcels, parcel events, and towns with `schemaVersion = 3`.
+- Existing database structure includes parcels, parcel events, and towns with `schemaVersion = 4`.
 - Existing commands are documented for Flutter run/build/test and Drift code generation.
 - Prepared production release `1.0.10+13` after moving To Town choices to Supabase town master and removing Settings To Town management.
 - Added the Supabase gate-branch foundation without deleting or renaming existing branch data: `branches.branch_type` (`main | gate`), `gate_llm` / `LLM` / လွိုင်လင်, and `gate_kgt` / `KGT` / ကျိုင်းတုံ. Seeded current-day zero counters for `LLM` and `KGT`; future daily counters are created automatically by the existing voucher RPC.
@@ -73,6 +73,7 @@ Latest full product/release status: Unknown / needs confirmation.
 - Added Supabase Split Voucher schema/RPC design to `supabase/schema.sql`: `parcels.status` supports `split`, split metadata columns are present, and `split_parcel(parent_id, splits)` atomically marks a received parent as split and creates child rows with `PARENT-A`, `PARENT-B`, etc. Android gate ledger/incoming RPCs now explicitly reject split parent tracking IDs.
 - Added `supabase/split_voucher_test.sql`, a rollback-only Supabase verification script for qty-4 parent -> qty-2 child A/B split, manual charges/cash advances, unique child tracking IDs, split-parent ledger attach rejection, and child ledger attach success.
 - Applied live Supabase SQL for Split Voucher support after creating a data-only JSON backup. `schema.sql`, `drivers.sql`, and `gate_operations.sql` applied successfully; `verify.sql` passed; `split_voucher_test.sql` passed with rollback leaving no `split-test-%` rows behind.
+- Added Android local model support for server-created split vouchers: `ParcelStatus.split`, local Drift schemaVersion `4`, nullable local parcel split columns (`parent_parcel_id`, `split_index`, `split_count`), Supabase pull mapping for those fields, and repository tests for local split metadata persistence.
 
 ## Known Issues
 - Requested Gradle Groovy files `android/app/build.gradle` and `android/build.gradle` are not present; project appears to use Kotlin DSL Gradle files.
@@ -98,7 +99,7 @@ Latest full product/release status: Unknown / needs confirmation.
 - Review Windows `TKT Transport Ledger` Beta 1 before depending on it operationally: Inventory and Reports are still placeholder/mock-backed areas, while Home/Main Ledger and Driver are the main Supabase-backed beta workflows.
 - Create Supabase Auth users and `staff_profiles` rows for `gate_llm` and `gate_kgt`, then real-device test gate login and `LLM/KGT` voucher creation.
 - Real-device test Android gate Main Ledger and Incoming Parcels with `kyaingtong@tkt.com`, including attach guards, settle locks, manual entry, claim note, and driver payment lock.
-- Implement Android Parcel Detail Split Voucher UI later and call `split_parcel(parent_id, splits)` only after operator confirmation. Local Drift split-column support and pull mapping are still not implemented.
+- Implement Android Parcel Detail Split Voucher UI later and call `split_parcel(parent_id, splits)` only after operator confirmation. Local Drift split-column support and pull mapping are implemented; split creation UI/RPC call is still pending.
 - Keep driver vehicle number uniqueness active-only. Inactive historical duplicate `vehicle_no` rows may remain for history.
 
 ## Decisions

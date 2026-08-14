@@ -243,6 +243,7 @@ const _statusFilterOptions = [
   ParcelStatus.dispatched,
   ParcelStatus.arrived,
   ParcelStatus.claimed,
+  ParcelStatus.split,
 ];
 
 String _statusLabel(ParcelStatus status) {
@@ -251,6 +252,7 @@ String _statusLabel(ParcelStatus status) {
     ParcelStatus.dispatched => 'Dispatched',
     ParcelStatus.arrived => 'Arrived',
     ParcelStatus.claimed => 'Claimed',
+    ParcelStatus.split => 'Split',
     ParcelStatus.cancelled => 'Cancelled',
   };
 }

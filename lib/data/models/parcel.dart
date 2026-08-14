@@ -40,6 +40,9 @@ class ParcelModel {
     this.driverPhone,
     this.dispatchedDate,
     this.claimNote,
+    this.parentParcelId,
+    this.splitIndex,
+    this.splitCount,
     required this.updatedAt,
   });
 
@@ -127,6 +130,9 @@ class ParcelModel {
   final String? driverPhone;
   final DateTime? dispatchedDate;
   final String? claimNote;
+  final String? parentParcelId;
+  final String? splitIndex;
+  final int? splitCount;
   final DateTime updatedAt;
 
   ParcelModel copyWith({
@@ -184,6 +190,12 @@ class ParcelModel {
     bool clearDispatchedDate = false,
     String? claimNote,
     bool clearClaimNote = false,
+    String? parentParcelId,
+    bool clearParentParcelId = false,
+    String? splitIndex,
+    bool clearSplitIndex = false,
+    int? splitCount,
+    bool clearSplitCount = false,
     DateTime? updatedAt,
   }) {
     return ParcelModel(
@@ -233,6 +245,11 @@ class ParcelModel {
           ? null
           : dispatchedDate ?? this.dispatchedDate,
       claimNote: clearClaimNote ? null : claimNote ?? this.claimNote,
+      parentParcelId: clearParentParcelId
+          ? null
+          : parentParcelId ?? this.parentParcelId,
+      splitIndex: clearSplitIndex ? null : splitIndex ?? this.splitIndex,
+      splitCount: clearSplitCount ? null : splitCount ?? this.splitCount,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
@@ -275,6 +292,9 @@ class ParcelModel {
       'driverPhone': driverPhone,
       'dispatchedDate': dispatchedDate?.toIso8601String(),
       'claimNote': claimNote,
+      'parentParcelId': parentParcelId,
+      'splitIndex': splitIndex,
+      'splitCount': splitCount,
       'updatedAt': updatedAt.toIso8601String(),
     };
   }
@@ -317,6 +337,9 @@ class ParcelModel {
       driverPhone: map['driverPhone'] as String?,
       dispatchedDate: _readDateTime(map['dispatchedDate']),
       claimNote: map['claimNote'] as String?,
+      parentParcelId: map['parentParcelId'] as String?,
+      splitIndex: map['splitIndex'] as String?,
+      splitCount: (map['splitCount'] as num?)?.toInt(),
       updatedAt: DateTime.parse(map['updatedAt'] as String),
     );
   }

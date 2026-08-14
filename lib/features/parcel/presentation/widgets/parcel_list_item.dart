@@ -20,6 +20,7 @@ class ParcelListItem extends StatelessWidget {
       'dispatched' => AppColors.dispatched,
       'arrived' => AppColors.arrived,
       'claimed' => AppColors.claimed,
+      'split' => AppColors.split,
       'cancelled' => AppColors.cancelled,
       _ => AppColors.primary,
     };

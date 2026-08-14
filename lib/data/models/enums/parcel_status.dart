@@ -3,6 +3,7 @@ enum ParcelStatus {
   dispatched('dispatched'),
   arrived('arrived'),
   claimed('claimed'),
+  split('split'),
   cancelled('cancelled');
 
   const ParcelStatus(this.value);

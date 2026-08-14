@@ -48,6 +48,10 @@ class Parcels extends Table {
   DateTimeColumn get dispatchedDate =>
       dateTime().named('dispatched_date').nullable()();
   TextColumn get claimNote => text().named('claim_note').nullable()();
+  TextColumn get parentParcelId =>
+      text().named('parent_parcel_id').nullable()();
+  TextColumn get splitIndex => text().named('split_index').nullable()();
+  IntColumn get splitCount => integer().named('split_count').nullable()();
   DateTimeColumn get updatedAt => dateTime().named('updated_at')();
 
   @override

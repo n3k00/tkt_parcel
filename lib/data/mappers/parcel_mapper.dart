@@ -42,6 +42,9 @@ class ParcelMapper {
       driverPhone: row.driverPhone,
       dispatchedDate: row.dispatchedDate,
       claimNote: row.claimNote,
+      parentParcelId: row.parentParcelId,
+      splitIndex: row.splitIndex,
+      splitCount: row.splitCount,
       updatedAt: row.updatedAt,
     );
   }

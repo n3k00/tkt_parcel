@@ -179,6 +179,9 @@ class SyncRepository {
       driverPhone: row['driver_phone'] as String?,
       dispatchedDate: _readDateTime(row['dispatched_date']),
       claimNote: row['claim_note'] as String?,
+      parentParcelId: row['parent_parcel_id'] as String?,
+      splitIndex: row['split_index'] as String?,
+      splitCount: _readInt(row['split_count']),
       updatedAt: _readRequiredDateTime(row, 'updated_at'),
     );
   }
@@ -200,10 +203,17 @@ class SyncRepository {
   }
 
   int _readRequiredInt(Map<String, dynamic> row, String key) {
-    final value = row[key];
+    final value = _readInt(row[key]);
+    if (value != null) return value;
+    throw StateError('Server parcel is missing $key.');
+  }
+
+  int? _readInt(Object? value) {
+    if (value == null) return null;
     if (value is int) return value;
     if (value is num) return value.toInt();
-    throw StateError('Server parcel is missing $key.');
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 
   double _readRequiredDouble(Map<String, dynamic> row, String key) {

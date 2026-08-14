@@ -21,7 +21,7 @@ Relevant generated file:
 Do not edit the generated file manually; regenerate it after schema changes.
 
 ## Tables
-- `Parcels`: main parcel/voucher records. Includes tracking ID, towns, sender/receiver data, parcel counts, charges, payment/status fields, sync metadata, dispatch/driver fields, lifecycle timestamps, image path, and claim note. `tracking_id` is unique. Custom constraints enforce positive parcel count and non-negative charges/cash advance.
+- `Parcels`: main parcel/voucher records. Includes tracking ID, towns, sender/receiver data, parcel counts, charges, payment/status fields, sync metadata, dispatch/driver fields, lifecycle timestamps, image path, claim note, and split voucher metadata (`parent_parcel_id`, `split_index`, `split_count`). `tracking_id` is unique. Custom constraints enforce positive parcel count and non-negative charges/cash advance.
 - `ParcelEvents`: event log rows linked to parcels by `parcel_id`; cascade deletes when the parent parcel is deleted.
 - `Towns`: source/destination town list. Unique by `{type, townName}`. Source towns require a non-empty `city_code`; destination towns require `city_code` to be null.
 
@@ -38,9 +38,9 @@ DAO files:
 - `lib/data/local/database/daos/towns_dao.dart`
 
 ## Current schemaVersion
-Current Drift `schemaVersion` is `3`.
+Current Drift `schemaVersion` is `4`.
 
-Backup validation also has a matching `_currentSchemaVersion = 3` in `lib/core/services/backup_restore_service.dart`. If the database schema version changes, check whether backup restore compatibility rules also need to change.
+Backup validation also has a matching `_currentSchemaVersion = 4` in `lib/core/services/backup_restore_service.dart`. If the database schema version changes, check whether backup restore compatibility rules also need to change.
 
 ## Migration Strategy
 `AppDatabase.migration` defines:
@@ -48,6 +48,7 @@ Backup validation also has a matching `_currentSchemaVersion = 3` in `lib/core/s
 - `onCreate`: creates all tables and seeds default towns.
 - `onUpgrade` from `< 2`: creates the `towns` table and seeds default towns.
 - `onUpgrade` from `< 3`: adds parcel sync/dispatch-related columns if missing.
+- `onUpgrade` from `< 4`: adds nullable split voucher columns (`parent_parcel_id`, `split_index`, `split_count`) if missing.
 
 Column additions use `_addParcelColumnIfMissing`, which checks `PRAGMA table_info(parcels)` before calling `migrator.addColumn`.
 
