@@ -105,6 +105,66 @@ Use `create_parcel_with_counter(...)` for backend-created parcels. The function:
 - inserts `parcels`
 - returns the created parcel row
 
+## Split Voucher RPC
+
+Split vouchers are server-generated only. Use `split_parcel(parent_id, splits)`
+after the operator decides how to divide one received parent voucher into
+physical child vouchers.
+
+`parcels.status` includes `split`. A split parent row is a reference row only
+and must not be attached to Main Ledger or Incoming workflows. Operators should
+attach/receive child tracking IDs such as `TGI-260814-0001-A` and
+`TGI-260814-0001-B`.
+
+Split metadata columns on `public.parcels`:
+
+- `parent_parcel_id`: parent parcel reference for child rows.
+- `split_index`: server-assigned child suffix such as `A`, `B`, `C`.
+- `split_count`: number of child rows created from the parent.
+- `split_created_at`: timestamp when the split was created.
+- `split_created_by`: authenticated user who created the split.
+
+RPC payload shape:
+
+```sql
+select public.split_parcel(
+  p_parent_parcel_id := 'parent-parcel-uuid',
+  p_splits := jsonb_build_array(
+    jsonb_build_object(
+      'number_of_parcels', 2,
+      'total_charges', 5000,
+      'cash_advance', 0,
+      'parcel_type', 'General',
+      'remark', 'Driver 1'
+    ),
+    jsonb_build_object(
+      'number_of_parcels', 2,
+      'total_charges', 5000,
+      'cash_advance', 0,
+      'parcel_type', 'General',
+      'remark', 'Driver 2'
+    )
+  )
+);
+```
+
+Rules enforced by the RPC:
+
+- authenticated staff only
+- parent must be accessible to the user's branch/admin scope
+- parent must be top-level, `received`, and not already split
+- split row count must be 2 to 26
+- child quantity must be greater than 0
+- child quantity total cannot exceed parent quantity
+- charges and cash advance must be non-negative
+- child payment status is copied from the parent
+- child tracking IDs use `PARENT-A`, `PARENT-B`, etc.
+
+Because the parent becomes a reference-only `split` row, the app UI should make
+the operator create child rows for every physical quantity that still needs to
+move. The RPC enforces "not over parent quantity"; the UI should show any
+remaining quantity clearly before confirmation.
+
 ## Example RPC Test
 
 `create_parcel_with_counter(...)` requires an authenticated user with an active `staff_profiles` row. Test it from the app or an authenticated API client after creating staff accounts.
@@ -137,7 +197,15 @@ Run the same call with a different `p_client_parcel_id`; the running number shou
 Run the same call again with the same `p_client_parcel_id`; it should return
 the already-created parcel without incrementing the counter.
 
-For a complete verification script, run [`verify.sql`](verify.sql) after `schema.sql`.
+For a complete verification script, run [`verify.sql`](verify.sql) after
+`schema.sql`.
+
+For split voucher behavior, run [`split_voucher_test.sql`](split_voucher_test.sql)
+after `schema.sql`, `drivers.sql`, and `gate_operations.sql`. It wraps the test
+in `BEGIN ... ROLLBACK`, creates a qty-4 parent, splits it into two qty-2 child
+rows, verifies manual child charges/cash advances, verifies child tracking IDs
+are unique, verifies split parent ledger attach is rejected, and verifies child
+ledger attach works.
 
 ## Current Auth Model
 
@@ -167,7 +235,8 @@ Windows ledger contract:
 
 Gate Main Ledger accepts existing tracking IDs only. Settling marks attached
 parcels as `dispatched` and locks the ledger. A parcel cannot be attached to a
-second active gate ledger entry.
+second active gate ledger entry. Split parent parcels are rejected; use a child
+voucher tracking ID.
 
 Gate Incoming accepts either an existing dispatched tracking ID or a manual
 parcel entry. Existing parcels become `arrived` when attached. Claim requires a
@@ -179,7 +248,8 @@ Removing an unclaimed existing parcel from an unpaid incoming list reverses its
 receipt state from `arrived` back to `dispatched`, so it can be attached again.
 Marking driver payment from `unpaid` to `paid` records the entered amount and
 locks entry add/remove/edit operations while leaving claim
-updates available.
+updates available. Split parent parcels are rejected; use a child voucher
+tracking ID.
 
 Gate tables are RLS-protected. Android reads its own branch rows directly and
 performs mutations through authenticated RPC wrappers only. Gate driver lists

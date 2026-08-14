@@ -74,11 +74,30 @@ where table_schema = 'public'
   and table_name = 'parcel_counters'
 order by ordinal_position;
 
+select column_name, is_nullable, data_type
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'parcels'
+  and column_name in (
+    'parent_parcel_id',
+    'split_index',
+    'split_count',
+    'split_created_at',
+    'split_created_by'
+  )
+order by ordinal_position;
+
+select conname, pg_get_constraintdef(oid) as constraint_definition
+from pg_constraint
+where conrelid = 'public.parcels'::regclass
+  and conname = 'parcels_status_check';
+
 select routine_schema, routine_name, security_type
 from information_schema.routines
 where routine_schema in ('public', 'app_private')
   and routine_name in (
     'create_parcel_with_counter',
+    'split_parcel',
     'current_user_role',
     'current_user_branch_id',
     'is_admin',
@@ -101,6 +120,8 @@ order by routine_schema, routine_name;
 -- - retrying create_parcel_with_counter with the same client_parcel_id returns
 --   the existing parcel without incrementing the counter
 -- - generated tracking IDs use CITY-YYMMDD-NNNN with no account-code segment
+-- - public.split_parcel has security_type = INVOKER
+-- - parcels has split metadata columns and parcels_status_check includes split
 -- - anon has no table privileges on app public tables
 -- - authenticated has only required table privileges:
 --   staff_profiles SELECT; branches SELECT plus address/phone_numbers/updated_at UPDATE;

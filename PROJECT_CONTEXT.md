@@ -66,9 +66,10 @@ Official voucher printing is server-first for new parcels: the app must call Sup
 
 If Supabase parcel creation succeeds but local save or physical print fails, do not delete the server parcel or reuse the tracking ID. The recovery workflow is to refresh/pull Parcel History, find the server-created official parcel, and reprint that same tracking ID.
 
-Planned Split Voucher behavior: if one voucher's parcel quantity must be split
-across multiple drivers, do not create unrelated replacement vouchers. A future
-server RPC should create child parcel rows linked to the original parent row.
+Split Voucher behavior: if one voucher's parcel quantity must be split
+across multiple drivers, do not create unrelated replacement vouchers. The
+Supabase `split_parcel(parent_id, splits)` RPC creates child parcel rows linked
+to the original parent row.
 Child tracking IDs use `PARENT-A`, `PARENT-B`, etc. Example:
 `TGI-260814-0001-A`. The parent status becomes `split` and must not be attached
 to ledger/incoming workflows; child vouchers are physical vouchers and follow
@@ -78,7 +79,9 @@ quantity is operator-entered but the total cannot exceed parent quantity, child
 charges and cash advance are manual non-negative values, and child payment
 status stays the same as the parent. Planned columns include
 `parent_parcel_id`, `split_index`, `split_count`, `split_created_at`, and
-`split_created_by`. This must be implemented server-side, not local-only.
+`split_created_by`. This is server-side only, not local-only. Current SQL also
+rejects split parent tracking IDs in Android gate ledger/incoming flows; use
+child voucher tracking IDs instead.
 
 Server-to-local parcel pull sync is incremental after the first successful pull. The first sync for each signed-in account fetches all RLS-visible Supabase parcels, then stores the max successful server `updated_at` in an account-scoped SharedPreferences cursor key derived from `parcel_pull_last_synced_at`. Later pulls for that account fetch `updated_at > last cursor` only, then update its cursor only after local upserts finish. Never share one cursor across branch accounts on the same device.
 

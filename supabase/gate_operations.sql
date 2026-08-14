@@ -158,6 +158,7 @@ begin
   if v_ledger.status <> 'draft' then raise exception 'Settled ledger cannot be edited'; end if;
   select * into v_parcel from public.parcels where tracking_id = btrim(p_tracking_id) for update;
   if not found then raise exception 'Parcel not found'; end if;
+  if v_parcel.status = 'split' then raise exception 'Split parent parcel cannot be attached. Use a child voucher tracking ID.'; end if;
   if v_parcel.status <> 'received' then raise exception 'Only received parcels can be attached'; end if;
   insert into public.gate_ledger_entries(ledger_id, parcel_id, tracking_id_snapshot, destination_town_snapshot, attached_by)
   values(v_ledger.id, v_parcel.id, v_parcel.tracking_id, v_parcel.to_town, auth.uid())
@@ -254,6 +255,7 @@ begin
   if v_main.driver_payment_status = 'paid' then raise exception 'Paid incoming list cannot be edited'; end if;
   select * into v_parcel from public.parcels where tracking_id = btrim(coalesce(p_tracking_id, '')) for update;
   if not found then raise exception 'Parcel not found'; end if;
+  if v_parcel.status = 'split' then raise exception 'Split parent parcel cannot be received. Use a child voucher tracking ID.'; end if;
   if v_parcel.status = 'claimed' then raise exception 'Claimed parcel cannot be received again'; end if;
   if v_parcel.status <> 'dispatched' then raise exception 'Only dispatched parcels can be received'; end if;
   insert into public.gate_incoming_entries(incoming_id, parcel_id, tracking_id, entry_type, receiver_name, receiver_phone, destination_town, payment_status, total_charges, cash_advance, note, attached_by)
@@ -279,6 +281,7 @@ begin
   if v_main.driver_payment_status = 'paid' then raise exception 'Paid incoming list cannot be edited'; end if;
   select * into v_parcel from public.parcels where tracking_id = btrim(coalesce(p_tracking_id, ''));
   if not found then raise exception 'Parcel not found'; end if;
+  if v_parcel.status = 'split' then raise exception 'Split parent parcel cannot be received. Use a child voucher tracking ID.'; end if;
   if v_parcel.status = 'claimed' then raise exception 'Claimed parcel cannot be received again'; end if;
   if v_parcel.status <> 'dispatched' then raise exception 'Only dispatched parcels can be received'; end if;
   if exists(select 1 from public.gate_incoming_entries where parcel_id = v_parcel.id and removed_at is null) then raise exception 'Parcel is already attached to an incoming list'; end if;
@@ -411,9 +414,13 @@ revoke all on public.gate_ledger_mains, public.gate_ledger_entries, public.gate_
 revoke all on public.gate_ledger_mains, public.gate_ledger_entries, public.gate_incoming_mains, public.gate_incoming_entries from authenticated;
 grant select on public.gate_ledger_mains, public.gate_ledger_entries, public.gate_incoming_mains, public.gate_incoming_entries to authenticated;
 
+drop policy if exists gate_ledger_mains_select_own_branch on public.gate_ledger_mains;
 create policy gate_ledger_mains_select_own_branch on public.gate_ledger_mains for select to authenticated using (branch_id = app_private.current_user_branch_id());
+drop policy if exists gate_ledger_entries_select_own_branch on public.gate_ledger_entries;
 create policy gate_ledger_entries_select_own_branch on public.gate_ledger_entries for select to authenticated using (exists(select 1 from public.gate_ledger_mains m where m.id = ledger_id and m.branch_id = app_private.current_user_branch_id()));
+drop policy if exists gate_incoming_mains_select_own_branch on public.gate_incoming_mains;
 create policy gate_incoming_mains_select_own_branch on public.gate_incoming_mains for select to authenticated using (branch_id = app_private.current_user_branch_id());
+drop policy if exists gate_incoming_entries_select_own_branch on public.gate_incoming_entries;
 create policy gate_incoming_entries_select_own_branch on public.gate_incoming_entries for select to authenticated using (exists(select 1 from public.gate_incoming_mains m where m.id = incoming_id and m.branch_id = app_private.current_user_branch_id()));
 
 revoke execute on all functions in schema app_private from authenticated, service_role;

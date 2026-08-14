@@ -22,8 +22,23 @@ create index if not exists drivers_name_idx
 create index if not exists drivers_driver_type_idx
   on public.drivers(driver_type);
 
-create unique index if not exists drivers_vehicle_no_unique_idx
-  on public.drivers(lower(btrim(vehicle_no)));
+do $$
+begin
+  if exists (
+    select 1
+    from public.drivers
+    where active = true
+    group by lower(btrim(vehicle_no))
+    having count(*) > 1
+  ) then
+    raise notice 'Skipping drivers_active_vehicle_no_unique_idx because duplicate active vehicle_no values already exist.';
+  else
+    create unique index if not exists drivers_active_vehicle_no_unique_idx
+      on public.drivers(lower(btrim(vehicle_no)))
+      where active = true;
+  end if;
+end;
+$$;
 
 create or replace function public.set_updated_at()
 returns trigger

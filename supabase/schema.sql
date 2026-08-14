@@ -117,7 +117,8 @@ create table if not exists public.parcels (
   cash_advance numeric(12, 2) not null default 0 check (cash_advance >= 0),
   remark text,
   status text not null default 'received'
-    check (status in ('received', 'dispatched', 'arrived', 'claimed', 'cancelled')),
+    constraint parcels_status_check
+    check (status in ('received', 'dispatched', 'arrived', 'claimed', 'cancelled', 'split')),
   dispatched_at timestamptz,
   arrived_at timestamptz,
   claimed_at timestamptz,
@@ -127,8 +128,71 @@ create table if not exists public.parcels (
   driver_name text,
   driver_phone text,
   dispatched_date timestamptz,
-  claim_note text
+  claim_note text,
+  parent_parcel_id uuid references public.parcels(id),
+  split_index text,
+  split_count integer check (split_count is null or split_count > 0),
+  split_created_at timestamptz,
+  split_created_by uuid references auth.users(id)
 );
+
+alter table public.parcels
+  add column if not exists parent_parcel_id uuid references public.parcels(id),
+  add column if not exists split_index text,
+  add column if not exists split_count integer,
+  add column if not exists split_created_at timestamptz,
+  add column if not exists split_created_by uuid references auth.users(id);
+
+do $$
+declare
+  v_constraint_name text;
+begin
+  select conname into v_constraint_name
+  from pg_constraint
+  where conrelid = 'public.parcels'::regclass
+    and contype = 'c'
+    and pg_get_constraintdef(oid) like '%status%'
+    and pg_get_constraintdef(oid) like '%received%'
+    and pg_get_constraintdef(oid) like '%cancelled%'
+  limit 1;
+
+  if v_constraint_name is not null and v_constraint_name <> 'parcels_status_check' then
+    execute format('alter table public.parcels drop constraint %I', v_constraint_name);
+  end if;
+
+  if exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.parcels'::regclass
+      and conname = 'parcels_status_check'
+      and pg_get_constraintdef(oid) not like '%split%'
+  ) then
+    alter table public.parcels drop constraint parcels_status_check;
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.parcels'::regclass
+      and conname = 'parcels_status_check'
+  ) then
+    alter table public.parcels
+      add constraint parcels_status_check
+      check (status in ('received', 'dispatched', 'arrived', 'claimed', 'cancelled', 'split'));
+  end if;
+
+  if not exists (
+    select 1
+    from pg_constraint
+    where conrelid = 'public.parcels'::regclass
+      and conname = 'parcels_split_count_check'
+  ) then
+    alter table public.parcels
+      add constraint parcels_split_count_check
+      check (split_count is null or split_count > 0);
+  end if;
+end;
+$$;
 
 create index if not exists staff_profiles_branch_id_idx
   on public.staff_profiles(branch_id);
@@ -147,6 +211,13 @@ create index if not exists parcels_branch_id_idx
 
 create index if not exists parcels_created_by_idx
   on public.parcels(created_by);
+
+create index if not exists parcels_parent_parcel_id_idx
+  on public.parcels(parent_parcel_id);
+
+create unique index if not exists parcels_parent_split_index_unique
+  on public.parcels(parent_parcel_id, split_index)
+  where parent_parcel_id is not null and split_index is not null;
 
 insert into public.branches (id, town_name, city_code, branch_type)
 values
@@ -644,9 +715,217 @@ begin
 end;
 $$;
 
+create or replace function public.split_parcel(
+  p_parent_parcel_id uuid,
+  p_splits jsonb
+)
+returns jsonb
+language plpgsql
+security invoker
+set search_path = public, pg_temp
+as $$
+declare
+  v_actor uuid := auth.uid();
+  v_parent public.parcels%rowtype;
+  v_child public.parcels%rowtype;
+  v_children jsonb := '[]'::jsonb;
+  v_item jsonb;
+  v_split_count integer;
+  v_split_index integer := 0;
+  v_split_code text;
+  v_qty integer;
+  v_total_qty integer := 0;
+  v_total_charges numeric;
+  v_cash_advance numeric;
+  v_parcel_type text;
+  v_remark text;
+begin
+  if v_actor is null then
+    raise exception 'Authentication required';
+  end if;
+
+  if p_parent_parcel_id is null then
+    raise exception 'Parent parcel is required';
+  end if;
+
+  if jsonb_typeof(p_splits) <> 'array' then
+    raise exception 'Split rows must be a JSON array';
+  end if;
+
+  v_split_count := jsonb_array_length(p_splits);
+
+  if v_split_count < 2 then
+    raise exception 'At least two split rows are required';
+  end if;
+
+  if v_split_count > 26 then
+    raise exception 'Split rows cannot exceed 26';
+  end if;
+
+  select *
+  into v_parent
+  from public.parcels
+  where id = p_parent_parcel_id
+  for update;
+
+  if not found then
+    raise exception 'Parent parcel not found';
+  end if;
+
+  if not app_private.can_access_branch(v_parent.branch_id) then
+    raise exception 'Parent parcel branch access denied';
+  end if;
+
+  if v_parent.parent_parcel_id is not null then
+    raise exception 'Child parcel cannot be split again';
+  end if;
+
+  if v_parent.status = 'split' then
+    raise exception 'Parent parcel is already split';
+  end if;
+
+  if v_parent.status <> 'received' then
+    raise exception 'Only received parcels can be split';
+  end if;
+
+  if exists (
+    select 1
+    from public.parcels
+    where parent_parcel_id = v_parent.id
+  ) then
+    raise exception 'Parent parcel already has split children';
+  end if;
+
+  for v_item in
+    select value
+    from jsonb_array_elements(p_splits)
+  loop
+    v_qty := nullif(coalesce(v_item->>'number_of_parcels', v_item->>'qty'), '')::integer;
+    v_total_charges := nullif(coalesce(v_item->>'total_charges', v_item->>'charges'), '')::numeric;
+    v_cash_advance := nullif(coalesce(v_item->>'cash_advance', '0'), '')::numeric;
+    v_parcel_type := nullif(btrim(coalesce(v_item->>'parcel_type', v_parent.parcel_type)), '');
+    v_remark := nullif(btrim(coalesce(v_item->>'remark', v_parent.remark, '')), '');
+
+    if coalesce(v_qty, 0) <= 0 then
+      raise exception 'Split quantity must be greater than 0';
+    end if;
+
+    if coalesce(v_total_charges, -1) < 0 then
+      raise exception 'Split charges cannot be negative';
+    end if;
+
+    if coalesce(v_cash_advance, 0) < 0 then
+      raise exception 'Split cash advance cannot be negative';
+    end if;
+
+    if v_parcel_type is null then
+      raise exception 'Split parcel type is required';
+    end if;
+
+    v_total_qty := v_total_qty + v_qty;
+  end loop;
+
+  if v_total_qty > v_parent.number_of_parcels then
+    raise exception 'Split quantity total cannot exceed parent quantity';
+  end if;
+
+  update public.parcels
+  set status = 'split',
+      split_count = v_split_count,
+      split_created_at = now(),
+      split_created_by = v_actor,
+      updated_at = now()
+  where id = v_parent.id
+  returning * into v_parent;
+
+  for v_item in
+    select value
+    from jsonb_array_elements(p_splits)
+  loop
+    v_split_index := v_split_index + 1;
+    v_split_code := chr(64 + v_split_index);
+    v_qty := nullif(coalesce(v_item->>'number_of_parcels', v_item->>'qty'), '')::integer;
+    v_total_charges := nullif(coalesce(v_item->>'total_charges', v_item->>'charges'), '')::numeric;
+    v_cash_advance := nullif(coalesce(v_item->>'cash_advance', '0'), '')::numeric;
+    v_parcel_type := nullif(btrim(coalesce(v_item->>'parcel_type', v_parent.parcel_type)), '');
+    v_remark := nullif(btrim(coalesce(v_item->>'remark', v_parent.remark, '')), '');
+
+    insert into public.parcels (
+      client_parcel_id,
+      tracking_id,
+      created_at,
+      updated_at,
+      created_by,
+      device_id,
+      branch_id,
+      from_town,
+      to_town,
+      city_code,
+      account_code,
+      sender_name,
+      sender_phone,
+      receiver_name,
+      receiver_phone,
+      parcel_type,
+      number_of_parcels,
+      total_charges,
+      payment_status,
+      cash_advance,
+      remark,
+      status,
+      parent_parcel_id,
+      split_index,
+      split_count,
+      split_created_at,
+      split_created_by
+    )
+    values (
+      v_parent.client_parcel_id || '-split-' || v_split_code,
+      v_parent.tracking_id || '-' || v_split_code,
+      now(),
+      now(),
+      v_actor,
+      v_parent.device_id,
+      v_parent.branch_id,
+      v_parent.from_town,
+      v_parent.to_town,
+      v_parent.city_code,
+      v_parent.account_code,
+      v_parent.sender_name,
+      v_parent.sender_phone,
+      v_parent.receiver_name,
+      v_parent.receiver_phone,
+      v_parcel_type,
+      v_qty,
+      v_total_charges,
+      v_parent.payment_status,
+      coalesce(v_cash_advance, 0),
+      v_remark,
+      'received',
+      v_parent.id,
+      v_split_code,
+      v_split_count,
+      now(),
+      v_actor
+    )
+    returning * into v_child;
+
+    v_children := v_children || jsonb_build_array(to_jsonb(v_child));
+  end loop;
+
+  return jsonb_build_object(
+    'parent', to_jsonb(v_parent),
+    'children', v_children
+  );
+end;
+$$;
+
 revoke all on function public.create_parcel_with_counter(text, text, text, text, text, text, text, text, text, text, text, integer, numeric, text, numeric, text, timestamptz) from public;
 revoke all on function public.create_parcel_with_counter(text, text, text, text, text, text, text, text, text, text, text, integer, numeric, text, numeric, text, timestamptz) from anon;
 grant execute on function public.create_parcel_with_counter(text, text, text, text, text, text, text, text, text, text, text, integer, numeric, text, numeric, text, timestamptz) to authenticated, service_role;
+revoke all on function public.split_parcel(uuid, jsonb) from public;
+revoke all on function public.split_parcel(uuid, jsonb) from anon;
+grant execute on function public.split_parcel(uuid, jsonb) to authenticated, service_role;
 
 comment on table public.staff_profiles is
   'Maps Supabase auth users to TKT staff/admin roles and branch access.';
@@ -656,3 +935,6 @@ comment on table public.towns is
 
 comment on function public.create_parcel_with_counter is
   'Authenticated RPC that idempotently returns an existing client parcel, validates branch access, atomically increments issuing-branch city/date counter, and inserts a parcel with CITY-YYMMDD-NNNN tracking ID.';
+
+comment on function public.split_parcel(uuid, jsonb) is
+  'Authenticated RPC that atomically marks a received parent parcel as split and creates child parcel rows with PARENT-A/PARENT-B tracking IDs.';
