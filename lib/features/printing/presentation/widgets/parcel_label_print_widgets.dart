@@ -1,16 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pos_printer_kit/pos_printer_kit.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/constants/font_families.dart';
 import '../../../../core/constants/label_strings.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../providers/printer_provider.dart';
-import '../../../../shared/models/label_settings_config.dart';
 import '../../../../shared/models/label_printer_selection.dart';
-import 'label_shared_widgets.dart';
+import '../../../../shared/models/label_settings_config.dart';
 import '../../../settings/presentation/providers/settings_provider.dart';
+import 'label_shared_widgets.dart';
+
+void _logLabelPrint(String message) {
+  assert(() {
+    debugPrint('[label_print] $message');
+    return true;
+  }());
+}
+
+LabelSettingsConfig _effectiveLabelSettings(LabelSettingsConfig settings) {
+  if (settings.labelSize.id != LabelSizePreset.mm80x60.id) {
+    return settings;
+  }
+
+  return settings.copyWith(
+    titleFontSize: settings.titleFontSize.clamp(52.0, 72.0).toDouble(),
+    subtitleFontSize: settings.subtitleFontSize.clamp(22.0, 30.0).toDouble(),
+    bodyFontSize: settings.bodyFontSize.clamp(30.0, 42.0).toDouble(),
+    paddingTop: settings.paddingTop.clamp(0.0, 48.0).toDouble(),
+    paddingHorizontal: settings.paddingHorizontal.clamp(0.0, 48.0).toDouble(),
+    rowGap: settings.rowGap.clamp(0.0, 48.0).toDouble(),
+  );
+}
 
 class LabelPrintRequest {
   const LabelPrintRequest({required this.quantity, required this.printer});
@@ -142,8 +166,8 @@ class _LabelPrintDialogState extends ConsumerState<LabelPrintDialog> {
           onPressed: selectedPrinter == null
               ? null
               : () async {
-                  debugPrint(
-                    '[label_print] dialog print requested '
+                  _logLabelPrint(
+                    'dialog print requested '
                     'printer=${selectedPrinter.name} qty=$_quantity',
                   );
                   await saveLastLabelPrinter(
@@ -204,9 +228,10 @@ class ParcelLabelPreview extends StatelessWidget {
     required this.phone,
     required this.address,
     required this.quantity,
+    required this.trackingId,
     this.includeShadow = true,
     this.includeBorder = true,
-    this.maxWidth = 560,
+    this.maxWidth,
   });
 
   final LabelSettingsConfig settings;
@@ -215,17 +240,22 @@ class ParcelLabelPreview extends StatelessWidget {
   final String phone;
   final String address;
   final int quantity;
+  final String trackingId;
   final bool includeShadow;
   final bool includeBorder;
-  final double maxWidth;
+  final double? maxWidth;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveSettings = _effectiveLabelSettings(settings);
+
     return Center(
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
+        constraints: BoxConstraints(
+          maxWidth: maxWidth ?? effectiveSettings.labelSize.widthPx.toDouble(),
+        ),
         child: AspectRatio(
-          aspectRatio: 70 / 50,
+          aspectRatio: effectiveSettings.labelSize.aspectRatio,
           child: DecoratedBox(
             decoration: BoxDecoration(
               color: Colors.white,
@@ -242,69 +272,255 @@ class ParcelLabelPreview extends StatelessWidget {
             ),
             child: Padding(
               padding: EdgeInsets.fromLTRB(
-                settings.paddingHorizontal,
-                settings.paddingTop,
-                settings.paddingHorizontal,
+                effectiveSettings.paddingHorizontal,
+                effectiveSettings.paddingTop,
+                effectiveSettings.paddingHorizontal,
                 24,
               ),
               child: DefaultTextStyle(
-                style: const TextStyle(color: Colors.black),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      LabelStrings.businessTitle,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: settings.titleFontSize,
-                        fontWeight: FontWeight.w800,
-                        height: 1,
-                      ),
-                    ),
-                    SizedBox(height: settings.rowGap / 2),
-                    Text(
-                      businessPhone,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: settings.subtitleFontSize,
-                        fontWeight: FontWeight.w600,
-                        height: 1.1,
-                      ),
-                    ),
-                    SizedBox(height: settings.rowGap),
-                    const Divider(height: 1, color: Colors.black45),
-                    SizedBox(height: settings.rowGap),
-                    _LabelPreviewRow(
-                      label: 'Name',
-                      value: name,
-                      fontSize: settings.bodyFontSize,
-                      labelWidth: 150,
-                    ),
-                    SizedBox(height: settings.rowGap),
-                    _LabelPreviewRow(
-                      label: 'Phone',
-                      value: phone,
-                      fontSize: settings.bodyFontSize,
-                      labelWidth: 150,
-                    ),
-                    SizedBox(height: settings.rowGap),
-                    LabelAddressQuantityRow(
-                      address: address,
-                      quantity: quantity,
-                      fontSize: settings.bodyFontSize,
-                      labelWidth: 150,
-                    ),
-                  ],
+                style: const TextStyle(
+                  color: Colors.black,
+                  fontFamily: FontFamilies.myanmar,
                 ),
+                child:
+                    effectiveSettings.labelSize.id == LabelSizePreset.mm80x60.id
+                    ? LayoutBuilder(
+                        builder: (context, constraints) {
+                          return FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.topLeft,
+                            child: SizedBox(
+                              width: constraints.maxWidth,
+                              child: _LabelPreview80x60(
+                                settings: effectiveSettings,
+                                businessPhone: businessPhone,
+                                name: name,
+                                phone: phone,
+                                address: address,
+                                quantity: quantity,
+                                trackingId: trackingId,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : _LabelPreview75x50(
+                        settings: effectiveSettings,
+                        businessPhone: businessPhone,
+                        name: name,
+                        phone: phone,
+                        address: address,
+                        quantity: quantity,
+                      ),
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _LabelPreview75x50 extends StatelessWidget {
+  const _LabelPreview75x50({
+    required this.settings,
+    required this.businessPhone,
+    required this.name,
+    required this.phone,
+    required this.address,
+    required this.quantity,
+  });
+
+  final LabelSettingsConfig settings;
+  final String businessPhone;
+  final String name;
+  final String phone;
+  final String address;
+  final int quantity;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _LabelHeader(settings: settings, businessPhone: businessPhone),
+        SizedBox(height: settings.rowGap),
+        const Divider(height: 1, color: Colors.black45),
+        SizedBox(height: settings.rowGap),
+        _LabelPreviewRow(
+          label: 'Name',
+          value: name,
+          fontSize: settings.bodyFontSize,
+          labelWidth: 150,
+        ),
+        SizedBox(height: settings.rowGap),
+        _LabelPreviewRow(
+          label: 'Phone',
+          value: phone,
+          fontSize: settings.bodyFontSize,
+          labelWidth: 150,
+        ),
+        SizedBox(height: settings.rowGap),
+        LabelAddressQuantityRow(
+          address: address,
+          quantity: quantity,
+          fontSize: settings.bodyFontSize,
+          labelWidth: 150,
+        ),
+      ],
+    );
+  }
+}
+
+class _LabelPreview80x60 extends StatelessWidget {
+  const _LabelPreview80x60({
+    required this.settings,
+    required this.businessPhone,
+    required this.name,
+    required this.phone,
+    required this.address,
+    required this.quantity,
+    required this.trackingId,
+  });
+
+  final LabelSettingsConfig settings;
+  final String businessPhone;
+  final String name;
+  final String phone;
+  final String address;
+  final int quantity;
+  final String trackingId;
+
+  @override
+  Widget build(BuildContext context) {
+    final bodyFontSize = settings.bodyFontSize * 1.06;
+    final labelWidth = 150.0;
+    final qrSize = (settings.labelSize.widthPx * 0.2).clamp(112.0, 130.0);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _LabelHeader(settings: settings, businessPhone: businessPhone),
+        SizedBox(height: settings.rowGap * 0.75),
+        const Divider(height: 1, color: Colors.black54),
+        SizedBox(height: settings.rowGap),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _LabelPreviewRow(
+                    label: 'Name',
+                    value: name,
+                    fontSize: bodyFontSize,
+                    labelWidth: labelWidth,
+                  ),
+                  SizedBox(height: settings.rowGap * 0.8),
+                  _LabelPreviewRow(
+                    label: 'Phone',
+                    value: phone,
+                    fontSize: bodyFontSize,
+                    labelWidth: labelWidth,
+                    valueMaxLines: 2,
+                  ),
+                  SizedBox(height: settings.rowGap * 0.8),
+                  _LabelPreviewRow(
+                    label: 'Address',
+                    value: address,
+                    fontSize: bodyFontSize,
+                    labelWidth: labelWidth,
+                    valueMaxLines: 1,
+                  ),
+                  SizedBox(height: settings.rowGap * 0.65),
+                  _LabelPreviewRow(
+                    label: 'Qty',
+                    value: quantity.toString(),
+                    fontSize: bodyFontSize,
+                    labelWidth: labelWidth,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 14),
+            SizedBox(
+              width: qrSize,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  QrImageView(
+                    data: trackingId,
+                    size: qrSize,
+                    padding: EdgeInsets.zero,
+                    backgroundColor: Colors.white,
+                  ),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    width: qrSize,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        trackingId,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontFamily: FontFamilies.myanmar,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          height: 1.05,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _LabelHeader extends StatelessWidget {
+  const _LabelHeader({required this.settings, required this.businessPhone});
+
+  final LabelSettingsConfig settings;
+  final String businessPhone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          LabelStrings.businessTitle,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontFamily: FontFamilies.myanmar,
+            fontSize: settings.titleFontSize,
+            fontWeight: FontWeight.w800,
+            height: 1,
+          ),
+        ),
+        SizedBox(height: settings.rowGap / 2),
+        Text(
+          businessPhone,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontFamily: FontFamilies.myanmar,
+            fontSize: settings.subtitleFontSize,
+            fontWeight: FontWeight.w600,
+            height: 1.1,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -315,12 +531,14 @@ class _LabelPreviewRow extends StatelessWidget {
     required this.value,
     required this.fontSize,
     this.labelWidth = 76,
+    this.valueMaxLines = 2,
   });
 
   final String label;
   final String value;
   final double fontSize;
   final double labelWidth;
+  final int valueMaxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -332,6 +550,7 @@ class _LabelPreviewRow extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
+              fontFamily: FontFamilies.myanmar,
               fontSize: fontSize,
               fontWeight: FontWeight.w700,
               height: 1.1,
@@ -341,9 +560,10 @@ class _LabelPreviewRow extends StatelessWidget {
         Expanded(
           child: Text(
             value,
-            maxLines: 2,
+            maxLines: valueMaxLines,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
+              fontFamily: FontFamilies.myanmar,
               fontSize: fontSize,
               fontWeight: FontWeight.w600,
               height: 1.1,

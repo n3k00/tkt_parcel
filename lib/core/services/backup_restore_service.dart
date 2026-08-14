@@ -163,8 +163,9 @@ class BackupRestoreService {
           final relativePath = imageEntry.name.substring(
             _imageDirectoryName.length + 1,
           );
-          final outputFile = File(
-            path.join(targetImageDirectory.path, relativePath),
+          final outputFile = _safeBackupImageOutputFile(
+            targetImageDirectory,
+            relativePath,
           );
           await outputFile.parent.create(recursive: true);
           await outputFile.writeAsBytes(_archiveBytes(imageEntry), flush: true);
@@ -180,6 +181,28 @@ class BackupRestoreService {
         await workingDirectory.delete(recursive: true);
       }
     }
+  }
+
+  File _safeBackupImageOutputFile(Directory targetDirectory, String entryPath) {
+    final normalizedEntryPath = path.normalize(
+      entryPath.replaceAll('\\', path.separator),
+    );
+    if (normalizedEntryPath.isEmpty ||
+        path.isAbsolute(normalizedEntryPath) ||
+        normalizedEntryPath == '..' ||
+        normalizedEntryPath.startsWith('..${path.separator}')) {
+      throw StateError('Backup contains an unsafe image path.');
+    }
+
+    final targetRoot = path.normalize(path.absolute(targetDirectory.path));
+    final outputPath = path.normalize(
+      path.absolute(path.join(targetRoot, normalizedEntryPath)),
+    );
+    if (!path.isWithin(targetRoot, outputPath)) {
+      throw StateError('Backup contains an unsafe image path.');
+    }
+
+    return File(outputPath);
   }
 
   Future<void> _replaceDatabaseFile(File sourceDatabase) async {

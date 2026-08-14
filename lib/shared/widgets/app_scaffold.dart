@@ -65,9 +65,7 @@ class AppScaffold extends StatelessWidget {
                   blockingOverlay ??
                   ColoredBox(
                     color: Colors.black26,
-                    child: const Center(
-                      child: CircularProgressIndicator(),
-                    ),
+                    child: const Center(child: CircularProgressIndicator()),
                   ),
             ),
         ],

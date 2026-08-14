@@ -48,7 +48,9 @@ class AppButtonStyles {
     textStyle: AppTextStyles.button.copyWith(color: AppColors.primary),
   );
 
-  static FilledButtonThemeData filledTheme() => FilledButtonThemeData(style: primaryFilled);
-  static OutlinedButtonThemeData outlinedTheme() => OutlinedButtonThemeData(style: outlined);
+  static FilledButtonThemeData filledTheme() =>
+      FilledButtonThemeData(style: primaryFilled);
+  static OutlinedButtonThemeData outlinedTheme() =>
+      OutlinedButtonThemeData(style: outlined);
   static TextButtonThemeData textTheme() => TextButtonThemeData(style: text);
 }

@@ -13,5 +13,7 @@ class AppRadius {
   static const BorderRadius medium = BorderRadius.all(Radius.circular(md));
   static const BorderRadius large = BorderRadius.all(Radius.circular(lg));
   static const BorderRadius extraLarge = BorderRadius.all(Radius.circular(xl));
-  static const BorderRadius roundedPill = BorderRadius.all(Radius.circular(pill));
+  static const BorderRadius roundedPill = BorderRadius.all(
+    Radius.circular(pill),
+  );
 }

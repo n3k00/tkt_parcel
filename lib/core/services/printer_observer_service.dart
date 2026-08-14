@@ -28,8 +28,9 @@ class PrinterObserverSnapshot {
   }) {
     return PrinterObserverSnapshot(
       connectionState: connectionState ?? this.connectionState,
-      printProgress:
-          clearPrintProgress ? null : printProgress ?? this.printProgress,
+      printProgress: clearPrintProgress
+          ? null
+          : printProgress ?? this.printProgress,
       latestError: clearLatestError ? null : latestError ?? this.latestError,
       logs: logs ?? this.logs,
     );
@@ -37,10 +38,8 @@ class PrinterObserverSnapshot {
 }
 
 class PrinterObserverService {
-  PrinterObserverService({
-    PrinterLogWriter? logWriter,
-    this.maxLogs = 100,
-  }) : _logWriter = logWriter;
+  PrinterObserverService({PrinterLogWriter? logWriter, this.maxLogs = 100})
+    : _logWriter = logWriter;
 
   final PrinterLogWriter? _logWriter;
   final int maxLogs;
@@ -59,10 +58,7 @@ class PrinterObserverService {
 
   PrinterObserverSnapshot get snapshot => _snapshot;
 
-  void attach(
-    PrinterCore core, {
-    required VoidCallback onChanged,
-  }) {
+  void attach(PrinterCore core, {required VoidCallback onChanged}) {
     detach();
     _onChanged = onChanged;
 
@@ -89,10 +85,7 @@ class PrinterObserverService {
   }
 
   void recordLog(String message) {
-    final nextLogs = <String>[
-      ..._snapshot.logs,
-      message,
-    ];
+    final nextLogs = <String>[..._snapshot.logs, message];
     if (nextLogs.length > maxLogs) {
       nextLogs.removeRange(0, nextLogs.length - maxLogs);
     }

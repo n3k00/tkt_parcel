@@ -57,10 +57,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
                 title: Text(preset.title, style: AppTextStyles.label),
                 subtitle: Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text(
-                    preset.subtitle,
-                    style: AppTextStyles.bodyMuted,
-                  ),
+                  child: Text(preset.subtitle, style: AppTextStyles.bodyMuted),
                 ),
                 trailing: isSelected
                     ? const Icon(Icons.check_circle_rounded)
@@ -75,9 +72,7 @@ class PrinterSettingsScreen extends ConsumerWidget {
                     return;
                   }
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${preset.title} preset selected.'),
-                    ),
+                    SnackBar(content: Text('${preset.title} preset selected.')),
                   );
                 },
               );

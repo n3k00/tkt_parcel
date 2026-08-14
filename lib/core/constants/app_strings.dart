@@ -5,7 +5,7 @@ abstract final class AppStrings {
       'Live preview, font size, and receipt padding controls.';
   static const labelSettingsTitle = 'Label Settings';
   static const labelSettingsSubtitle =
-      'Adjust the 70x50 parcel label preview and spacing.';
+      'Adjust parcel label size, preview, and spacing.';
   static const printerSettingsTitle = 'Printer Settings';
   static const printerSettingsSubtitle =
       'Choose the printer preset used for receipt output.';
@@ -41,6 +41,7 @@ abstract final class AppStrings {
   static const phoneLabel = 'Phone';
   static const phoneNumbersLabel = 'Phone Numbers';
   static const labelLabel = 'Label';
+  static const labelSizeLabel = 'Label Size';
   static const valueLabel = 'Value';
   static const termsLabel = 'Terms';
   static const topLabel = 'Top';

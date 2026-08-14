@@ -15,8 +15,7 @@ class AppConfig {
   );
   static const _defaultSupabaseAnonKey = String.fromEnvironment(
     'SUPABASE_ANON_KEY',
-    defaultValue:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjZnhjYmtlempvcHdsZ3Nhc3piIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0OTU4MTEsImV4cCI6MjA5NTA3MTgxMX0.WlFGWbj7K2Ak8hhdFfceT8rA8eJzoh7EhStLR0gCP_g',
+    defaultValue: '',
   );
 
   final AppEnvironment environment;

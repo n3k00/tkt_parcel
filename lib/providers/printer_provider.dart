@@ -250,10 +250,18 @@ class PrinterNotifier extends Notifier<PrinterState> {
   Future<bool> printTsplLabelImage(
     Uint8List imageBytes, {
     int copies = 1,
+    int widthPx = 600,
+    int heightPx = 400,
+    double labelWidthMm = 75,
+    double labelHeightMm = 50,
   }) async {
     try {
       final success = await _repository.printTsplLabelImage(
         imageBytes,
+        widthPx: widthPx,
+        heightPx: heightPx,
+        labelWidthMm: labelWidthMm,
+        labelHeightMm: labelHeightMm,
         copies: copies,
       );
       state = _fromCore(

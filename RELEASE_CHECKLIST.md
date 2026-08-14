@@ -26,6 +26,7 @@
 - Confirm counters are scoped by `city_code + service_date`.
 - Confirm `anon` has no table privileges on app backend tables.
 - Confirm `authenticated` does not have destructive table privileges such as `DELETE` or `TRUNCATE`.
+- Confirm `app_private` does not use `grant execute on all functions`; only explicit function grants are allowed.
 - Confirm no destructive SQL is used during release checks.
 
 ## Device Login Checks

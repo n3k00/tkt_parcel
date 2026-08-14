@@ -10,10 +10,7 @@ Widget _buildTestApp() {
     overrides: [
       parcelHistoryProvider.overrideWith((ref) => Stream.value(const [])),
     ],
-    child: MaterialApp(
-      theme: AppTheme.light(),
-      home: const ParcelListScreen(),
-    ),
+    child: MaterialApp(theme: AppTheme.light(), home: const ParcelListScreen()),
   );
 }
 

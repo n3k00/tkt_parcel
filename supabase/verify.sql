@@ -1,4 +1,4 @@
--- Run after schema.sql in Supabase SQL Editor.
+-- Run after schema.sql, drivers.sql, and gate_operations.sql in Supabase SQL Editor.
 -- This verifies branch seeding, RLS setup, and RPC security mode.
 --
 -- Note: create_parcel_with_counter now requires an authenticated user with
@@ -19,7 +19,8 @@ where n.nspname = 'public'
     'towns',
     'devices',
     'parcel_counters',
-    'parcels'
+    'parcels',
+    'drivers'
   )
 order by c.relname;
 
@@ -32,7 +33,8 @@ where schemaname = 'public'
     'towns',
     'devices',
     'parcel_counters',
-    'parcels'
+    'parcels',
+    'drivers'
   )
 order by tablename, policyname;
 
@@ -45,7 +47,8 @@ where table_schema = 'public'
     'towns',
     'devices',
     'parcel_counters',
-    'parcels'
+    'parcels',
+    'drivers'
   )
   and grantee in ('anon', 'authenticated')
 order by table_name, grantee, privilege_type;
@@ -60,6 +63,10 @@ order by column_name, privilege_type;
 select name_mm, name_en, code, sort_order, active
 from public.towns
 order by sort_order;
+
+select id, name, phone, vehicle_no, driver_type, active
+from public.drivers
+order by active desc, name;
 
 select column_name, is_nullable, data_type
 from information_schema.columns
@@ -86,9 +93,13 @@ order by routine_schema, routine_name;
 -- - towns include 33 active rows; ခိုလန် is normalized to ခိုလမ်
 -- - listed public tables have rls_enabled = true
 -- - policies are scoped to authenticated
+-- - drivers has RLS enabled, active gate-user read policy, admin write policy,
+--   and no anon table privileges
 -- - parcel_counters columns are city_code, service_date, running_number, updated_at
 -- - public.create_parcel_with_counter has security_type = INVOKER
 -- - app_private helper functions have security_type = DEFINER
+-- - retrying create_parcel_with_counter with the same client_parcel_id returns
+--   the existing parcel without incrementing the counter
 -- - generated tracking IDs use CITY-YYMMDD-NNNN with no account-code segment
 -- - anon has no table privileges on app public tables
 -- - authenticated has only required table privileges:

@@ -416,9 +416,30 @@ create policy gate_ledger_entries_select_own_branch on public.gate_ledger_entrie
 create policy gate_incoming_mains_select_own_branch on public.gate_incoming_mains for select to authenticated using (branch_id = app_private.current_user_branch_id());
 create policy gate_incoming_entries_select_own_branch on public.gate_incoming_entries for select to authenticated using (exists(select 1 from public.gate_incoming_mains m where m.id = incoming_id and m.branch_id = app_private.current_user_branch_id()));
 
-grant execute on function app_private.current_user_is_gate() to authenticated, service_role;
-grant execute on all functions in schema app_private to authenticated, service_role;
+revoke execute on all functions in schema app_private from authenticated, service_role;
+
+grant execute on function
+  app_private.current_user_role(),
+  app_private.current_user_branch_id(),
+  app_private.is_admin(),
+  app_private.can_access_branch(text),
+  app_private.can_access_city_code(text),
+  app_private.current_user_is_gate(),
+  app_private.create_gate_ledger(uuid, date),
+  app_private.attach_parcel_to_gate_ledger(uuid, text),
+  app_private.remove_gate_ledger_entry(uuid),
+  app_private.settle_gate_ledger(uuid),
+  app_private.create_gate_incoming(uuid, date),
+  app_private.attach_existing_gate_incoming_parcel(uuid, text),
+  app_private.lookup_gate_incoming_parcel(uuid, text),
+  app_private.add_manual_gate_incoming_parcel(uuid, text, text, text, text, numeric, numeric, text),
+  app_private.remove_gate_incoming_entry(uuid),
+  app_private.update_manual_gate_incoming_parcel(uuid, text, text, text, text, numeric, numeric, text),
+  app_private.mark_gate_incoming_driver_paid(uuid, numeric, text),
+  app_private.mark_gate_incoming_entry_claimed(uuid, text, text)
+to authenticated, service_role;
 revoke execute on function public.create_gate_ledger(uuid, date), public.attach_parcel_to_gate_ledger(uuid, text), public.remove_gate_ledger_entry(uuid), public.settle_gate_ledger(uuid), public.create_gate_incoming(uuid, date), public.lookup_gate_incoming_parcel(uuid, text), public.attach_existing_gate_incoming_parcel(uuid, text), public.add_manual_gate_incoming_parcel(uuid, text, text, text, text, numeric, numeric, text), public.remove_gate_incoming_entry(uuid), public.update_manual_gate_incoming_parcel(uuid, text, text, text, text, numeric, numeric, text), public.mark_gate_incoming_driver_paid(uuid, numeric, text), public.mark_gate_incoming_entry_claimed(uuid, text, text) from public, anon;
 grant execute on function public.create_gate_ledger(uuid, date), public.attach_parcel_to_gate_ledger(uuid, text), public.remove_gate_ledger_entry(uuid), public.settle_gate_ledger(uuid), public.create_gate_incoming(uuid, date), public.lookup_gate_incoming_parcel(uuid, text), public.attach_existing_gate_incoming_parcel(uuid, text), public.add_manual_gate_incoming_parcel(uuid, text, text, text, text, numeric, numeric, text), public.remove_gate_incoming_entry(uuid), public.update_manual_gate_incoming_parcel(uuid, text, text, text, text, numeric, numeric, text), public.mark_gate_incoming_driver_paid(uuid, numeric, text), public.mark_gate_incoming_entry_claimed(uuid, text, text) to authenticated;
 
+drop policy if exists drivers_select_active_gate_staff on public.drivers;
 create policy drivers_select_active_gate_staff on public.drivers for select to authenticated using (active = true and app_private.current_user_is_gate());

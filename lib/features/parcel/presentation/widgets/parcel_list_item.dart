@@ -8,11 +8,7 @@ import '../../../../core/utils/date_utils.dart';
 import '../../../../data/models/parcel.dart';
 
 class ParcelListItem extends StatelessWidget {
-  const ParcelListItem({
-    super.key,
-    required this.parcel,
-    required this.onTap,
-  });
+  const ParcelListItem({super.key, required this.parcel, required this.onTap});
 
   final ParcelModel parcel;
   final VoidCallback onTap;
@@ -58,9 +54,7 @@ class ParcelListItem extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: statusColor,
-                    borderRadius: const BorderRadius.all(
-                      Radius.circular(999),
-                    ),
+                    borderRadius: const BorderRadius.all(Radius.circular(999)),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),

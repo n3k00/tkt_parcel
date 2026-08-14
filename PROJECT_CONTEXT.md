@@ -33,6 +33,10 @@ Migration rules are defined in `AppDatabase.migration`: new installs create all 
 
 Backup restore replaces `tkt_parcel.sqlite` and must remove SQLite sidecar files (`-wal`, `-shm`, `-journal`). Older schema v1 backups may not contain `towns`; restore should allow them so Drift can migrate and seed towns on reopen.
 
+ZIP backup restore validates image entry paths before extraction and rejects
+absolute or parent-directory paths. Keep this boundary check when changing
+backup formats.
+
 Generated database code lives in `lib/data/local/database/app_database.g.dart`. Regenerate it with:
 
 ```powershell
@@ -41,6 +45,20 @@ dart run build_runner build --delete-conflicting-outputs
 
 ## Printer / Hardware Integration
 The project uses `pos_printer_kit` for printer integration and includes Bluetooth/storage permissions. Printer-related code is organized under `lib/features/printer`, `lib/features/printing`, and core printer services. Voucher/label printing appears image-based, which helps preserve Myanmar text rendering on thermal printers.
+
+Label Settings supports selectable parcel label stock sizes: `75 x 50 mm`
+and `80 x 60 mm`. The selected size controls the label preview aspect ratio,
+hidden image capture pixel size, and TSPL print command width/height in mm.
+The `75 x 50 mm` label keeps the compact text layout. The `80 x 60 mm` label
+uses a roomier layout with a right-side tracking-ID QR code, one-line address
+value, two-line phone value, and separate Address / Qty rows to keep the label
+easy to scan.
+Because label sliders are shared across stock sizes, the `80 x 60 mm` render
+path clamps extreme saved font/spacing values and scales down only if needed to
+avoid print-preview overflow. Label Top, Horizontal, and Row Gap controls start
+at `0` for every label size, including `80 x 60 mm`; the settings screen uses
+the same effective range as the renderer so slider changes are visible in
+preview and print.
 
 Printer connect currently uses the package default `PrinterConnectPage`. Open it through `openPrinterConnectPage(...)` so Android Bluetooth/Nearby devices permissions are checked first. Avoid replacing the package UI unless explicitly requested. The app currently depends on `pos_printer_kit` branch `codex/fix-printer-connection-hangs` with package path `packages/pos_printer_kit`; that branch moves retry/disconnect-before-connect handling into the package/core layer.
 
@@ -93,6 +111,21 @@ claim time, editable unpaid manual entries, and an irreversible gate-user
 driver payment lock from unpaid to paid. Gate mutations use authenticated RPC wrappers from
 `supabase/gate_operations.sql`.
 
+Run Supabase SQL in this order for Android backend setup: `schema.sql`,
+`drivers.sql`, then `gate_operations.sql`. `drivers.sql` is additive and
+creates/enables RLS for the shared `public.drivers` master used by gate screens.
+Android gate users can read active drivers; driver add/edit remains admin-side.
+
+`create_parcel_with_counter(...)` is idempotent by `client_parcel_id`: if a
+server parcel was already created for the same client parcel ID, the RPC returns
+that existing row without incrementing the counter again. This protects retry
+flows after local save/print failures.
+
+Supabase app config must not hardcode the anon key. Pass `SUPABASE_ANON_KEY`
+with `--dart-define` for run/build commands. App-private function access uses
+explicit grants only; do not reintroduce `grant execute on all functions in
+schema app_private` without a deliberate security review.
+
 ## Current Known Issues
 - Requested Gradle paths `android/app/build.gradle` and `android/build.gradle` do not exist; this project appears to use Kotlin DSL Gradle files instead.
 - Real-device release verification is still required before production: staff login, branch visibility, two-device tracking ID uniqueness, printer connection/printing, and Parcel History reprint recovery.
@@ -110,6 +143,7 @@ driver payment lock from unpaid to paid. Gate mutations use authenticated RPC wr
 - Do not blind-sync old local-only parcels to Supabase. Old printed/local-only parcels remain local history unless a separate legacy import plan is explicitly approved.
 - New official parcels must be created through Supabase `create_parcel_with_counter(...)`; do not generate official tracking IDs on-device.
 - Never add a Supabase service-role key to Flutter source, dart defines, assets, or release scripts. The app may use the public anon key only.
+- Do not hardcode the Supabase anon key in source. Use `--dart-define=SUPABASE_ANON_KEY=...` for run/build.
 - Supabase public app tables should have RLS enabled, no `anon` table privileges, and only minimal `authenticated` table privileges. Do not grant `DELETE` or `TRUNCATE` to app roles.
 - If local save/print fails after server parcel creation, keep the server parcel and recover by pull-refreshing Parcel History and reprinting; do not delete the server row or create a replacement tracking ID.
 - Treat `parcels.cityCode` / Supabase `parcels.city_code` as the issuing branch city code for new official parcels. Do not infer parcel origin from the tracking prefix; use `fromTown` for the selected origin town.

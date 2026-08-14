@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppEmptyState extends StatelessWidget {
-  const AppEmptyState({
-    super.key,
-    required this.title,
-    required this.message,
-  });
+  const AppEmptyState({super.key, required this.title, required this.message});
 
   final String title;
   final String message;

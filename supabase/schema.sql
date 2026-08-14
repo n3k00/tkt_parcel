@@ -295,7 +295,15 @@ as $$
   );
 $$;
 
-grant execute on all functions in schema app_private to authenticated, service_role;
+revoke execute on all functions in schema app_private from authenticated, service_role;
+
+grant execute on function
+  app_private.current_user_role(),
+  app_private.current_user_branch_id(),
+  app_private.is_admin(),
+  app_private.can_access_branch(text),
+  app_private.can_access_city_code(text)
+to authenticated, service_role;
 
 alter table public.staff_profiles enable row level security;
 alter table public.branches enable row level security;
@@ -508,6 +516,22 @@ begin
     raise exception 'Authentication required';
   end if;
 
+  if btrim(coalesce(p_client_parcel_id, '')) = '' then
+    raise exception 'client_parcel_id is required';
+  end if;
+
+  select * into v_parcel
+  from public.parcels
+  where client_parcel_id = p_client_parcel_id;
+
+  if found then
+    if not app_private.can_access_branch(v_parcel.branch_id) then
+      raise exception 'User is not allowed to access existing parcel %', p_client_parcel_id;
+    end if;
+
+    return v_parcel;
+  end if;
+
   if not app_private.can_access_branch(p_branch_id) then
     raise exception 'User is not allowed to create parcels for branch %', p_branch_id;
   end if;
@@ -631,4 +655,4 @@ comment on table public.towns is
   'Central read-only town master list for parcel From/To town choices. Android users should not add towns locally.';
 
 comment on function public.create_parcel_with_counter is
-  'Authenticated RPC that validates branch access, atomically increments issuing-branch city/date counter, and inserts a parcel with CITY-YYMMDD-NNNN tracking ID.';
+  'Authenticated RPC that idempotently returns an existing client parcel, validates branch access, atomically increments issuing-branch city/date counter, and inserts a parcel with CITY-YYMMDD-NNNN tracking ID.';

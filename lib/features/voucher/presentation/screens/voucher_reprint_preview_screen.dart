@@ -69,6 +69,8 @@ class _VoucherReprintPreviewScreenState
     if (request == null) {
       return;
     }
+    final labelSettings = await ref.read(labelSettingsProvider.future);
+    final labelSize = labelSettings.labelSize;
 
     setState(() {
       _labelQuantity = request.quantity;
@@ -126,7 +128,14 @@ class _VoucherReprintPreviewScreenState
       }
 
       final success = await printerNotifier
-          .printTsplLabelImage(imageBytes, copies: request.quantity)
+          .printTsplLabelImage(
+            imageBytes,
+            copies: request.quantity,
+            widthPx: labelSize.widthPx,
+            heightPx: labelSize.heightPx,
+            labelWidthMm: labelSize.widthMm,
+            labelHeightMm: labelSize.heightMm,
+          )
           .timeout(_labelPrintTimeout(request.quantity));
       _logLabelPrint('tspl print result=$success');
       if (success) {
@@ -473,7 +482,8 @@ class _VoucherReprintPreviewScreenState
                 child: RepaintBoundary(
                   key: _labelPrintKey,
                   child: SizedBox(
-                    width: 560,
+                    width: labelSettingsAsync.value!.labelSize.widthPx
+                        .toDouble(),
                     child: ParcelLabelPreview(
                       settings: labelSettingsAsync.value!,
                       businessPhone: preview.setup.businessPhone,
@@ -481,9 +491,11 @@ class _VoucherReprintPreviewScreenState
                       phone: preview.parcel.receiverPhone,
                       address: preview.parcel.toTown,
                       quantity: preview.parcel.numberOfParcels,
+                      trackingId: preview.parcel.trackingId,
                       includeShadow: false,
                       includeBorder: false,
-                      maxWidth: 560,
+                      maxWidth: labelSettingsAsync.value!.labelSize.widthPx
+                          .toDouble(),
                     ),
                   ),
                 ),

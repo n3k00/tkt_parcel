@@ -24,7 +24,7 @@ flutter run --flavor prod -t lib/main_prod.dart
 flutter run
 ```
 
-`flutter run` uses [main.dart](C:\projects\Thein Kha Thu Transport System\TKT Parcel\lib\main.dart), which defaults to `prod` unless `APP_ENV` is passed with `--dart-define`.
+`flutter run` uses [main.dart](C:\projects\Thein Kha Thu Transport System\TKT Parcel\lib\main.dart), which defaults to `prod` unless `APP_ENV` is passed with `--dart-define`. Supabase auth/sync requires `SUPABASE_ANON_KEY` to be passed with `--dart-define`.
 
 ## Build
 
@@ -71,13 +71,16 @@ Release builds fail if `android/key.properties` is missing, incomplete, or point
 
 ## Supabase Configuration
 
-The app reads Supabase config from dart defines and currently defaults to the production project used by this repository.
+The app reads Supabase config from dart defines. The project URL may default to this repository's production project, but the anon key has no source-code fallback and must be passed at run/build time.
 
 ```powershell
 flutter build apk --release --flavor prod -t lib/main_prod.dart --dart-define=SUPABASE_URL=https://bcfxcbkezjopwlgsaszb.supabase.co --dart-define=SUPABASE_ANON_KEY=YOUR_PROD_ANON_KEY
 ```
 
 Only the public anon key belongs in the app. Never add a Supabase service-role key to Flutter source, dart defines, assets, or release scripts.
+
+For Android gate workflows, apply Supabase SQL in order: `schema.sql`,
+`drivers.sql`, then `gate_operations.sql`.
 
 ## Notes
 
@@ -91,6 +94,8 @@ Only the public anon key belongs in the app. Never add a Supabase service-role k
 - Tracking ID prefix is the issuing branch/account city code, not the selected From Town. Example: Lashio account printing Taunggyi From Town uses `LSO-YYMMDD-NNNN`.
 - Do not blind-sync old local-only printed parcels. Old local-only parcels remain local history unless a separate legacy import plan is approved.
 - Printer connection uses the default `pos_printer_kit` connect page. Open it through the app permission helper; do not replace the connect UI without explicit approval.
+- Label Settings supports `75 x 50 mm` and `80 x 60 mm` label stock. The selected size controls label preview, captured image size, and TSPL print width/height.
+- `80 x 60 mm` labels use a right-side tracking-ID QR layout; `75 x 50 mm` labels keep the compact text-only layout.
 - `pos_printer_kit` is currently pinned to Git branch `codex/fix-printer-connection-hangs` at package path `packages/pos_printer_kit` so connection retry/disconnect-before-connect behavior stays in the package/core layer.
 
 ## Verification

@@ -58,6 +58,17 @@ Latest full product/release status: Unknown / needs confirmation.
 - Fixed Manual Parcel dialog runtime assertions introduced during polish: removed `LayoutBuilder` from AlertDialog intrinsic sizing, kept amount inputs in a stable vertical layout, and set the multiline note field to `TextInputType.multiline`.
 - Polished the Gate Incoming Driver Payment dialog to match the manual-entry form: added a payment icon and short prompt, spaced inputs, multiline optional note, visible non-negative amount validation, constrained dialog width, and an icon-backed confirm action.
 - Improved printer connect preflight UX: before opening the package default `PrinterConnectPage`, the app now shows blocking dialogs for missing/blocked Bluetooth, Nearby devices, or Location permissions and for Bluetooth being turned off. Permission-blocked cases offer an App Settings button; Bluetooth-off cases tell the operator to enable Bluetooth first.
+- Added selectable parcel label size in Label Settings: `75 x 50 mm` and `80 x 60 mm`. The selected size is saved locally and now drives label preview ratio, hidden capture pixel size, and TSPL label print width/height for reprint and label test print flows.
+- Split parcel label layouts by stock size: `75 x 50 mm` remains compact text-only, while `80 x 60 mm` now uses a text + right-side QR layout with tracking ID under the QR. The 80 x 60 layout keeps address to one line, allows phone to wrap to two lines, and shows Address and Qty as separate rows.
+- Tightened the `80 x 60 mm` label preview spacing after real preview review: removed the large visual gap between Address and Qty, added an 80 x 60 widget regression test, and moved label/voucher debug logs behind debug-only assertions where changed.
+- Adjusted the `80 x 60 mm` label details so Address and Qty no longer share one row.
+- Updated Label Settings padding behavior so Top, Horizontal, and Row Gap all start at `0` for every label size, including `80 x 60 mm`. The settings sliders now match the renderer's effective range so changes visibly affect preview/print output.
+- Added additive Supabase `drivers.sql` for Android gate workflows. It creates the shared `public.drivers` table if missing, enables RLS, allows active gate users to read active drivers, allows admin-side insert/update, and grants no delete policy.
+- Made `create_parcel_with_counter(...)` idempotent by `client_parcel_id`: retrying the same client parcel returns the existing server parcel without incrementing the counter again.
+- Improved voucher print/save recovery UX. If the server creates an official tracking ID but local save/print does not finish, the app tells the operator to refresh Parcel List and reprint that tracking ID; duplicate local tracking retries reuse the existing local parcel when available.
+- Removed the source-code fallback Supabase anon key. Future run/build commands must pass `SUPABASE_ANON_KEY` with `--dart-define`.
+- Replaced broad `app_private` function execute grants with explicit grants for the app-private helper and gate RPC functions.
+- Hardened ZIP backup restore by rejecting absolute or parent-directory image paths before extraction.
 
 ## Known Issues
 - Requested Gradle Groovy files `android/app/build.gradle` and `android/build.gradle` are not present; project appears to use Kotlin DSL Gradle files.
@@ -65,6 +76,7 @@ Latest full product/release status: Unknown / needs confirmation.
 - Current production APK readiness: Unknown / needs confirmation.
 - Authenticated parcel RPC still needs real-device verification from the Flutter print/save flow.
 - Bluetooth printer connect should be retested on a real Android device after the `pos_printer_kit` branch update; if it still returns native `connect_failed` / `result status connect: false`, next investigation should stay in package/native connection behavior without replacing the package connect UI.
+- `80 x 60 mm` label stock still needs real XP-420B Bluetooth test output verification, including gap alignment and whether calibration is needed.
 
 ## Next Tasks
 - Confirm current release goal: local APK, internal testing, Play Store, or continued MVP development.
@@ -81,6 +93,7 @@ Latest full product/release status: Unknown / needs confirmation.
 - Review Windows `TKT Transport Ledger` Beta 1 before depending on it operationally: Inventory and Reports are still placeholder/mock-backed areas, while Home/Main Ledger and Driver are the main Supabase-backed beta workflows.
 - Create Supabase Auth users and `staff_profiles` rows for `gate_llm` and `gate_kgt`, then real-device test gate login and `LLM/KGT` voucher creation.
 - Real-device test Android gate Main Ledger and Incoming Parcels with `kyaingtong@tkt.com`, including attach guards, settle locks, manual entry, claim note, and driver payment lock.
+- Apply/verify Supabase SQL order on the live project after backup: `schema.sql`, `drivers.sql`, then `gate_operations.sql`.
 
 ## Decisions
 - Use Riverpod/provider/repository/service patterns for new work unless architecture changes are explicitly requested.
@@ -98,8 +111,12 @@ Latest full product/release status: Unknown / needs confirmation.
 - Android To Town choices must come from Supabase `towns` sorted by `sort_order`; do not reintroduce device-local To Town add/delete/read-only management UI in Settings.
 - Android From Town choices must come from active Supabase `branches`; do not reintroduce device-local From Town management UI in Settings.
 - Android gate operation tables stay separate from Windows ledger tables. Gate users may read active drivers but add/edit drivers only from Windows/Admin.
+- Supabase driver setup for Android is additive and non-destructive. `drivers.sql` must not delete driver data and should not grant delete access. Gate users read active drivers only; admin users may insert/update drivers.
+- Supabase app-private SQL must use explicit function grants, not `grant execute on all functions in schema app_private`.
+- Supabase anon key must be supplied by dart define or local environment and must not be committed in source.
 - Login success must return to the root `AuthGate`; do not navigate directly from `LoginScreen` to `HomeScreen`, because staff profile access must be checked first.
 - Server-side tracking IDs must be generated by the authenticated `create_parcel_with_counter` RPC to avoid duplicate counters across devices.
+- `create_parcel_with_counter(...)` must remain idempotent by `client_parcel_id` so app retries do not create a second tracking ID or increment the counter twice.
 - Tracking ID format is `CITY-YYMMDD-NNNN`; `CITY` is the issuing branch/account city code, not necessarily selected From Town. Do not use account code in new server-generated tracking IDs.
 - `parcels.cityCode` / Supabase `parcels.city_code` stores the issuing branch city code for new official parcels. Use `fromTown` for the selected parcel origin town.
 - Official voucher printing requires a server-issued tracking ID. The app should repaint the voucher with the server ID before capture/print.

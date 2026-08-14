@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/font_families.dart';
 import '../../../../core/constants/receipt_strings.dart';
 import '../../../../core/constants/voucher_layout.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -432,10 +433,10 @@ class _TermsSection extends StatelessWidget {
           textAlign: TextAlign.center,
           style: _ReceiptStyles.termsTitle(setup, isPrintable),
         ),
-        SizedBox(height: isPrintable ? 10 : 8),
+        SizedBox(height: isPrintable ? 6 : 8),
         for (var index = 0; index < ReceiptStrings.voucherTerms.length; index++)
           Padding(
-            padding: EdgeInsets.only(bottom: isPrintable ? 8 : 5),
+            padding: EdgeInsets.only(bottom: isPrintable ? 4 : 5),
             child: _ReceiptTermLine(
               number: index + 1,
               text: ReceiptStrings.voucherTerms[index],
@@ -468,10 +469,10 @@ class _ReceiptTermLine extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: isPrintable ? 34 : 24,
+          width: isPrintable ? 28 : 24,
           child: Text('$number.', style: style),
         ),
-        SizedBox(width: isPrintable ? 5 : 4),
+        SizedBox(width: isPrintable ? 3 : 4),
         Expanded(child: Text(text, style: style)),
       ],
     );
@@ -483,6 +484,7 @@ class _ReceiptStyles {
 
   static TextStyle businessName(AppSetupConfig setup, bool isPrintable) =>
       TextStyle(
+        fontFamily: FontFamilies.myanmar,
         fontSize: _scale(setup.businessNameFontSize, isPrintable, 1.28),
         fontWeight: FontWeight.w700,
         height: 1.08,
@@ -491,6 +493,7 @@ class _ReceiptStyles {
 
   static TextStyle subtitle(AppSetupConfig setup, bool isPrintable) =>
       TextStyle(
+        fontFamily: FontFamilies.myanmar,
         fontSize: _scale(setup.businessSubtitleFontSize, isPrintable, 1.22),
         fontWeight: FontWeight.w600,
         height: 1.15,
@@ -498,6 +501,7 @@ class _ReceiptStyles {
       );
 
   static TextStyle address(AppSetupConfig setup, bool isPrintable) => TextStyle(
+    fontFamily: FontFamilies.myanmar,
     fontSize: _scale(setup.businessAddressFontSize, isPrintable, 1.08),
     fontWeight: FontWeight.w500,
     height: 1.2,
@@ -505,6 +509,7 @@ class _ReceiptStyles {
   );
 
   static TextStyle phone(AppSetupConfig setup, bool isPrintable) => TextStyle(
+    fontFamily: FontFamilies.myanmar,
     fontSize: _scale(setup.businessPhoneFontSize, isPrintable, 1.18),
     fontWeight: FontWeight.w600,
     height: 1.15,
@@ -512,6 +517,7 @@ class _ReceiptStyles {
   );
 
   static TextStyle label(AppSetupConfig setup, bool isPrintable) => TextStyle(
+    fontFamily: FontFamilies.myanmar,
     fontSize: isPrintable ? setup.receiptLabelFontSize : 16,
     fontWeight: FontWeight.w500,
     height: 1.25,
@@ -519,6 +525,7 @@ class _ReceiptStyles {
   );
 
   static TextStyle value(AppSetupConfig setup, bool isPrintable) => TextStyle(
+    fontFamily: FontFamilies.myanmar,
     fontSize: isPrintable ? setup.receiptValueFontSize : 16,
     fontWeight: FontWeight.w500,
     height: 1.28,
@@ -526,6 +533,7 @@ class _ReceiptStyles {
   );
 
   static TextStyle footer(bool isPrintable) => TextStyle(
+    fontFamily: FontFamilies.myanmar,
     fontSize: isPrintable ? 22 : 16,
     fontWeight: FontWeight.w600,
     height: 1.2,
@@ -534,16 +542,18 @@ class _ReceiptStyles {
 
   static TextStyle termsTitle(AppSetupConfig setup, bool isPrintable) =>
       TextStyle(
-        fontSize: isPrintable ? setup.receiptTermsFontSize + 2 : 14,
+        fontFamily: FontFamilies.myanmar,
+        fontSize: isPrintable ? setup.receiptTermsFontSize : 14,
         fontWeight: FontWeight.w700,
-        height: 1.2,
+        height: isPrintable ? 1.08 : 1.2,
         color: Colors.black,
       );
 
   static TextStyle terms(AppSetupConfig setup, bool isPrintable) => TextStyle(
-    fontSize: isPrintable ? setup.receiptTermsFontSize : 12,
+    fontFamily: FontFamilies.myanmar,
+    fontSize: isPrintable ? setup.receiptTermsFontSize * 0.92 : 12,
     fontWeight: FontWeight.w500,
-    height: isPrintable ? 1.34 : 1.28,
+    height: isPrintable ? 1.16 : 1.28,
     color: Colors.black,
   );
 

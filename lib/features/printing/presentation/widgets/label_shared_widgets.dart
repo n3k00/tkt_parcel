@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pos_printer_kit/pos_printer_kit.dart';
 
+import '../../../../core/constants/font_families.dart';
 import '../../../../core/theme/app_spacing.dart';
 
 class LabelPrinterPickerField extends StatelessWidget {
@@ -106,6 +107,7 @@ class LabelAddressQuantityRow extends StatelessWidget {
           child: Text(
             'Address',
             style: TextStyle(
+              fontFamily: FontFamilies.myanmar,
               fontSize: fontSize,
               fontWeight: FontWeight.w700,
               height: 1.1,
@@ -118,6 +120,7 @@ class LabelAddressQuantityRow extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
+              fontFamily: FontFamilies.myanmar,
               fontSize: fontSize,
               fontWeight: FontWeight.w600,
               height: 1.1,
@@ -154,6 +157,7 @@ class _QuantityBadge extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
+          fontFamily: FontFamilies.myanmar,
           fontSize: fontSize * 0.8,
           fontWeight: FontWeight.w800,
           height: 1,

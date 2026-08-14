@@ -7,10 +7,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/section_card.dart';
 
 class ParcelImagePreviewCard extends StatelessWidget {
-  const ParcelImagePreviewCard({
-    super.key,
-    required this.imagePath,
-  });
+  const ParcelImagePreviewCard({super.key, required this.imagePath});
 
   final String imagePath;
 

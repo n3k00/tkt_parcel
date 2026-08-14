@@ -25,6 +25,7 @@ class AppPreferences {
   static const _receiptPaddingBottomKey = 'receipt_padding_bottom';
   static const _footerMessageKey = 'voucher_footer_message';
   static const _printerPresetKey = 'printer_preset';
+  static const _labelSizeKey = 'label_size';
   static const _labelTitleFontSizeKey = 'label_title_font_size';
   static const _labelSubtitleFontSizeKey = 'label_subtitle_font_size';
   static const _labelBodyFontSizeKey = 'label_body_font_size';
@@ -118,6 +119,8 @@ class AppPreferences {
   String? getFooterMessage() => _preferences.getString(_footerMessageKey);
 
   String? getPrinterPreset() => _preferences.getString(_printerPresetKey);
+
+  String? getLabelSize() => _preferences.getString(_labelSizeKey);
 
   double? getLabelTitleFontSize() {
     return _preferences.getDouble(_labelTitleFontSizeKey);
@@ -276,6 +279,10 @@ class AppPreferences {
 
   Future<bool> setPrinterPreset(String value) {
     return _preferences.setString(_printerPresetKey, value);
+  }
+
+  Future<bool> setLabelSize(String value) {
+    return _preferences.setString(_labelSizeKey, value);
   }
 
   Future<bool> setLabelTitleFontSize(double value) {

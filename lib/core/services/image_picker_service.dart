@@ -19,10 +19,7 @@ class ImagePickerService {
     ImageSource source = ImageSource.gallery,
     String? previousPath,
   }) async {
-    final image = await _picker.pickImage(
-      source: source,
-      imageQuality: 90,
-    );
+    final image = await _picker.pickImage(source: source, imageQuality: 90);
     if (image == null) {
       return null;
     }

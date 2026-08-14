@@ -32,7 +32,9 @@ class StoragePermissionService {
       currentStatuses[permission] = await permission.status;
     }
 
-    final grantedAlready = currentStatuses.values.any((status) => status.isGranted);
+    final grantedAlready = currentStatuses.values.any(
+      (status) => status.isGranted,
+    );
     if (grantedAlready) {
       return const StoragePermissionResult(isGranted: true);
     }

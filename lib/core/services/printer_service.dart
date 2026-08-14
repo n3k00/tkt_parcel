@@ -30,9 +30,9 @@ class PrinterService {
 
   Future<bool> printTsplLabelImage(
     Uint8List imageBytes, {
-    int widthPx = 560,
+    int widthPx = 600,
     int heightPx = 400,
-    double labelWidthMm = 70,
+    double labelWidthMm = 75,
     double labelHeightMm = 50,
     double gapMm = 2,
     int xOffsetPx = 0,

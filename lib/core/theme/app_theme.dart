@@ -56,7 +56,9 @@ class AppTheme {
         disabledColor: AppColors.disabledButton,
         side: const BorderSide(color: Colors.transparent),
         padding: AppSpacing.chipPadding,
-        shape: const RoundedRectangleBorder(borderRadius: AppRadius.roundedPill),
+        shape: const RoundedRectangleBorder(
+          borderRadius: AppRadius.roundedPill,
+        ),
         labelStyle: AppTextStyles.label,
         secondaryLabelStyle: AppTextStyles.label,
       ),

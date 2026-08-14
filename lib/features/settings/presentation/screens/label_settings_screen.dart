@@ -16,6 +16,7 @@ import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../printing/presentation/widgets/label_shared_widgets.dart';
+import '../../../printing/presentation/widgets/parcel_label_print_widgets.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../constants/label_settings_dimens.dart';
 import '../providers/settings_provider.dart';
@@ -51,6 +52,62 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
   bool _isCapturingLabel = false;
   bool _shouldRestoreReceiptPrinter = false;
 
+  double _topPaddingMin(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm80x60.id
+        ? LabelSettingsDimens.topPaddingMin80x60
+        : LabelSettingsDimens.topPaddingMin;
+  }
+
+  double _topPaddingMax(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm80x60.id
+        ? LabelSettingsDimens.topPaddingMax80x60
+        : LabelSettingsDimens.topPaddingMax;
+  }
+
+  double _horizontalPaddingMin(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm80x60.id
+        ? LabelSettingsDimens.horizontalPaddingMin80x60
+        : LabelSettingsDimens.horizontalPaddingMin;
+  }
+
+  double _horizontalPaddingMax(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm80x60.id
+        ? LabelSettingsDimens.horizontalPaddingMax80x60
+        : LabelSettingsDimens.horizontalPaddingMax;
+  }
+
+  double _rowGapMax(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm80x60.id
+        ? LabelSettingsDimens.rowGapMax80x60
+        : LabelSettingsDimens.rowGapMax;
+  }
+
+  double _rowGapMin(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm80x60.id
+        ? LabelSettingsDimens.rowGapMin80x60
+        : LabelSettingsDimens.rowGapMin;
+  }
+
+  LabelSettingsConfig _normalizeDraft(LabelSettingsConfig config) {
+    return config.copyWith(
+      paddingTop: config.paddingTop
+          .clamp(
+            _topPaddingMin(config.labelSize),
+            _topPaddingMax(config.labelSize),
+          )
+          .toDouble(),
+      paddingHorizontal: config.paddingHorizontal
+          .clamp(
+            _horizontalPaddingMin(config.labelSize),
+            _horizontalPaddingMax(config.labelSize),
+          )
+          .toDouble(),
+      rowGap: config.rowGap
+          .clamp(_rowGapMin(config.labelSize), _rowGapMax(config.labelSize))
+          .toDouble(),
+    );
+  }
+
   Future<void> _handleTestPrint() async {
     if (_isTestPrinting) {
       return;
@@ -69,9 +126,11 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
     if (request == null) {
       return;
     }
+    final labelSize = _draft!.labelSize;
     _logLabelPrint(
       'request received printer='
-      '${request.printer?.name ?? 'none'} qty=${request.quantity}',
+      '${request.printer?.name ?? 'none'} qty=${request.quantity} '
+      'size=${labelSize.id}',
     );
 
     setState(() {
@@ -135,10 +194,16 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
         throw StateError('Printer is busy. Please try again.');
       }
 
-      final success = await printerNotifier.printTsplLabelImage(
-        imageBytes,
-        copies: request.quantity,
-      ).timeout(_labelPrintTimeout(request.quantity));
+      final success = await printerNotifier
+          .printTsplLabelImage(
+            imageBytes,
+            copies: request.quantity,
+            widthPx: labelSize.widthPx,
+            heightPx: labelSize.heightPx,
+            labelWidthMm: labelSize.widthMm,
+            labelHeightMm: labelSize.heightMm,
+          )
+          .timeout(_labelPrintTimeout(request.quantity));
       _logLabelPrint('tspl print result=$success');
       if (success) {
         await _waitForLabelOutput(request.quantity);
@@ -309,7 +374,7 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
       body: settingsAsync.when(
         data: (settings) {
           _draft ??= settings;
-          final draft = _draft!;
+          final draft = _normalizeDraft(_draft!);
           final contentWidth = AppResponsive.centeredContentWidth(
             context,
             horizontalPadding: AppSpacing.lg,
@@ -339,12 +404,17 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                               ? FittedBox(
                                   fit: BoxFit.contain,
                                   child: SizedBox(
-                                    width: 560,
-                                    child: _LabelPreview(
+                                    width: draft.labelSize.widthPx.toDouble(),
+                                    child: ParcelLabelPreview(
                                       settings: draft,
                                       businessPhone: businessPhone,
+                                      name: LabelStrings.sampleReceiverName,
+                                      phone: LabelStrings.sampleReceiverPhone,
+                                      address: LabelStrings.sampleAddress,
                                       quantity: _testQuantity,
-                                      maxWidth: 560,
+                                      trackingId: LabelStrings.sampleTrackingId,
+                                      maxWidth: draft.labelSize.widthPx
+                                          .toDouble(),
                                     ),
                                   ),
                                 )
@@ -352,6 +422,30 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                                   padding: EdgeInsets.all(AppSpacing.lg),
                                   child: AppLoading(),
                                 ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      _SettingsSection(
+                        title: AppStrings.labelSizeLabel,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: SegmentedButton<LabelSizePreset>(
+                            segments: [
+                              for (final option in LabelSizePreset.values)
+                                ButtonSegment<LabelSizePreset>(
+                                  value: option,
+                                  label: Text(option.label),
+                                ),
+                            ],
+                            selected: {draft.labelSize},
+                            onSelectionChanged: (selected) {
+                              setState(() {
+                                _draft = _normalizeDraft(
+                                  draft.copyWith(labelSize: selected.first),
+                                );
+                              });
+                            },
+                          ),
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -403,8 +497,8 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                             _SliderField(
                               label: AppStrings.topLabel,
                               value: draft.paddingTop,
-                              min: LabelSettingsDimens.topPaddingMin,
-                              max: LabelSettingsDimens.topPaddingMax,
+                              min: _topPaddingMin(draft.labelSize),
+                              max: _topPaddingMax(draft.labelSize),
                               onChanged: (value) => setState(() {
                                 _draft = draft.copyWith(paddingTop: value);
                               }),
@@ -412,8 +506,8 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                             _SliderField(
                               label: AppStrings.horizontalLabel,
                               value: draft.paddingHorizontal,
-                              min: LabelSettingsDimens.horizontalPaddingMin,
-                              max: LabelSettingsDimens.horizontalPaddingMax,
+                              min: _horizontalPaddingMin(draft.labelSize),
+                              max: _horizontalPaddingMax(draft.labelSize),
                               onChanged: (value) => setState(() {
                                 _draft = draft.copyWith(
                                   paddingHorizontal: value,
@@ -423,8 +517,8 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                             _SliderField(
                               label: AppStrings.rowGapLabel,
                               value: draft.rowGap,
-                              min: LabelSettingsDimens.rowGapMin,
-                              max: LabelSettingsDimens.rowGapMax,
+                              min: _rowGapMin(draft.labelSize),
+                              max: _rowGapMax(draft.labelSize),
                               onChanged: (value) => setState(() {
                                 _draft = draft.copyWith(rowGap: value);
                               }),
@@ -455,7 +549,7 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                                   );
                                   await ref
                                       .read(labelSettingsProvider.notifier)
-                                      .saveSettings(draft);
+                                      .saveSettings(_normalizeDraft(draft));
                                   if (!mounted) {
                                     return;
                                   }
@@ -481,14 +575,18 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                   child: RepaintBoundary(
                     key: _labelPrintKey,
                     child: SizedBox(
-                      width: 560,
-                      child: _LabelPreview(
+                      width: draft.labelSize.widthPx.toDouble(),
+                      child: ParcelLabelPreview(
                         settings: draft,
                         businessPhone: businessPhone,
+                        name: LabelStrings.sampleReceiverName,
+                        phone: LabelStrings.sampleReceiverPhone,
+                        address: LabelStrings.sampleAddress,
                         quantity: _testQuantity,
+                        trackingId: LabelStrings.sampleTrackingId,
                         includeShadow: false,
                         includeBorder: false,
-                        maxWidth: 560,
+                        maxWidth: draft.labelSize.widthPx.toDouble(),
                       ),
                     ),
                   ),
@@ -498,113 +596,6 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
         },
         loading: AppLoading.new,
         error: (error, _) => AppErrorView(message: error.toString()),
-      ),
-    );
-  }
-}
-
-class _LabelPreview extends StatelessWidget {
-  const _LabelPreview({
-    required this.settings,
-    required this.businessPhone,
-    required this.quantity,
-    this.includeShadow = true,
-    this.includeBorder = true,
-    this.maxWidth = 560,
-  });
-
-  final LabelSettingsConfig settings;
-  final String businessPhone;
-  final int quantity;
-  final bool includeShadow;
-  final bool includeBorder;
-  final double maxWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: AspectRatio(
-          aspectRatio: 70 / 50,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: includeBorder ? Border.all(color: Colors.black12) : null,
-              boxShadow: includeShadow
-                  ? const [
-                      BoxShadow(
-                        color: Colors.black12,
-                        blurRadius: 12,
-                        offset: Offset(0, 6),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                settings.paddingHorizontal,
-                settings.paddingTop,
-                settings.paddingHorizontal,
-                24,
-              ),
-              child: DefaultTextStyle(
-                style: const TextStyle(color: Colors.black),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      LabelStrings.businessTitle,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: settings.titleFontSize,
-                        fontWeight: FontWeight.w800,
-                        height: 1,
-                      ),
-                    ),
-                    SizedBox(height: settings.rowGap / 2),
-                    Text(
-                      businessPhone,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: settings.subtitleFontSize,
-                        fontWeight: FontWeight.w600,
-                        height: 1.1,
-                      ),
-                    ),
-                    SizedBox(height: settings.rowGap),
-                    const Divider(height: 1, color: Colors.black45),
-                    SizedBox(height: settings.rowGap),
-                    _LabelPreviewRow(
-                      label: 'Name',
-                      value: LabelStrings.sampleReceiverName,
-                      fontSize: settings.bodyFontSize,
-                      labelWidth: 150,
-                    ),
-                    SizedBox(height: settings.rowGap),
-                    _LabelPreviewRow(
-                      label: 'Phone',
-                      value: LabelStrings.sampleReceiverPhone,
-                      fontSize: settings.bodyFontSize,
-                      labelWidth: 150,
-                    ),
-                    SizedBox(height: settings.rowGap),
-                    LabelAddressQuantityRow(
-                      address: LabelStrings.sampleAddress,
-                      quantity: quantity,
-                      fontSize: settings.bodyFontSize,
-                      labelWidth: 150,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -792,52 +783,6 @@ class _LabelTestPrintDialogState extends ConsumerState<_LabelTestPrintDialog> {
       }
     }
     return false;
-  }
-}
-
-class _LabelPreviewRow extends StatelessWidget {
-  const _LabelPreviewRow({
-    required this.label,
-    required this.value,
-    required this.fontSize,
-    this.labelWidth = 76,
-  });
-
-  final String label;
-  final String value;
-  final double fontSize;
-  final double labelWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: labelWidth,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w700,
-              height: 1.1,
-            ),
-          ),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w600,
-              height: 1.1,
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }
 

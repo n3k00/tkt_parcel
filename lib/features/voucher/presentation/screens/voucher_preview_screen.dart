@@ -75,9 +75,24 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
         return;
       }
 
-      savedParcelId = await ref
-          .read(parcelRepositoryProvider)
-          .createParcel(officialParcel, preserveSyncState: true);
+      final parcelRepository = ref.read(parcelRepositoryProvider);
+      try {
+        savedParcelId = await parcelRepository.createParcel(
+          officialParcel,
+          preserveSyncState: true,
+        );
+      } catch (error) {
+        if (!_isLocalTrackingDuplicate(error)) {
+          rethrow;
+        }
+        final existingParcel = await parcelRepository.getParcelByTrackingId(
+          officialParcel.trackingId,
+        );
+        if (existingParcel?.id == null) {
+          rethrow;
+        }
+        savedParcelId = existingParcel!.id;
+      }
       if (!mounted) {
         return;
       }
@@ -120,6 +135,15 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
           ),
         );
         await _finishAfterSave();
+      } else if (_officialParcel != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Server created tracking ID ${_officialParcel!.trackingId}, but local save or print did not finish. Refresh Parcel List and reprint that tracking ID.',
+            ),
+          ),
+        );
+        await _finishAfterSave();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(_messageForOfficialVoucherError(error))),
@@ -136,7 +160,10 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
 
   String _messageForOfficialVoucherError(Object error) {
     final message = error.toString().toLowerCase();
-    debugPrint('Official voucher save failed: $error');
+    assert(() {
+      debugPrint('Official voucher save failed: $error');
+      return true;
+    }());
     if (message.contains('jwt') ||
         message.contains('session') ||
         message.contains('sign in') ||
@@ -156,6 +183,11 @@ class _VoucherPreviewScreenState extends ConsumerState<VoucherPreviewScreen> {
       return 'Server rejected this device. Please try again after updating the app.';
     }
     return _messageForSaveError(error);
+  }
+
+  bool _isLocalTrackingDuplicate(Object error) {
+    final message = error.toString().toLowerCase();
+    return message.contains('unique') && message.contains('tracking_id');
   }
 
   String _messageForSaveError(Object error) {

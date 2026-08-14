@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tkt_parcel/core/constants/receipt_strings.dart';
 import 'package:tkt_parcel/data/local/preferences/app_preferences.dart';
 import 'package:tkt_parcel/data/repositories/settings_repository.dart';
+import 'package:tkt_parcel/shared/models/label_settings_config.dart';
 
 void main() {
   late SettingsRepository repository;
@@ -42,5 +43,35 @@ void main() {
 
     expect(setup.businessAddressFontSize, 22);
     expect(setup.businessAddress, ReceiptStrings.defaultBusinessAddress);
+  });
+
+  test('returns 75x50 label size by default', () async {
+    final settings = await repository.getLabelSettings();
+
+    expect(settings.labelSize, LabelSizePreset.mm75x50);
+  });
+
+  test('saves selected label size', () async {
+    final initial = await repository.getLabelSettings();
+
+    await repository.saveLabelSettings(
+      initial.copyWith(labelSize: LabelSizePreset.mm80x60),
+    );
+
+    final saved = await repository.getLabelSettings();
+    expect(saved.labelSize, LabelSizePreset.mm80x60);
+  });
+
+  test('saves zero label padding values', () async {
+    final initial = await repository.getLabelSettings();
+
+    await repository.saveLabelSettings(
+      initial.copyWith(paddingTop: 0, paddingHorizontal: 0, rowGap: 0),
+    );
+
+    final saved = await repository.getLabelSettings();
+    expect(saved.paddingTop, 0);
+    expect(saved.paddingHorizontal, 0);
+    expect(saved.rowGap, 0);
   });
 }

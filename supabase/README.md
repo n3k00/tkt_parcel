@@ -16,9 +16,11 @@ This folder contains the first backend contract for future TKT Parcel sync.
 1. Create a Supabase project.
 2. Open `SQL Editor`.
 3. Run [`schema.sql`](schema.sql).
-4. Run [`gate_operations.sql`](gate_operations.sql) for Android gate Main
+4. Run [`drivers.sql`](drivers.sql) for the shared driver master used by
+   Android gate workflows.
+5. Run [`gate_operations.sql`](gate_operations.sql) for Android gate Main
    Ledger and Incoming Parcels workflows.
-4. Confirm seeded branches exist:
+6. Confirm seeded branches exist:
 
 Safety rule: never delete/drop/remove database objects or data without explicit approval. Do not run destructive SQL such as `DROP TABLE`, `DROP COLUMN`, `TRUNCATE`, broad `DELETE`, or destructive migration steps unless the exact operation has been approved.
 
@@ -95,6 +97,7 @@ issuing branch city_code + service_date
 
 Use `create_parcel_with_counter(...)` for backend-created parcels. The function:
 
+- returns the existing parcel row when the same `client_parcel_id` is retried
 - validates parcel amount/count fields
 - validates branch access and uses the issuing branch city code
 - increments `parcel_counters`
@@ -131,6 +134,8 @@ from public.create_parcel_with_counter(
 ```
 
 Run the same call with a different `p_client_parcel_id`; the running number should increment.
+Run the same call again with the same `p_client_parcel_id`; it should return
+the already-created parcel without incrementing the counter.
 
 For a complete verification script, run [`verify.sql`](verify.sql) after `schema.sql`.
 
@@ -143,6 +148,8 @@ For a complete verification script, run [`verify.sql`](verify.sql) after `schema
 - RLS is enabled for the public backend tables.
 - `anon` should have no table privileges on app backend tables.
 - `authenticated` should have only the app-required table privileges; destructive table privileges such as `DELETE` and `TRUNCATE` must not be granted.
+- `app_private` functions use explicit `EXECUTE` grants only. Do not grant
+  execute on all functions in `app_private`.
 - `create_parcel_with_counter(...)` validates branch access and generates the server tracking ID.
 
 ## Next Phase
@@ -177,3 +184,14 @@ updates available.
 Gate tables are RLS-protected. Android reads its own branch rows directly and
 performs mutations through authenticated RPC wrappers only. Gate driver lists
 are read-only in Android; driver add/edit remains Windows/Admin work.
+
+## Drivers
+
+Run [`drivers.sql`](drivers.sql) before `gate_operations.sql`. It creates
+`public.drivers` if missing, enables RLS, grants authenticated users
+non-destructive table access, and adds explicit policies:
+
+- active gate staff can read active drivers for Android gate screens
+- admin users can insert/update driver rows for admin tooling
+
+No delete policy is granted.
