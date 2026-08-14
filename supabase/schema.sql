@@ -118,7 +118,7 @@ create table if not exists public.parcels (
   remark text,
   status text not null default 'received'
     constraint parcels_status_check
-    check (status in ('received', 'dispatched', 'arrived', 'claimed', 'cancelled', 'split')),
+    check (status in ('received', 'partially_split', 'dispatched', 'arrived', 'claimed', 'cancelled', 'split')),
   dispatched_at timestamptz,
   arrived_at timestamptz,
   claimed_at timestamptz,
@@ -165,7 +165,7 @@ begin
     from pg_constraint
     where conrelid = 'public.parcels'::regclass
       and conname = 'parcels_status_check'
-      and pg_get_constraintdef(oid) not like '%split%'
+      and pg_get_constraintdef(oid) not like '%partially_split%'
   ) then
     alter table public.parcels drop constraint parcels_status_check;
   end if;
@@ -178,7 +178,7 @@ begin
   ) then
     alter table public.parcels
       add constraint parcels_status_check
-      check (status in ('received', 'dispatched', 'arrived', 'claimed', 'cancelled', 'split'));
+      check (status in ('received', 'partially_split', 'dispatched', 'arrived', 'claimed', 'cancelled', 'split'));
   end if;
 
   if not exists (
@@ -731,6 +731,10 @@ declare
   v_children jsonb := '[]'::jsonb;
   v_item jsonb;
   v_split_count integer;
+  v_existing_child_count integer := 0;
+  v_existing_child_qty integer := 0;
+  v_new_child_count integer;
+  v_new_total_qty integer;
   v_split_index integer := 0;
   v_split_code text;
   v_qty integer;
@@ -754,12 +758,8 @@ begin
 
   v_split_count := jsonb_array_length(p_splits);
 
-  if v_split_count < 2 then
-    raise exception 'At least two split rows are required';
-  end if;
-
-  if v_split_count > 26 then
-    raise exception 'Split rows cannot exceed 26';
+  if v_split_count <> 1 then
+    raise exception 'Progressive split accepts one child row at a time';
   end if;
 
   select *
@@ -781,19 +781,23 @@ begin
   end if;
 
   if v_parent.status = 'split' then
-    raise exception 'Parent parcel is already split';
+    raise exception 'Parent parcel is already fully split';
   end if;
 
-  if v_parent.status <> 'received' then
-    raise exception 'Only received parcels can be split';
+  if v_parent.status not in ('received', 'partially_split') then
+    raise exception 'Only received or partially split parcels can be split';
   end if;
 
-  if exists (
-    select 1
-    from public.parcels
-    where parent_parcel_id = v_parent.id
-  ) then
-    raise exception 'Parent parcel already has split children';
+  select
+    coalesce(sum(number_of_parcels), 0),
+    count(*),
+    coalesce(max(ascii(split_index) - 64), 0)
+  into v_existing_child_qty, v_existing_child_count, v_split_index
+  from public.parcels
+  where parent_parcel_id = v_parent.id;
+
+  if v_existing_child_count >= 26 or v_split_index >= 26 then
+    raise exception 'Split rows cannot exceed 26';
   end if;
 
   for v_item in
@@ -825,13 +829,19 @@ begin
     v_total_qty := v_total_qty + v_qty;
   end loop;
 
-  if v_total_qty > v_parent.number_of_parcels then
+  v_new_total_qty := v_existing_child_qty + v_total_qty;
+  v_new_child_count := v_existing_child_count + 1;
+
+  if v_new_total_qty > v_parent.number_of_parcels then
     raise exception 'Split quantity total cannot exceed parent quantity';
   end if;
 
   update public.parcels
-  set status = 'split',
-      split_count = v_split_count,
+  set status = case
+        when v_new_total_qty = v_parent.number_of_parcels then 'split'
+        else 'partially_split'
+      end,
+      split_count = v_new_child_count,
       split_created_at = now(),
       split_created_by = v_actor,
       updated_at = now()
@@ -904,7 +914,7 @@ begin
       'received',
       v_parent.id,
       v_split_code,
-      v_split_count,
+      v_new_child_count,
       now(),
       v_actor
     )
@@ -912,6 +922,11 @@ begin
 
     v_children := v_children || jsonb_build_array(to_jsonb(v_child));
   end loop;
+
+  update public.parcels
+  set split_count = v_new_child_count,
+      updated_at = now()
+  where parent_parcel_id = v_parent.id;
 
   return jsonb_build_object(
     'parent', to_jsonb(v_parent),
@@ -937,4 +952,4 @@ comment on function public.create_parcel_with_counter is
   'Authenticated RPC that idempotently returns an existing client parcel, validates branch access, atomically increments issuing-branch city/date counter, and inserts a parcel with CITY-YYMMDD-NNNN tracking ID.';
 
 comment on function public.split_parcel(uuid, jsonb) is
-  'Authenticated RPC that atomically marks a received parent parcel as split and creates child parcel rows with PARENT-A/PARENT-B tracking IDs.';
+  'Authenticated RPC that progressively splits one child voucher at a time from a received/partially_split parent, auto-assigning PARENT-A/PARENT-B tracking IDs and marking the parent split only when fully consumed.';

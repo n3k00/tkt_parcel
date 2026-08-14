@@ -11,6 +11,7 @@ class ParcelStatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = switch (status) {
       'received' => AppColors.received,
+      'partially_split' => AppColors.partiallySplit,
       'dispatched' => AppColors.dispatched,
       'arrived' => AppColors.arrived,
       'claimed' => AppColors.claimed,
@@ -19,8 +20,13 @@ class ParcelStatusChip extends StatelessWidget {
       _ => AppColors.textSecondary,
     };
 
+    final label = switch (status) {
+      'partially_split' => 'PARTIALLY SPLIT',
+      _ => status.toUpperCase(),
+    };
+
     return Chip(
-      label: Text(status.toUpperCase()),
+      label: Text(label),
       backgroundColor: color.withValues(alpha: 0.12),
       side: BorderSide(color: color.withValues(alpha: 0.18)),
       labelStyle: TextStyle(color: color, fontWeight: FontWeight.w700),

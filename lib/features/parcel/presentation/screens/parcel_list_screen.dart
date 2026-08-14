@@ -240,6 +240,7 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
 
 const _statusFilterOptions = [
   ParcelStatus.received,
+  ParcelStatus.partiallySplit,
   ParcelStatus.dispatched,
   ParcelStatus.arrived,
   ParcelStatus.claimed,
@@ -249,6 +250,7 @@ const _statusFilterOptions = [
 String _statusLabel(ParcelStatus status) {
   return switch (status) {
     ParcelStatus.received => 'Received',
+    ParcelStatus.partiallySplit => 'Partially Split',
     ParcelStatus.dispatched => 'Dispatched',
     ParcelStatus.arrived => 'Arrived',
     ParcelStatus.claimed => 'Claimed',

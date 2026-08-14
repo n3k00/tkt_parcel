@@ -1,5 +1,6 @@
 enum ParcelStatus {
   received('received'),
+  partiallySplit('partially_split'),
   dispatched('dispatched'),
   arrived('arrived'),
   claimed('claimed'),

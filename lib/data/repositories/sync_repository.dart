@@ -118,12 +118,135 @@ class SyncRepository {
     );
   }
 
+  Future<List<ParcelModel>> splitParcel({
+    required ParcelModel parent,
+    required List<SplitParcelInput> splits,
+  }) async {
+    if (_client.auth.currentSession == null) {
+      throw StateError('Please sign in before splitting vouchers.');
+    }
+
+    if (parent.trackingId.trim().isEmpty) {
+      throw StateError('Missing parent tracking ID.');
+    }
+
+    if (parent.status != ParcelStatus.received &&
+        parent.status != ParcelStatus.partiallySplit) {
+      throw StateError(
+        'Only received or partially split parcels can be split.',
+      );
+    }
+
+    final summary = await getSplitParcelSummary(parent);
+
+    final response = await _client.rpc(
+      'split_parcel',
+      params: {
+        'p_parent_parcel_id': summary.parentServerId,
+        'p_splits': splits.map((split) => split.toServerJson()).toList(),
+      },
+    );
+
+    final result = _readRpcObject(response);
+    final syncedAt = DateTime.now();
+    final rows = <Map<String, dynamic>>[];
+    final parentResult = result['parent'];
+    if (parentResult is Map) {
+      rows.add(Map<String, dynamic>.from(parentResult));
+    }
+    final children = result['children'];
+    if (children is List) {
+      rows.addAll(
+        children.whereType<Map>().map((row) => Map<String, dynamic>.from(row)),
+      );
+    }
+
+    if (rows.isEmpty) {
+      throw StateError('Server did not return split parcel data.');
+    }
+
+    final parcels = rows
+        .map((row) => _parcelFromServerRow(row, syncedAt: syncedAt))
+        .toList();
+    for (final parcel in parcels) {
+      await _parcelRepository.upsertSyncedParcel(parcel);
+    }
+
+    return parcels;
+  }
+
+  Future<SplitParcelSummary> getSplitParcelSummary(ParcelModel parent) async {
+    if (_client.auth.currentSession == null) {
+      throw StateError('Please sign in before splitting vouchers.');
+    }
+
+    final parentRow = await _client
+        .from('parcels')
+        .select('id, number_of_parcels, status, parcel_type')
+        .eq('tracking_id', parent.trackingId)
+        .maybeSingle();
+    final parentServerId = parentRow?['id'] as String?;
+    if (parentServerId == null || parentServerId.isEmpty) {
+      throw StateError('Parent parcel was not found on the server.');
+    }
+
+    final parentStatus = ParcelStatus.fromValue(
+      (parentRow?['status'] as String?) ?? ParcelStatus.received.value,
+    );
+    if (parentStatus != ParcelStatus.received &&
+        parentStatus != ParcelStatus.partiallySplit) {
+      throw StateError(
+        'Only received or partially split parcels can be split.',
+      );
+    }
+
+    final parentQuantity =
+        _readInt(parentRow?['number_of_parcels']) ?? parent.numberOfParcels;
+    final childRows = await _client
+        .from('parcels')
+        .select('number_of_parcels, split_index, parcel_type')
+        .eq('parent_parcel_id', parentServerId)
+        .order('split_index', ascending: true);
+    final children = childRows.map((row) {
+      return SplitParcelChildSummary(
+        splitIndex: (row['split_index'] as String?) ?? '?',
+        parcelType: (row['parcel_type'] as String?) ?? '',
+        numberOfParcels: _readInt(row['number_of_parcels']) ?? 0,
+      );
+    }).toList();
+    final usedQuantity = children.fold<int>(
+      0,
+      (sum, child) => sum + child.numberOfParcels,
+    );
+    final remainingQuantity = parentQuantity - usedQuantity;
+    if (remainingQuantity <= 0) {
+      throw StateError('Parent parcel is already fully split.');
+    }
+
+    return SplitParcelSummary(
+      parentServerId: parentServerId,
+      parentParcelType: (parentRow?['parcel_type'] as String?) ?? '',
+      parentQuantity: parentQuantity,
+      usedQuantity: usedQuantity,
+      remainingQuantity: remainingQuantity,
+      nextSplitIndex: String.fromCharCode(65 + childRows.length),
+      children: children,
+    );
+  }
+
   Map<String, dynamic> _readRpcRow(Object? response) {
     if (response is Map) {
       return Map<String, dynamic>.from(response);
     }
     if (response is List && response.isNotEmpty && response.first is Map) {
       return Map<String, dynamic>.from(response.first as Map);
+    }
+    throw StateError('Server did not return parcel data.');
+  }
+
+  Map<String, dynamic> _readRpcObject(Object? response) {
+    if (response is Map) {
+      return Map<String, dynamic>.from(response);
     }
     throw StateError('Server did not return parcel data.');
   }
@@ -230,4 +353,62 @@ class SyncRepository {
     if (value is String) return double.tryParse(value);
     return null;
   }
+}
+
+class SplitParcelInput {
+  const SplitParcelInput({
+    required this.numberOfParcels,
+    required this.totalCharges,
+    required this.cashAdvance,
+    required this.parcelType,
+    this.remark,
+  });
+
+  final int numberOfParcels;
+  final double totalCharges;
+  final double cashAdvance;
+  final String parcelType;
+  final String? remark;
+
+  Map<String, dynamic> toServerJson() {
+    return {
+      'number_of_parcels': numberOfParcels,
+      'total_charges': totalCharges,
+      'cash_advance': cashAdvance,
+      'parcel_type': parcelType,
+      'remark': remark,
+    };
+  }
+}
+
+class SplitParcelSummary {
+  const SplitParcelSummary({
+    required this.parentServerId,
+    required this.parentParcelType,
+    required this.parentQuantity,
+    required this.usedQuantity,
+    required this.remainingQuantity,
+    required this.nextSplitIndex,
+    required this.children,
+  });
+
+  final String parentServerId;
+  final String parentParcelType;
+  final int parentQuantity;
+  final int usedQuantity;
+  final int remainingQuantity;
+  final String nextSplitIndex;
+  final List<SplitParcelChildSummary> children;
+}
+
+class SplitParcelChildSummary {
+  const SplitParcelChildSummary({
+    required this.splitIndex,
+    required this.parcelType,
+    required this.numberOfParcels,
+  });
+
+  final String splitIndex;
+  final String parcelType;
+  final int numberOfParcels;
 }

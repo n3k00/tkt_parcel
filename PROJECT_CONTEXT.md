@@ -68,16 +68,23 @@ If Supabase parcel creation succeeds but local save or physical print fails, do 
 
 Split Voucher behavior: if one voucher's parcel quantity must be split
 across multiple drivers, do not create unrelated replacement vouchers. The
-Supabase `split_parcel(parent_id, splits)` RPC creates child parcel rows linked
-to the original parent row.
-Child tracking IDs use `PARENT-A`, `PARENT-B`, etc. Example:
-`TGI-260814-0001-A`. The parent status becomes `split` and must not be attached
-to ledger/incoming workflows; child vouchers are physical vouchers and follow
-the normal parcel lifecycle. Child rows copy sender, receiver, from town, and to
+accepted design is progressive split: each server `split_parcel(parent_id,
+splits)` call creates one child voucher from the parent remaining quantity.
+Example parent quantity 4 may become `PARENT-A` qty 2, later `PARENT-B` qty 1,
+and later `PARENT-C` qty 1. Child tracking IDs use `PARENT-A`, `PARENT-B`, etc.
+Example: `TGI-260814-0001-A`.
+
+The parent row remains a reference/master row. When child total quantity is less
+than parent quantity, parent status is `partially_split`; when child total
+quantity equals parent quantity, parent status is `split`. Once any child exists,
+the parent tracking ID must not be attached to ledger/incoming workflows; if the
+remaining quantity is going on a vehicle, create another child voucher and use
+that child tracking ID. Child vouchers are physical vouchers and follow the
+normal parcel lifecycle. Child rows copy sender, receiver, from town, and to
 town from the parent; child `parcel_type` and `remark` are editable, child
-quantity is operator-entered but the total cannot exceed parent quantity, child
-charges and cash advance are manual non-negative values, and child payment
-status stays the same as the parent. Planned columns include
+quantity is operator-entered but total child quantity cannot exceed parent
+quantity, child charges and cash advance are manual non-negative values, and
+child payment status stays the same as the parent. Split metadata columns are
 `parent_parcel_id`, `split_index`, `split_count`, `split_created_at`, and
 `split_created_by`. This is server-side only, not local-only. Current SQL also
 rejects split parent tracking IDs in Android gate ledger/incoming flows; use
@@ -87,8 +94,15 @@ Android local model support is partially in place for server-created split
 vouchers. Local Drift `Parcels` has nullable `parent_parcel_id`,
 `split_index`, and `split_count` columns, `ParcelStatus.split` is supported,
 and Supabase pull sync maps those three fields into local history. Android must
-still call the server `split_parcel(...)` RPC for actual split creation; do not
-generate child tracking IDs locally.
+call the server `split_parcel(...)` RPC for actual split creation; do not
+generate child tracking IDs locally. Android supports `partially_split` status
+and Parcel Detail/Reprint Split Voucher UI creates one child voucher at a time
+from server-calculated remaining quantity. The dialog validates child quantity
+against remaining quantity, rejects negative charges/cash advance, and asks for
+confirmation before sending a one-row `p_splits` array to the RPC. The split
+dialog shows parent and previous child parcel types in a Reference card; the new
+child Parcel Type input stays blank and is required so operators consciously
+enter the child parcel type.
 
 Server-to-local parcel pull sync is incremental after the first successful pull. The first sync for each signed-in account fetches all RLS-visible Supabase parcels, then stores the max successful server `updated_at` in an account-scoped SharedPreferences cursor key derived from `parcel_pull_last_synced_at`. Later pulls for that account fetch `updated_at > last cursor` only, then update its cursor only after local upserts finish. Never share one cursor across branch accounts on the same device.
 

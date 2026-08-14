@@ -92,6 +92,13 @@ from pg_constraint
 where conrelid = 'public.parcels'::regclass
   and conname = 'parcels_status_check';
 
+select
+  pg_get_constraintdef(oid) like '%partially_split%' as supports_partially_split,
+  pg_get_constraintdef(oid) like '%split%' as supports_split
+from pg_constraint
+where conrelid = 'public.parcels'::regclass
+  and conname = 'parcels_status_check';
+
 select routine_schema, routine_name, security_type
 from information_schema.routines
 where routine_schema in ('public', 'app_private')
@@ -121,7 +128,8 @@ order by routine_schema, routine_name;
 --   the existing parcel without incrementing the counter
 -- - generated tracking IDs use CITY-YYMMDD-NNNN with no account-code segment
 -- - public.split_parcel has security_type = INVOKER
--- - parcels has split metadata columns and parcels_status_check includes split
+-- - parcels has split metadata columns and parcels_status_check includes
+--   partially_split and split
 -- - anon has no table privileges on app public tables
 -- - authenticated has only required table privileges:
 --   staff_profiles SELECT; branches SELECT plus address/phone_numbers/updated_at UPDATE;

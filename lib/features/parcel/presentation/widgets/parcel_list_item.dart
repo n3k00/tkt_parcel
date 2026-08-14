@@ -17,6 +17,7 @@ class ParcelListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = switch (parcel.status.value) {
       'received' => AppColors.received,
+      'partially_split' => AppColors.partiallySplit,
       'dispatched' => AppColors.dispatched,
       'arrived' => AppColors.arrived,
       'claimed' => AppColors.claimed,

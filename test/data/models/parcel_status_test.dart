@@ -5,6 +5,10 @@ void main() {
   test(
     'parses cancelled status and falls back to received for unknown values',
     () {
+      expect(
+        ParcelStatus.fromValue('partially_split'),
+        ParcelStatus.partiallySplit,
+      );
       expect(ParcelStatus.fromValue('split'), ParcelStatus.split);
       expect(ParcelStatus.fromValue('cancelled'), ParcelStatus.cancelled);
       expect(ParcelStatus.fromValue('legacy_unknown'), ParcelStatus.received);

@@ -31,6 +31,7 @@ class AppColors {
   static const inputBorder = Color(0xFFC7CDD6);
   static const focusedBorder = Color(0xFF0F4C81);
   static const received = Color(0xFFDC2626);
+  static const partiallySplit = Color(0xFF8B5CF6);
   static const dispatched = Color(0xFFF59E0B);
   static const arrived = Color(0xFF2E8B57);
   static const claimed = Color(0xFF2563EB);

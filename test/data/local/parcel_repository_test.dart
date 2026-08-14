@@ -129,6 +129,21 @@ void main() {
     expect(saved.splitCount, 2);
   });
 
+  test('persists partially split parent status', () async {
+    final id = await repository.createParcel(
+      _buildParcel(
+        trackingId: 'TGI-260814-0001',
+      ).copyWith(status: ParcelStatus.partiallySplit, splitCount: 1),
+      preserveSyncState: true,
+    );
+
+    final saved = await repository.getParcel(id);
+
+    expect(saved, isNotNull);
+    expect(saved!.status, ParcelStatus.partiallySplit);
+    expect(saved.splitCount, 1);
+  });
+
   test('updates lifecycle timestamps and claim note metadata', () async {
     final id = await repository.createParcel(
       _buildParcel(trackingId: 'TGI-A1-250317-0005'),

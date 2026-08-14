@@ -69,11 +69,14 @@ Latest full product/release status: Unknown / needs confirmation.
 - Removed the source-code fallback Supabase anon key. Future run/build commands must pass `SUPABASE_ANON_KEY` with `--dart-define`.
 - Replaced broad `app_private` function execute grants with explicit grants for the app-private helper and gate RPC functions.
 - Hardened ZIP backup restore by rejecting absolute or parent-directory image paths before extraction.
-- Accepted Split Voucher / Child Parcel direction for a future implementation. Child tracking IDs will use `PARENT-A`, `PARENT-B`; parent status becomes `split`; child rows copy sender/receiver/from/to, allow editable parcel type and remark, keep parent payment status, and use manual non-negative charges/cash advance. Planned metadata includes `parent_parcel_id`, `split_index`, `split_count`, `split_created_at`, and `split_created_by`.
-- Added Supabase Split Voucher schema/RPC design to `supabase/schema.sql`: `parcels.status` supports `split`, split metadata columns are present, and `split_parcel(parent_id, splits)` atomically marks a received parent as split and creates child rows with `PARENT-A`, `PARENT-B`, etc. Android gate ledger/incoming RPCs now explicitly reject split parent tracking IDs.
-- Added `supabase/split_voucher_test.sql`, a rollback-only Supabase verification script for qty-4 parent -> qty-2 child A/B split, manual charges/cash advances, unique child tracking IDs, split-parent ledger attach rejection, and child ledger attach success.
+- Accepted Progressive Split Voucher / Child Parcel direction. Child tracking IDs use `PARENT-A`, `PARENT-B`, `PARENT-C`; each split call creates one child voucher from remaining parent quantity; parent status is `partially_split` while quantity remains and `split` when fully consumed; child rows copy sender/receiver/from/to, allow editable parcel type and remark, keep parent payment status, and use manual non-negative charges/cash advance. Metadata includes `parent_parcel_id`, `split_index`, `split_count`, `split_created_at`, and `split_created_by`.
+- Updated Supabase Split Voucher schema/RPC design in `supabase/schema.sql`: `parcels.status` supports `partially_split` and `split`, split metadata columns are present, and `split_parcel(parent_id, splits)` now accepts exactly one child row per call, auto-assigns the next child suffix, rejects over-splitting beyond parent quantity, and marks the parent `split` only when fully consumed. Android gate ledger/incoming RPCs now explicitly reject both `partially_split` and `split` parent tracking IDs.
+- Updated `supabase/split_voucher_test.sql`, a rollback-only Supabase verification script for progressive qty-4 parent -> A=2, B=1, C=1 split, manual charges/cash advances, unique child tracking IDs, over-split rejection, split-parent ledger attach rejection, and child ledger attach success.
 - Applied live Supabase SQL for Split Voucher support after creating a data-only JSON backup. `schema.sql`, `drivers.sql`, and `gate_operations.sql` applied successfully; `verify.sql` passed; `split_voucher_test.sql` passed with rollback leaving no `split-test-%` rows behind.
-- Added Android local model support for server-created split vouchers: `ParcelStatus.split`, local Drift schemaVersion `4`, nullable local parcel split columns (`parent_parcel_id`, `split_index`, `split_count`), Supabase pull mapping for those fields, and repository tests for local split metadata persistence.
+- Re-applied/verified live Supabase progressive split support on 2026-08-14 after local public-schema backups. `schema.sql`, `gate_operations.sql`, `verify.sql`, and rollback-only `split_voucher_test.sql` ran successfully; no `split-test-%` rows remained after rollback.
+- Added Android local model support for server-created split vouchers: `ParcelStatus.split`, `ParcelStatus.partiallySplit`, local Drift schemaVersion `4`, nullable local parcel split columns (`parent_parcel_id`, `split_index`, `split_count`), Supabase pull mapping for those fields, and repository tests for local split metadata persistence.
+- Revised Android Parcel Detail/Reprint Split Voucher UI for progressive one-child-at-a-time split. The app fetches server-calculated remaining quantity before opening the dialog, validates child qty against remaining qty, validates non-negative charges/cash advance, asks for confirmation, and sends one child row in `p_splits`.
+- Updated Android Split Voucher dialog to show parent and previous child parcel types as a Reference card. The new Child Parcel Type field is intentionally blank and required before review/confirm can proceed.
 
 ## Known Issues
 - Requested Gradle Groovy files `android/app/build.gradle` and `android/build.gradle` are not present; project appears to use Kotlin DSL Gradle files.
@@ -99,7 +102,8 @@ Latest full product/release status: Unknown / needs confirmation.
 - Review Windows `TKT Transport Ledger` Beta 1 before depending on it operationally: Inventory and Reports are still placeholder/mock-backed areas, while Home/Main Ledger and Driver are the main Supabase-backed beta workflows.
 - Create Supabase Auth users and `staff_profiles` rows for `gate_llm` and `gate_kgt`, then real-device test gate login and `LLM/KGT` voucher creation.
 - Real-device test Android gate Main Ledger and Incoming Parcels with `kyaingtong@tkt.com`, including attach guards, settle locks, manual entry, claim note, and driver payment lock.
-- Implement Android Parcel Detail Split Voucher UI later and call `split_parcel(parent_id, splits)` only after operator confirmation. Local Drift split-column support and pull mapping are implemented; split creation UI/RPC call is still pending.
+- Apply progressive split SQL to live Supabase after backup/export, then run `verify.sql` and `split_voucher_test.sql`.
+- Real-device test Android Parcel Detail Split Voucher flow with a received parent voucher: create A/B/C child rows progressively, confirm parent becomes `partially_split` then `split`, confirm children appear in Parcel History, and confirm child vouchers can be reprinted.
 - Keep driver vehicle number uniqueness active-only. Inactive historical duplicate `vehicle_no` rows may remain for history.
 
 ## Decisions
@@ -128,7 +132,7 @@ Latest full product/release status: Unknown / needs confirmation.
 - Tracking ID format is `CITY-YYMMDD-NNNN`; `CITY` is the issuing branch/account city code, not necessarily selected From Town. Do not use account code in new server-generated tracking IDs.
 - `parcels.cityCode` / Supabase `parcels.city_code` stores the issuing branch city code for new official parcels. Use `fromTown` for the selected parcel origin town.
 - Official voucher printing requires a server-issued tracking ID. The app should repaint the voucher with the server ID before capture/print.
-- Split parent vouchers are reference rows only after status becomes `split`; ledger/incoming workflows must use child tracking IDs.
+- Split parent vouchers are reference rows once any child exists. Parent status may be `partially_split` or `split`; ledger/incoming workflows must use child tracking IDs.
 - New official parcel creation remains online-only. Saved Parcel History, detail, and reprint should use local Drift data and work offline where possible.
 - If save/print fails after server creation, do not delete the Supabase parcel and do not create a replacement ID. Recover by pulling Parcel History and reprinting the existing official parcel.
 - Do not blind-sync old local-only printed parcels. Old printed/local-only parcels remain local history only.
