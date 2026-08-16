@@ -102,7 +102,11 @@ against remaining quantity, rejects negative charges/cash advance, and asks for
 confirmation before sending a one-row `p_splits` array to the RPC. The split
 dialog shows parent and previous child parcel types in a Reference card; the new
 child Parcel Type input stays blank and is required so operators consciously
-enter the child parcel type.
+enter the child parcel type. Parent vouchers with quantity `1` may also use this
+flow as a correction voucher when the original charges were left as `0` or need
+to be re-stated. In that case the child quantity is fixed at `1`, the operator
+enters the corrected charges/cash advance/parcel type, and ledger/incoming
+workflows must use the child tracking ID.
 
 Server-to-local parcel pull sync is incremental after the first successful pull. The first sync for each signed-in account fetches all RLS-visible Supabase parcels, then stores the max successful server `updated_at` in an account-scoped SharedPreferences cursor key derived from `parcel_pull_last_synced_at`. Later pulls for that account fetch `updated_at > last cursor` only, then update its cursor only after local upserts finish. Never share one cursor across branch accounts on the same device.
 

@@ -366,7 +366,13 @@ as $$
   );
 $$;
 
-revoke execute on all functions in schema app_private from authenticated, service_role;
+revoke execute on function
+  app_private.current_user_role(),
+  app_private.current_user_branch_id(),
+  app_private.is_admin(),
+  app_private.can_access_branch(text),
+  app_private.can_access_city_code(text)
+from public, anon;
 
 grant execute on function
   app_private.current_user_role(),

@@ -352,7 +352,7 @@ class _VoucherReprintPreviewScreenState
             parcel.status == ParcelStatus.partiallySplit) &&
         parcel.parentParcelId == null &&
         parcel.splitIndex == null &&
-        parcel.numberOfParcels > 1;
+        parcel.numberOfParcels > 0;
   }
 
   Future<void> _handleSplitVoucher(VoucherPreviewData preview) async {
@@ -419,7 +419,7 @@ class _VoucherReprintPreviewScreenState
       await showDialog<void>(
         context: context,
         builder: (_) => AlertDialog(
-          title: const Text('Cannot split voucher'),
+          title: const Text('Cannot split/correct voucher'),
           content: Text(_friendlySplitError(error)),
           actions: [
             FilledButton(
@@ -576,7 +576,7 @@ class _VoucherReprintPreviewScreenState
                             ? null
                             : () => _handleSplitVoucher(preview),
                         icon: const Icon(Icons.call_split_rounded),
-                        label: const Text('Split Voucher'),
+                        label: const Text('Split / Correct Voucher'),
                       ),
                     ],
                     if ((preview.parcel.parcelImagePath ?? '').isNotEmpty) ...[
@@ -700,7 +700,7 @@ class _SplitVoucherDialogState extends State<_SplitVoucherDialog> {
         children: [
           Icon(Icons.call_split_rounded),
           SizedBox(width: AppSpacing.xs),
-          Expanded(child: Text('Split Voucher')),
+          Expanded(child: Text('Split / Correct Voucher')),
         ],
       ),
       content: SingleChildScrollView(
@@ -721,6 +721,15 @@ class _SplitVoucherDialogState extends State<_SplitVoucherDialog> {
                   'Parent qty ${widget.summary.parentQuantity}  |  Split used ${widget.summary.usedQuantity}  |  Remaining ${widget.summary.remainingQuantity}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
+                if (_isSingleQuantityCorrection) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'Qty 1 voucher will be corrected as one child voucher. Use the child tracking ID for ledger and incoming flows.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.md),
                 _referenceCard(context),
                 const SizedBox(height: AppSpacing.md),
@@ -736,36 +745,32 @@ class _SplitVoucherDialogState extends State<_SplitVoucherDialog> {
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: AppSpacing.sm),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _splitField(
-                                _qty,
-                                'Qty',
-                                icon: Icons.inventory_2_outlined,
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                validator: _validateQty,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Expanded(
-                              child: _splitField(
-                                _charges,
-                                'Charges',
-                                icon: Icons.payments_outlined,
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.allow(
-                                    RegExp(r'[0-9.]'),
-                                  ),
-                                ],
-                                validator: _validateAmount,
-                              ),
+                        _splitField(
+                          _qty,
+                          'Qty',
+                          icon: Icons.inventory_2_outlined,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          readOnly: _isFixedQuantity,
+                          helperText: _isFixedQuantity
+                              ? 'Only 1 remaining, so qty is fixed.'
+                              : null,
+                          validator: _validateQty,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        _splitField(
+                          _charges,
+                          'Charges',
+                          icon: Icons.payments_outlined,
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[0-9.]'),
                             ),
                           ],
+                          validator: _validateAmount,
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         _splitField(
@@ -874,6 +879,13 @@ class _SplitVoucherDialogState extends State<_SplitVoucherDialog> {
     return widget.summary.parentParcelType.trim();
   }
 
+  bool get _isFixedQuantity => widget.summary.remainingQuantity == 1;
+
+  bool get _isSingleQuantityCorrection =>
+      widget.summary.parentQuantity == 1 &&
+      widget.summary.usedQuantity == 0 &&
+      widget.summary.remainingQuantity == 1;
+
   Widget _referenceBlock(
     BuildContext context, {
     required String label,
@@ -934,7 +946,7 @@ class _SplitVoucherDialogState extends State<_SplitVoucherDialog> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Confirm Split'),
+        title: const Text('Confirm Split / Correction'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -953,7 +965,7 @@ class _SplitVoucherDialogState extends State<_SplitVoucherDialog> {
             ),
             const SizedBox(height: AppSpacing.md),
             const Text(
-              'This creates one child voucher. Use the child tracking ID for ledger and incoming flows.',
+              'This creates one child voucher. The parent voucher will no longer be used for ledger and incoming flows.',
             ),
           ],
         ),
@@ -964,7 +976,7 @@ class _SplitVoucherDialogState extends State<_SplitVoucherDialog> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Confirm Split'),
+            child: const Text('Confirm'),
           ),
         ],
       ),
@@ -1011,14 +1023,21 @@ class _SplitVoucherDialogState extends State<_SplitVoucherDialog> {
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
     int maxLines = 1,
+    bool readOnly = false,
+    String? helperText,
   }) {
     return TextFormField(
       controller: controller,
+      readOnly: readOnly,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
       inputFormatters: inputFormatters,
       maxLines: maxLines,
-      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon),
+        helperText: helperText,
+      ),
       validator: validator,
     );
   }

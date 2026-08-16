@@ -423,7 +423,26 @@ create policy gate_incoming_mains_select_own_branch on public.gate_incoming_main
 drop policy if exists gate_incoming_entries_select_own_branch on public.gate_incoming_entries;
 create policy gate_incoming_entries_select_own_branch on public.gate_incoming_entries for select to authenticated using (exists(select 1 from public.gate_incoming_mains m where m.id = incoming_id and m.branch_id = app_private.current_user_branch_id()));
 
-revoke execute on all functions in schema app_private from authenticated, service_role;
+revoke execute on function
+  app_private.current_user_role(),
+  app_private.current_user_branch_id(),
+  app_private.is_admin(),
+  app_private.can_access_branch(text),
+  app_private.can_access_city_code(text),
+  app_private.current_user_is_gate(),
+  app_private.create_gate_ledger(uuid, date),
+  app_private.attach_parcel_to_gate_ledger(uuid, text),
+  app_private.remove_gate_ledger_entry(uuid),
+  app_private.settle_gate_ledger(uuid),
+  app_private.create_gate_incoming(uuid, date),
+  app_private.attach_existing_gate_incoming_parcel(uuid, text),
+  app_private.lookup_gate_incoming_parcel(uuid, text),
+  app_private.add_manual_gate_incoming_parcel(uuid, text, text, text, text, numeric, numeric, text),
+  app_private.remove_gate_incoming_entry(uuid),
+  app_private.update_manual_gate_incoming_parcel(uuid, text, text, text, text, numeric, numeric, text),
+  app_private.mark_gate_incoming_driver_paid(uuid, numeric, text),
+  app_private.mark_gate_incoming_entry_claimed(uuid, text, text)
+from public, anon;
 
 grant execute on function
   app_private.current_user_role(),
