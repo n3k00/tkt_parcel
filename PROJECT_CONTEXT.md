@@ -112,6 +112,23 @@ Server-to-local parcel pull sync is incremental after the first successful pull.
 
 Parcel History supports local filtering by tracking ID, receiver name, and receiver phone. Keep the search field mounted across empty/non-empty result states so typing a query that returns no rows does not drop keyboard focus.
 
+Parcel History also supports QR search/open. The QR scanner lives beside the
+search field, reads voucher QR codes with the camera, extracts tracking IDs such
+as `TGI-260814-0001` or `TGI-260814-0001-A`, searches only the current
+account/admin-visible local history, and opens the voucher reprint/detail screen
+when found. It does not query Supabase or bypass branch visibility. The search
+field suffix shows one compact action at a time: QR scan when the query is
+empty, or clear search when text is present. Parcel List keeps the search card
+pinned at the top while only the parcel rows scroll, and the QR action uses a
+quiet scan-frame icon instead of the heavier QR-code glyph.
+
+Parcel History shows parent/master vouchers only. Split child vouchers are hidden
+from the normal list to keep history readable. Typing a child tracking ID still
+maps back to the parent row, while QR scanning a child tracking ID opens that
+child voucher detail/reprint directly. Parent voucher detail shows a Split
+Children section with color status indicators, quantity, charges, and driver
+name when available; child rows tap through to their own reprint/detail screen.
+
 Parcel History, parcel detail, and reprint are offline-capable for parcels already saved in the local Drift database. Creating a new official parcel remains online-only because it must call Supabase for the official tracking ID. If profile/server refresh fails while offline, the app may use the last cached staff profile to keep local branch filtering available.
 
 Parcel form Total Charges UI accepts `0` as valid. Empty, invalid, or negative values are rejected; database and Supabase constraints allow non-negative total charges.

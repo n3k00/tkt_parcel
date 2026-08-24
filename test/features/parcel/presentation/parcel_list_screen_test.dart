@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:tkt_parcel/core/theme/app_theme.dart';
 import 'package:tkt_parcel/core/utils/date_utils.dart';
 import 'package:tkt_parcel/data/models/enums/payment_status.dart';
+import 'package:tkt_parcel/data/models/enums/parcel_status.dart';
 import 'package:tkt_parcel/data/models/parcel.dart';
 import 'package:tkt_parcel/features/auth/data/models/staff_profile.dart';
 import 'package:tkt_parcel/features/auth/providers/auth_provider.dart';
@@ -197,6 +198,59 @@ void main() {
     expect(find.text('Ma LSO'), findsNothing);
     expect(find.text('0999222222'), findsOneWidget);
     expect(find.text('0999111111'), findsNothing);
+  });
+
+  testWidgets('hides split children but maps child tracking search to parent', (
+    tester,
+  ) async {
+    final parent = ParcelModel.create(
+      trackingId: 'TGI-260814-0001',
+      branchId: 'source_tgi',
+      fromTown: 'Taunggyi',
+      toTown: 'Lashio',
+      cityCode: 'TGI',
+      accountCode: 'A1',
+      senderName: 'Parent Sender',
+      senderPhone: '0911000000',
+      receiverName: 'Parent Receiver',
+      receiverPhone: '0999000000',
+      parcelType: 'Box',
+      numberOfParcels: 4,
+      totalCharges: 40000,
+      paymentStatus: PaymentStatus.unpaid,
+      now: DateTime(2026, 8, 14, 9, 0),
+    ).copyWith(status: ParcelStatus.partiallySplit);
+    final child = ParcelModel.create(
+      trackingId: 'TGI-260814-0001-A',
+      branchId: 'source_tgi',
+      fromTown: 'Taunggyi',
+      toTown: 'Lashio',
+      cityCode: 'TGI',
+      accountCode: 'A1',
+      senderName: 'Child Sender',
+      senderPhone: '0911000000',
+      receiverName: 'Child Receiver',
+      receiverPhone: '0999111111',
+      parcelType: 'Bag',
+      numberOfParcels: 2,
+      totalCharges: 20000,
+      paymentStatus: PaymentStatus.unpaid,
+      now: DateTime(2026, 8, 14, 9, 5),
+    ).copyWith(parentParcelId: 'server-parent-id', splitIndex: 'A');
+
+    await _pumpParcelList(tester, [child, parent]);
+
+    expect(find.text('Parent Receiver'), findsOneWidget);
+    expect(find.text('Child Receiver'), findsNothing);
+
+    await tester.enterText(
+      find.byKey(const Key('parcel-history-search-field')),
+      'TGI-260814-0001-A',
+    );
+    await tester.pump();
+
+    expect(find.text('Parent Receiver'), findsOneWidget);
+    expect(find.text('Child Receiver'), findsNothing);
   });
 }
 

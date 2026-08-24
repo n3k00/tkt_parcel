@@ -80,6 +80,10 @@ Latest full product/release status: Unknown / needs confirmation.
 - Updated Android Split Voucher dialog to show parent and previous child parcel types as a Reference card. The new Child Parcel Type field is intentionally blank and required before review/confirm can proceed.
 - Fixed Split Voucher dialog amount entry layout so Qty and Charges are no longer squeezed into one row; each field now gets full dialog width for easier typing on real devices.
 - Allowed quantity-1 parent vouchers to use the Split / Correct Voucher flow for corrected charges. When only one quantity remains, the child qty is fixed at `1`, while charges, cash advance, parcel type, and remark remain operator-entered.
+- Added Parcel History QR scan-to-open. The QR button beside search opens a camera scanner, extracts normal and split-child tracking IDs, searches the current account/admin-visible local history only, and opens voucher reprint/detail when found.
+- Changed Parcel History split display behavior: normal list shows parent/master vouchers only, child tracking search maps back to the parent row, parent detail shows Split Children with color-only status indicators and driver/qty/charges, and child rows open their own reprint/detail screen.
+- Polished Parcel History search actions: the search field now shows a compact QR icon only when empty, and changes to a clear X action when text is present.
+- Pinned Parcel History search above the scrollable list and replaced the QR glyph with a quieter custom scan-frame icon.
 
 ## Known Issues
 - Requested Gradle Groovy files `android/app/build.gradle` and `android/build.gradle` are not present; project appears to use Kotlin DSL Gradle files.
@@ -107,6 +111,7 @@ Latest full product/release status: Unknown / needs confirmation.
 - Real-device test Android gate Main Ledger and Incoming Parcels with `kyaingtong@tkt.com`, including attach guards, settle locks, manual entry, claim note, and driver payment lock.
 - Apply progressive split SQL to live Supabase after backup/export, then run `verify.sql` and `split_voucher_test.sql`.
 - Real-device test Android Parcel Detail Split Voucher flow with a received parent voucher: create A/B/C child rows progressively, confirm parent becomes `partially_split` then `split`, confirm children appear in Parcel History, and confirm child vouchers can be reprinted.
+- Real-device test Parcel History QR scan-to-open, including camera permission, normal voucher IDs, split child IDs opening child detail directly, not-found dialogs, and branch-account visibility.
 - Keep driver vehicle number uniqueness active-only. Inactive historical duplicate `vehicle_no` rows may remain for history.
 
 ## Decisions
@@ -137,6 +142,8 @@ Latest full product/release status: Unknown / needs confirmation.
 - Official voucher printing requires a server-issued tracking ID. The app should repaint the voucher with the server ID before capture/print.
 - Split parent vouchers are reference rows once any child exists. Parent status may be `partially_split` or `split`; ledger/incoming workflows must use child tracking IDs.
 - New official parcel creation remains online-only. Saved Parcel History, detail, and reprint should use local Drift data and work offline where possible.
+- Parcel History QR scan-to-open is local/offline after prior sync and must respect the current signed-in account/admin branch visibility. Do not open another branch's cached local row for non-admin users.
+- Parcel History normal list should stay parent/master-only for split vouchers. Child vouchers live under the parent detail Split Children section; child status is shown by color indicator only, not status text.
 - If save/print fails after server creation, do not delete the Supabase parcel and do not create a replacement ID. Recover by pulling Parcel History and reprinting the existing official parcel.
 - Do not blind-sync old local-only printed parcels. Old printed/local-only parcels remain local history only.
 - Server official tracking starts with new parcels created through `create_parcel_with_counter(...)`.

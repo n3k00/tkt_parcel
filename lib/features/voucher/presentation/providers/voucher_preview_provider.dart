@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/tracking_id_service.dart';
 import '../../../../data/models/parcel.dart';
+import '../../../../data/repositories/parcel_repository.dart';
 import '../../../../providers/parcel_repository_provider.dart';
 import '../../../../shared/models/app_setup_config.dart';
 import '../../../auth/providers/auth_provider.dart';
@@ -17,11 +18,13 @@ class VoucherPreviewData {
     required this.parcel,
     required this.qrPayload,
     required this.setup,
+    this.splitChildren = const [],
   });
 
   final ParcelModel parcel;
   final String qrPayload;
   final AppSetupConfig setup;
+  final List<ParcelModel> splitChildren;
 }
 
 final voucherPreviewProvider = FutureProvider.autoDispose
@@ -139,13 +142,76 @@ final voucherReprintPreviewProvider = FutureProvider.autoDispose
       final qrPayload = ref
           .read(qrServiceProvider)
           .buildParcelPayload(trackingId: parcel.trackingId);
+      final splitChildren = parcel.parentParcelId == null
+          ? await _loadSplitChildren(
+              ref.read(parcelRepositoryProvider),
+              parent: parcel,
+            )
+          : const <ParcelModel>[];
 
       return VoucherPreviewData(
         parcel: parcel,
         qrPayload: qrPayload,
         setup: voucherSetup,
+        splitChildren: splitChildren,
       );
     });
+
+Future<List<ParcelModel>> _loadSplitChildren(
+  ParcelRepository repository, {
+  required ParcelModel parent,
+}) async {
+  final parcels = await repository.getAllParcels();
+  final children = parcels.where((parcel) {
+    return _isChildOfParent(parcel, parent);
+  }).toList();
+
+  children.sort((a, b) {
+    final indexCompare = _splitIndexSortValue(
+      a,
+    ).compareTo(_splitIndexSortValue(b));
+    if (indexCompare != 0) {
+      return indexCompare;
+    }
+    return a.createdAt.compareTo(b.createdAt);
+  });
+  return children;
+}
+
+bool _isChildOfParent(ParcelModel parcel, ParcelModel parent) {
+  final parentId = parent.clientParcelId;
+  final childParentId = parcel.parentParcelId;
+  if (parentId != null &&
+      parentId.isNotEmpty &&
+      childParentId != null &&
+      childParentId == parentId) {
+    return true;
+  }
+
+  final parentTrackingId = parent.trackingId.toUpperCase();
+  return parcel.trackingId.toUpperCase().startsWith('$parentTrackingId-') &&
+      parcel.trackingId.length > parent.trackingId.length + 1;
+}
+
+int _splitIndexSortValue(ParcelModel parcel) {
+  final index = parcel.splitIndex?.trim().toUpperCase();
+  if (index != null && index.length == 1) {
+    final code = index.codeUnitAt(0);
+    if (code >= 65 && code <= 90) {
+      return code - 65;
+    }
+  }
+
+  final match = RegExp(
+    r'-([A-Z])$',
+    caseSensitive: false,
+  ).firstMatch(parcel.trackingId);
+  final fallback = match?.group(1)?.toUpperCase();
+  if (fallback != null) {
+    return fallback.codeUnitAt(0) - 65;
+  }
+  return 999;
+}
 
 AppSetupConfig _setupWithBranchProfile(
   AppSetupConfig setup,

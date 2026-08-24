@@ -14,6 +14,7 @@ import '../../../voucher/presentation/screens/voucher_reprint_preview_screen.dar
 import '../providers/parcel_list_provider.dart';
 import '../widgets/parcel_list_item.dart';
 import 'home_screen.dart';
+import 'parcel_qr_scanner_screen.dart';
 
 class ParcelListScreen extends ConsumerStatefulWidget {
   const ParcelListScreen({super.key});
@@ -118,83 +119,130 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
       ],
       body: parcelsAsync.when(
         data: (parcels) {
-          final searchCard = SectionCard(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: TextField(
-                key: const Key('parcel-history-search-field'),
-                controller: _searchController,
-                focusNode: _searchFocusNode,
-                onChanged: filterNotifier.updateQuery,
-                textInputAction: TextInputAction.search,
-                decoration: InputDecoration(
-                  hintText: selectedDate == null
-                      ? 'Search tracking, receiver, phone'
-                      : 'Search in filtered date results',
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: selectedDate == null
-                      ? null
-                      : Padding(
-                          padding: const EdgeInsets.only(right: AppSpacing.md),
-                          child: Center(
-                            widthFactor: 1,
-                            child: Text(
-                              '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}',
-                            ),
-                          ),
-                        ),
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.sm,
+                ),
+                child: _buildSearchCard(
+                  selectedDate: selectedDate,
+                  filterNotifier: filterNotifier,
                 ),
               ),
-            ),
-          );
-
-          return RefreshIndicator(
-            onRefresh: _refreshParcels,
-            child: ListView.separated(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: AppSpacing.screenPadding,
-              itemCount: parcels.isEmpty ? 2 : parcels.length + 1,
-              separatorBuilder: (_, index) =>
-                  const SizedBox(height: AppSpacing.sm),
-              itemBuilder: (context, index) {
-                if (index == 0) {
-                  return searchCard;
-                }
-
-                if (parcels.isEmpty) {
-                  final hasFilters =
-                      filters.query.isNotEmpty ||
-                      selectedDate != null ||
-                      filters.status != null;
-                  return SizedBox(
-                    height: 360,
-                    child: AppEmptyState(
-                      title: hasFilters ? 'No parcels found' : 'No parcels yet',
-                      message: hasFilters
-                          ? 'Try a different tracking ID, receiver name, phone, date, or status filter.'
-                          : 'Create your first parcel voucher to start operations.',
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: _refreshParcels,
+                  child: ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.lg,
+                      0,
+                      AppSpacing.lg,
+                      AppSpacing.lg,
                     ),
-                  );
-                }
+                    itemCount: parcels.isEmpty ? 1 : parcels.length,
+                    separatorBuilder: (_, index) =>
+                        const SizedBox(height: AppSpacing.sm),
+                    itemBuilder: (context, index) {
+                      if (parcels.isEmpty) {
+                        final hasFilters =
+                            filters.query.isNotEmpty ||
+                            selectedDate != null ||
+                            filters.status != null;
+                        return SizedBox(
+                          height: 360,
+                          child: AppEmptyState(
+                            title: hasFilters
+                                ? 'No parcels found'
+                                : 'No parcels yet',
+                            message: hasFilters
+                                ? 'Try a different tracking ID, receiver name, phone, date, or status filter.'
+                                : 'Create your first parcel voucher to start operations.',
+                          ),
+                        );
+                      }
 
-                final parcel = parcels[index - 1];
-                return ParcelListItem(
-                  parcel: parcel,
-                  onTap: () {
-                    if (parcel.id != null) {
-                      Navigator.of(context).pushNamed(
-                        VoucherReprintPreviewScreen.routeName,
-                        arguments: parcel.id,
+                      final parcel = parcels[index];
+                      return ParcelListItem(
+                        parcel: parcel,
+                        onTap: () {
+                          if (parcel.id != null) {
+                            Navigator.of(context).pushNamed(
+                              VoucherReprintPreviewScreen.routeName,
+                              arguments: parcel.id,
+                            );
+                          }
+                        },
                       );
-                    }
-                  },
-                );
-              },
-            ),
+                    },
+                  ),
+                ),
+              ),
+            ],
           );
         },
-        loading: () => const AppLoading(),
+        loading: () => Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.sm,
+              ),
+              child: _buildSearchCard(
+                selectedDate: selectedDate,
+                filterNotifier: filterNotifier,
+              ),
+            ),
+            const Expanded(child: AppLoading()),
+          ],
+        ),
         error: (error, _) => AppErrorView(message: error.toString()),
+      ),
+    );
+  }
+
+  Widget _buildSearchCard({
+    required DateTime? selectedDate,
+    required ParcelListFilterNotifier filterNotifier,
+  }) {
+    return SectionCard(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _searchController,
+          builder: (context, searchValue, _) {
+            final hasSearchText = searchValue.text.trim().isNotEmpty;
+
+            return TextField(
+              key: const Key('parcel-history-search-field'),
+              controller: _searchController,
+              focusNode: _searchFocusNode,
+              onChanged: filterNotifier.updateQuery,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: selectedDate == null
+                    ? 'Search tracking, receiver, phone'
+                    : 'Search in filtered date results',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  tooltip: hasSearchText ? 'Clear search' : 'Scan QR',
+                  onPressed: hasSearchText
+                      ? () => _clearSearch(filterNotifier)
+                      : _scanParcelQr,
+                  icon: hasSearchText
+                      ? const Icon(Icons.close_rounded)
+                      : const _ScanFrameIcon(),
+                ),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -213,6 +261,83 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
         ),
       );
     }
+  }
+
+  Future<void> _scanParcelQr() async {
+    final scannedValue = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (_) => const ParcelQrScannerScreen()),
+    );
+    if (!mounted || scannedValue == null) {
+      return;
+    }
+
+    final trackingId = _extractTrackingId(scannedValue);
+    if (trackingId == null) {
+      await _showScanMessage(
+        title: 'QR ဖတ်လို့မရပါ',
+        message: 'QR ထဲမှာ tracking ID မတွေ့ပါ။ Voucher QR ကိုပြန်စမ်းပါ။',
+      );
+      return;
+    }
+
+    final visibleParcels = ref
+        .read(branchParcelHistoryProvider)
+        .whenOrNull(data: (parcels) => parcels);
+    if (visibleParcels == null) {
+      await _showScanMessage(
+        title: 'Parcel List မဖွင့်ရသေးပါ',
+        message: 'Parcel history ကို ပြန်ဖွင့်ပြီး QR ကိုထပ် scan လုပ်ပါ။',
+      );
+      return;
+    }
+
+    final parcel = visibleParcels
+        .where(
+          (parcel) =>
+              parcel.trackingId.toUpperCase() == trackingId.toUpperCase(),
+        )
+        .firstOrNull;
+
+    final parcelId = parcel?.id;
+    if (parcelId == null) {
+      ref.read(parcelListFilterProvider.notifier).updateQuery(trackingId);
+      await _showScanMessage(
+        title: 'Parcel မတွေ့ပါ',
+        message:
+            '$trackingId ကို ဒီ account ရဲ့ local Parcel History ထဲမှာ မတွေ့ပါ။ Refresh လုပ်ပြီး ပြန်စမ်းပါ။',
+      );
+      return;
+    }
+
+    ref.read(parcelListFilterProvider.notifier).updateQuery(trackingId);
+    await Navigator.of(
+      context,
+    ).pushNamed(VoucherReprintPreviewScreen.routeName, arguments: parcelId);
+  }
+
+  void _clearSearch(ParcelListFilterNotifier filterNotifier) {
+    _searchController.clear();
+    filterNotifier.updateQuery('');
+    _searchFocusNode.requestFocus();
+  }
+
+  Future<void> _showScanMessage({
+    required String title,
+    required String message,
+  }) {
+    return showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _pickDate(
@@ -235,6 +360,107 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
       startDate: DateTime(picked.year, picked.month, picked.day),
       endDate: DateTime(picked.year, picked.month, picked.day, 23, 59, 59, 999),
     );
+  }
+}
+
+String? _extractTrackingId(String value) {
+  final trimmed = value.trim();
+  final decoded = _safeDecodeQrValue(trimmed).toUpperCase();
+  final match = RegExp(
+    r'\b[A-Z]{2,5}-\d{6}-\d{4}(?:-[A-Z])?\b',
+  ).firstMatch(decoded);
+  return match?.group(0);
+}
+
+String _safeDecodeQrValue(String value) {
+  try {
+    return Uri.decodeFull(value);
+  } on FormatException {
+    return value;
+  }
+}
+
+class _ScanFrameIcon extends StatelessWidget {
+  const _ScanFrameIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    final color = IconTheme.of(context).color ?? Colors.black;
+    return SizedBox.square(
+      dimension: 24,
+      child: CustomPaint(painter: _ScanFramePainter(color)),
+    );
+  }
+}
+
+class _ScanFramePainter extends CustomPainter {
+  const _ScanFramePainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final strokeWidth = size.width * 0.12;
+    final radius = size.width * 0.10;
+    final inset = strokeWidth / 2;
+    final corner = size.width * 0.28;
+    final midLineY = size.height * 0.52;
+
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final left = inset;
+    final top = inset;
+    final right = size.width - inset;
+    final bottom = size.height - inset;
+
+    void drawCorner(Path path) {
+      canvas.drawPath(path, paint);
+    }
+
+    drawCorner(
+      Path()
+        ..moveTo(left, top + corner)
+        ..lineTo(left, top + radius)
+        ..quadraticBezierTo(left, top, left + radius, top)
+        ..lineTo(left + corner, top),
+    );
+    drawCorner(
+      Path()
+        ..moveTo(right - corner, top)
+        ..lineTo(right - radius, top)
+        ..quadraticBezierTo(right, top, right, top + radius)
+        ..lineTo(right, top + corner),
+    );
+    drawCorner(
+      Path()
+        ..moveTo(left, bottom - corner)
+        ..lineTo(left, bottom - radius)
+        ..quadraticBezierTo(left, bottom, left + radius, bottom)
+        ..lineTo(left + corner, bottom),
+    );
+    drawCorner(
+      Path()
+        ..moveTo(right - corner, bottom)
+        ..lineTo(right - radius, bottom)
+        ..quadraticBezierTo(right, bottom, right, bottom - radius)
+        ..lineTo(right, bottom - corner),
+    );
+
+    canvas.drawLine(
+      Offset(size.width * 0.18, midLineY),
+      Offset(size.width * 0.82, midLineY),
+      paint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _ScanFramePainter oldDelegate) {
+    return oldDelegate.color != color;
   }
 }
 

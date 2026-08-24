@@ -7,7 +7,10 @@ import 'package:pos_printer_kit/pos_printer_kit.dart';
 
 import '../../../../core/constants/voucher_layout.dart';
 import '../../../../core/layout/app_responsive.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_radius.dart';
 import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 import '../../../../data/models/enums/parcel_status.dart';
 import '../../../../data/models/parcel.dart';
 import '../../../../data/repositories/sync_repository.dart';
@@ -569,6 +572,22 @@ class _VoucherReprintPreviewScreenState
                       ),
                     ),
                     DispatchInfoSection(parcel: preview.parcel),
+                    if (preview.splitChildren.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      _SplitChildrenSection(
+                        children: preview.splitChildren,
+                        onChildTap: (child) {
+                          final childId = child.id;
+                          if (childId == null) {
+                            return;
+                          }
+                          Navigator.of(context).pushNamed(
+                            VoucherReprintPreviewScreen.routeName,
+                            arguments: childId,
+                          );
+                        },
+                      ),
+                    ],
                     if (_canSplitVoucher(preview.parcel)) ...[
                       const SizedBox(height: AppSpacing.md),
                       OutlinedButton.icon(
@@ -651,6 +670,154 @@ class _VoucherReprintPreviewScreenState
       ),
     );
   }
+}
+
+class _SplitChildrenSection extends StatelessWidget {
+  const _SplitChildrenSection({
+    required this.children,
+    required this.onChildTap,
+  });
+
+  final List<ParcelModel> children;
+  final ValueChanged<ParcelModel> onChildTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.call_split_rounded, size: 20),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(
+                    'Split Children / ခွဲထားသော ဘောင်ချာများ',
+                    style: AppTextStyles.subtitle.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            for (final child in children) ...[
+              _SplitChildRow(parcel: child, onTap: () => onChildTap(child)),
+              if (child != children.last) const SizedBox(height: AppSpacing.sm),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SplitChildRow extends StatelessWidget {
+  const _SplitChildRow({required this.parcel, required this.onTap});
+
+  final ParcelModel parcel;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final driverName = parcel.driverName?.trim();
+
+    return Material(
+      color: AppColors.surface,
+      borderRadius: AppRadius.medium,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.medium,
+        child: Ink(
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.border),
+            borderRadius: AppRadius.medium,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    color: _statusColor(parcel.status),
+                    borderRadius: const BorderRadius.all(Radius.circular(999)),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        parcel.trackingId,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Wrap(
+                        spacing: AppSpacing.md,
+                        runSpacing: AppSpacing.xs,
+                        children: [
+                          Text(
+                            'Qty ${parcel.numberOfParcels}',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          Text(
+                            'Charges ${parcel.totalCharges.toStringAsFixed(0)}',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          Text(
+                            driverName == null || driverName.isEmpty
+                                ? 'Driver မပါသေး'
+                                : 'Driver $driverName',
+                            style: AppTextStyles.caption.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.iconSecondary,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+Color _statusColor(ParcelStatus status) {
+  return switch (status) {
+    ParcelStatus.received => AppColors.received,
+    ParcelStatus.partiallySplit => AppColors.partiallySplit,
+    ParcelStatus.dispatched => AppColors.dispatched,
+    ParcelStatus.arrived => AppColors.arrived,
+    ParcelStatus.claimed => AppColors.claimed,
+    ParcelStatus.split => AppColors.split,
+    ParcelStatus.cancelled => AppColors.cancelled,
+  };
 }
 
 class _SplitVoucherDialog extends StatefulWidget {

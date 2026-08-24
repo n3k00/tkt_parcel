@@ -76,28 +76,90 @@ final parcelHistoryProvider = StreamProvider.autoDispose<List<ParcelModel>>((
   return repository.watchParcels();
 });
 
+final branchParcelHistoryProvider =
+    Provider.autoDispose<AsyncValue<List<ParcelModel>>>((ref) {
+      final parcelsAsync = ref.watch(parcelHistoryProvider);
+      final profileAsync = ref.watch(staffProfileProvider);
+
+      return parcelsAsync.when(
+        data: (parcels) => profileAsync.when(
+          data: (profile) => AsyncValue.data(
+            parcels
+                .where((parcel) => _matchesBranchAccess(parcel, profile))
+                .toList(),
+          ),
+          loading: AsyncValue.loading,
+          error: AsyncValue.error,
+        ),
+        loading: AsyncValue.loading,
+        error: AsyncValue.error,
+      );
+    });
+
 final parcelListProvider = Provider.autoDispose<AsyncValue<List<ParcelModel>>>((
   ref,
 ) {
   final filters = ref.watch(parcelListFilterProvider);
-  final parcelsAsync = ref.watch(parcelHistoryProvider);
-  final profileAsync = ref.watch(staffProfileProvider);
+  final parcelsAsync = ref.watch(branchParcelHistoryProvider);
 
   return parcelsAsync.when(
-    data: (parcels) => profileAsync.when(
-      data: (profile) => AsyncValue.data(
-        parcels
-            .where((parcel) => _matchesBranchAccess(parcel, profile))
-            .where((parcel) => _matchesFilter(parcel, filters))
-            .toList(),
-      ),
-      loading: AsyncValue.loading,
-      error: AsyncValue.error,
+    data: (parcels) => AsyncValue.data(
+      _filterParentParcels(parcels: parcels, filters: filters),
     ),
     loading: AsyncValue.loading,
     error: AsyncValue.error,
   );
 });
+
+List<ParcelModel> _filterParentParcels({
+  required List<ParcelModel> parcels,
+  required ParcelListFilterState filters,
+}) {
+  final parentParcels = parcels
+      .where((parcel) => !_isSplitChild(parcel))
+      .toList();
+  final childParcels = parcels.where(_isSplitChild).toList();
+  final matchingChildParentTrackingIds = _matchingChildParentTrackingIds(
+    children: childParcels,
+    filters: filters,
+  );
+
+  return parentParcels.where((parcel) {
+    final query = filters.query.trim();
+    if (!_matchesStatusAndDate(parcel, filters)) {
+      return false;
+    }
+
+    if (query.isEmpty) {
+      return true;
+    }
+
+    if (_matchesSearch(parcel, query.toLowerCase())) {
+      return true;
+    }
+
+    return matchingChildParentTrackingIds.contains(
+      parcel.trackingId.toUpperCase(),
+    );
+  }).toList();
+}
+
+Set<String> _matchingChildParentTrackingIds({
+  required List<ParcelModel> children,
+  required ParcelListFilterState filters,
+}) {
+  final query = filters.query.toLowerCase().trim();
+  if (query.isEmpty) {
+    return const {};
+  }
+
+  return children
+      .where((child) => _matchesSearch(child, query))
+      .map(_parentTrackingIdFromChild)
+      .whereType<String>()
+      .map((trackingId) => trackingId.toUpperCase())
+      .toSet();
+}
 
 bool _matchesBranchAccess(ParcelModel parcel, StaffProfile? profile) {
   if (profile == null) {
@@ -118,7 +180,7 @@ bool _matchesBranchAccess(ParcelModel parcel, StaffProfile? profile) {
       parcel.cityCode.toUpperCase() == cityCode.toUpperCase();
 }
 
-bool _matchesFilter(ParcelModel parcel, ParcelListFilterState filters) {
+bool _matchesStatusAndDate(ParcelModel parcel, ParcelListFilterState filters) {
   if (filters.status != null && parcel.status != filters.status) {
     return false;
   }
@@ -132,11 +194,10 @@ bool _matchesFilter(ParcelModel parcel, ParcelListFilterState filters) {
     return false;
   }
 
-  final query = filters.query.toLowerCase();
-  if (query.isEmpty) {
-    return true;
-  }
+  return true;
+}
 
+bool _matchesSearch(ParcelModel parcel, String query) {
   return _contains(parcel.trackingId, query) ||
       _contains(parcel.receiverName, query) ||
       _contains(parcel.receiverPhone, query);
@@ -144,4 +205,26 @@ bool _matchesFilter(ParcelModel parcel, ParcelListFilterState filters) {
 
 bool _contains(String value, String query) {
   return value.toLowerCase().contains(query);
+}
+
+bool _isSplitChild(ParcelModel parcel) {
+  return (parcel.parentParcelId ?? '').isNotEmpty ||
+      (parcel.splitIndex ?? '').isNotEmpty ||
+      _parentTrackingIdFromChild(parcel) != null;
+}
+
+String? _parentTrackingIdFromChild(ParcelModel parcel) {
+  final trackingId = parcel.trackingId.trim();
+  final splitIndex = parcel.splitIndex?.trim();
+  if (splitIndex != null &&
+      splitIndex.isNotEmpty &&
+      trackingId.toUpperCase().endsWith('-${splitIndex.toUpperCase()}')) {
+    return trackingId.substring(0, trackingId.length - splitIndex.length - 1);
+  }
+
+  final match = RegExp(
+    r'^(.+-\d{6}-\d{4})-[A-Z]$',
+    caseSensitive: false,
+  ).firstMatch(trackingId);
+  return match?.group(1);
 }
