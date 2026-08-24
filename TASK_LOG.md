@@ -85,11 +85,12 @@ Latest full product/release status: Unknown / needs confirmation.
 - Polished Parcel History search actions: the search field now shows a compact QR icon only when empty, and changes to a clear X action when text is present.
 - Pinned Parcel History search above the scrollable list and replaced the QR glyph with a quieter custom scan-frame icon.
 - Bumped production release version to `1.0.14+17` for the Parcel History QR/search polish and split-child display update.
+- Updated voucher terms compensation wording from `၁၀` times transport fee to `၅` times transport fee, and bumped production release version to `1.0.15+18`.
 
 ## Known Issues
 - Requested Gradle Groovy files `android/app/build.gradle` and `android/build.gradle` are not present; project appears to use Kotlin DSL Gradle files.
 - Manual/background sync for existing pending local parcels is not implemented by design; old local-only parcels should not be blind-synced.
-- Current production APK readiness: `1.0.14+17` release APK built / needs final install and real-device smoke confirmation.
+- Current production APK readiness: `1.0.15+18` release APK built / needs final install and real-device smoke confirmation.
 - Authenticated parcel RPC still needs real-device verification from the Flutter print/save flow.
 - Bluetooth printer connect should be retested on a real Android device after the `pos_printer_kit` branch update; if it still returns native `connect_failed` / `result status connect: false`, next investigation should stay in package/native connection behavior without replacing the package connect UI.
 - `80 x 60 mm` label stock still needs real XP-420B Bluetooth test output verification, including gap alignment and whether calibration is needed.
