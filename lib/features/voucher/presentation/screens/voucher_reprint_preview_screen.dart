@@ -1074,7 +1074,7 @@ class _SplitVoucherDialogState extends State<_SplitVoucherDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Text(
+              child: SelectableText(
                 displayValue.isEmpty ? 'Not set' : displayValue,
                 style: textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
