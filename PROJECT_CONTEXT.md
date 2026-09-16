@@ -109,7 +109,16 @@ to be re-stated. In that case the child quantity is fixed at `1`, the operator
 enters the corrected charges/cash advance/parcel type, and ledger/incoming
 workflows must use the child tracking ID.
 
-Server-to-local parcel pull sync is incremental after the first successful pull. The first sync for each signed-in account fetches all RLS-visible Supabase parcels, then stores the max successful server `updated_at` in an account-scoped SharedPreferences cursor key derived from `parcel_pull_last_synced_at`. Later pulls for that account fetch `updated_at > last cursor` only, then update its cursor only after local upserts finish. Never share one cursor across branch accounts on the same device.
+Server-to-local parcel pull sync is incremental after the first successful pull.
+For a new signed-in account/device, the first pull intentionally fetches the
+latest server parcels first instead of waiting for all historical rows. It loads
+the newest page from Supabase, stores the max successful server `updated_at` in
+an account-scoped SharedPreferences cursor key derived from
+`parcel_pull_last_synced_at`, and stores a separate account-scoped
+`parcel_pull_oldest_loaded_at` cursor for history backfill. Later refreshes for
+that account fetch `updated_at > last cursor` only. Parcel History can load
+older pages from the server with the oldest-created cursor. Never share sync
+cursors across branch accounts on the same device.
 
 Parcel History supports local filtering by tracking ID, receiver name, and receiver phone. Keep the search field mounted across empty/non-empty result states so typing a query that returns no rows does not drop keyboard focus.
 

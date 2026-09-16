@@ -10,6 +10,8 @@ import 'parcel_repository.dart';
 class SyncRepository {
   const SyncRepository(this._client, this._parcelRepository, this._preferences);
 
+  static const serverParcelPageSize = 100;
+
   final SupabaseClient _client;
   final ParcelRepository _parcelRepository;
   final AppPreferences _preferences;
@@ -30,36 +32,66 @@ class SyncRepository {
         ? await _client
               .from('parcels')
               .select()
-              .order('updated_at', ascending: true)
+              .order('created_at', ascending: false)
+              .limit(serverParcelPageSize)
         : await _client
               .from('parcels')
               .select()
               .gt('updated_at', lastSyncedAt.toUtc().toIso8601String())
               .order('updated_at', ascending: true);
 
-    var updatedCount = 0;
-    DateTime? maxServerUpdatedAt;
-    final syncedAt = DateTime.now();
-    for (final item in response) {
-      final parcel = _parcelFromServerRow(item, syncedAt: syncedAt);
-      final didUpsert = await _parcelRepository.upsertSyncedParcel(parcel);
-      if (didUpsert) {
-        updatedCount++;
-      }
-      if (maxServerUpdatedAt == null ||
-          parcel.updatedAt.isAfter(maxServerUpdatedAt)) {
-        maxServerUpdatedAt = parcel.updatedAt;
-      }
-    }
+    final result = await _upsertServerRows(response);
+    await _saveLatestCursorIfNewer(
+      scope: userId,
+      value: result.maxServerUpdatedAt,
+    );
 
-    if (maxServerUpdatedAt != null) {
-      await _preferences.setParcelPullLastSyncedAt(
+    if (lastSyncedAt == null && result.oldestServerCreatedAt != null) {
+      await _preferences.setParcelPullOldestLoadedAt(
         scope: userId,
-        value: maxServerUpdatedAt,
+        value: result.oldestServerCreatedAt!,
       );
     }
 
-    return updatedCount;
+    return result.updatedCount;
+  }
+
+  Future<int> pullOlderParcelsFromServer() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null || userId.isEmpty) {
+      throw StateError('Please sign in before loading older parcels.');
+    }
+
+    final oldestLoadedAt = _preferences.getParcelPullOldestLoadedAt(
+      scope: userId,
+    );
+    final response = oldestLoadedAt == null
+        ? await _client
+              .from('parcels')
+              .select()
+              .order('created_at', ascending: false)
+              .limit(serverParcelPageSize)
+        : await _client
+              .from('parcels')
+              .select()
+              .lt('created_at', oldestLoadedAt.toUtc().toIso8601String())
+              .order('created_at', ascending: false)
+              .limit(serverParcelPageSize);
+
+    final result = await _upsertServerRows(response);
+    await _saveLatestCursorIfNewer(
+      scope: userId,
+      value: result.maxServerUpdatedAt,
+    );
+
+    if (result.oldestServerCreatedAt != null) {
+      await _preferences.setParcelPullOldestLoadedAt(
+        scope: userId,
+        value: result.oldestServerCreatedAt!,
+      );
+    }
+
+    return result.updatedCount;
   }
 
   Future<ParcelModel> createParcelWithServerCounter(ParcelModel parcel) async {
@@ -251,6 +283,54 @@ class SyncRepository {
     throw StateError('Server did not return parcel data.');
   }
 
+  Future<_ServerParcelPullResult> _upsertServerRows(
+    List<dynamic> response,
+  ) async {
+    var updatedCount = 0;
+    DateTime? maxServerUpdatedAt;
+    DateTime? oldestServerCreatedAt;
+    final syncedAt = DateTime.now();
+
+    for (final item in response) {
+      final parcel = _parcelFromServerRow(
+        Map<String, dynamic>.from(item as Map),
+        syncedAt: syncedAt,
+      );
+      final didUpsert = await _parcelRepository.upsertSyncedParcel(parcel);
+      if (didUpsert) {
+        updatedCount++;
+      }
+      if (maxServerUpdatedAt == null ||
+          parcel.updatedAt.isAfter(maxServerUpdatedAt)) {
+        maxServerUpdatedAt = parcel.updatedAt;
+      }
+      if (oldestServerCreatedAt == null ||
+          parcel.createdAt.isBefore(oldestServerCreatedAt)) {
+        oldestServerCreatedAt = parcel.createdAt;
+      }
+    }
+
+    return _ServerParcelPullResult(
+      updatedCount: updatedCount,
+      maxServerUpdatedAt: maxServerUpdatedAt,
+      oldestServerCreatedAt: oldestServerCreatedAt,
+    );
+  }
+
+  Future<void> _saveLatestCursorIfNewer({
+    required String scope,
+    required DateTime? value,
+  }) async {
+    if (value == null) {
+      return;
+    }
+
+    final current = _preferences.getParcelPullLastSyncedAt(scope: scope);
+    if (current == null || value.isAfter(current)) {
+      await _preferences.setParcelPullLastSyncedAt(scope: scope, value: value);
+    }
+  }
+
   DateTime? _readDateTime(Object? value) {
     if (value == null) return null;
     if (value is DateTime) return value;
@@ -411,4 +491,16 @@ class SplitParcelChildSummary {
   final String splitIndex;
   final String parcelType;
   final int numberOfParcels;
+}
+
+class _ServerParcelPullResult {
+  const _ServerParcelPullResult({
+    required this.updatedCount,
+    required this.maxServerUpdatedAt,
+    required this.oldestServerCreatedAt,
+  });
+
+  final int updatedCount;
+  final DateTime? maxServerUpdatedAt;
+  final DateTime? oldestServerCreatedAt;
 }

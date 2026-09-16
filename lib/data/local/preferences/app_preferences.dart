@@ -35,6 +35,7 @@ class AppPreferences {
   static const _lastLabelPrinterIdKey = 'last_label_printer_id';
   static const _lastLabelPrinterNameKey = 'last_label_printer_name';
   static const _parcelPullLastSyncedAtKey = 'parcel_pull_last_synced_at';
+  static const _parcelPullOldestLoadedAtKey = 'parcel_pull_oldest_loaded_at';
   static const _cachedStaffProfileKey = 'cached_staff_profile';
   static const _cachedSourceBranchesKey = 'cached_source_branches';
   static const _cachedDestinationTownsKey = 'cached_destination_towns';
@@ -156,6 +157,14 @@ class AppPreferences {
 
   DateTime? getParcelPullLastSyncedAt({required String scope}) {
     final value = _preferences.getString(_parcelPullCursorKey(scope));
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse(value);
+  }
+
+  DateTime? getParcelPullOldestLoadedAt({required String scope}) {
+    final value = _preferences.getString(_parcelPullOldestCursorKey(scope));
     if (value == null || value.isEmpty) {
       return null;
     }
@@ -331,8 +340,22 @@ class AppPreferences {
     );
   }
 
+  Future<bool> setParcelPullOldestLoadedAt({
+    required String scope,
+    required DateTime value,
+  }) {
+    return _preferences.setString(
+      _parcelPullOldestCursorKey(scope),
+      value.toUtc().toIso8601String(),
+    );
+  }
+
   String _parcelPullCursorKey(String scope) {
     return '${_parcelPullLastSyncedAtKey}_${scope.trim()}';
+  }
+
+  String _parcelPullOldestCursorKey(String scope) {
+    return '${_parcelPullOldestLoadedAtKey}_${scope.trim()}';
   }
 
   Future<bool> setCachedStaffProfile(Map<String, dynamic> value) {

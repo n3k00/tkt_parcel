@@ -28,6 +28,7 @@ class ParcelListScreen extends ConsumerStatefulWidget {
 class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
   late final TextEditingController _searchController;
   late final FocusNode _searchFocusNode;
+  bool _isLoadingOlder = false;
 
   @override
   void initState() {
@@ -119,6 +120,12 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
       ],
       body: parcelsAsync.when(
         data: (parcels) {
+          final canLoadOlder =
+              parcels.isNotEmpty &&
+              filters.query.isEmpty &&
+              selectedDate == null &&
+              filters.status == null;
+
           return Column(
             children: [
               Padding(
@@ -144,7 +151,9 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
                       AppSpacing.lg,
                       AppSpacing.lg,
                     ),
-                    itemCount: parcels.isEmpty ? 1 : parcels.length,
+                    itemCount: parcels.isEmpty
+                        ? 1
+                        : parcels.length + (canLoadOlder ? 1 : 0),
                     separatorBuilder: (_, index) =>
                         const SizedBox(height: AppSpacing.sm),
                     itemBuilder: (context, index) {
@@ -164,6 +173,10 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
                                 : 'Create your first parcel voucher to start operations.',
                           ),
                         );
+                      }
+
+                      if (index >= parcels.length) {
+                        return _buildLoadOlderButton();
                       }
 
                       final parcel = parcels[index];
@@ -260,6 +273,60 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
           content: Text('Parcel refresh failed. Check login and internet.'),
         ),
       );
+    }
+  }
+
+  Widget _buildLoadOlderButton() {
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.sm),
+      child: Center(
+        child: OutlinedButton.icon(
+          onPressed: _isLoadingOlder ? null : _loadOlderParcels,
+          icon: _isLoadingOlder
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.history_rounded),
+          label: Text(
+            _isLoadingOlder ? 'Loading older parcels...' : 'Load older parcels',
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _loadOlderParcels() async {
+    setState(() {
+      _isLoadingOlder = true;
+    });
+
+    try {
+      final syncRepository = await ref.read(syncRepositoryProvider.future);
+      final count = await syncRepository.pullOlderParcelsFromServer();
+      if (!mounted) {
+        return;
+      }
+      if (count == 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No older parcels found.')),
+        );
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Loading older parcels failed. Check internet.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingOlder = false;
+        });
+      }
     }
   }
 

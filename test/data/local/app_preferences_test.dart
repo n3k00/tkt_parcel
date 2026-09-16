@@ -58,6 +58,25 @@ void main() {
     },
   );
 
+  test('stores oldest loaded parcel cursor per signed-in account', () async {
+    final preferences = await AppPreferences.create();
+    final lashioOldest = DateTime.parse('2026-05-01T02:15:30Z');
+
+    await preferences.setParcelPullOldestLoadedAt(
+      scope: 'lashio-user',
+      value: lashioOldest,
+    );
+
+    expect(
+      preferences.getParcelPullOldestLoadedAt(scope: 'lashio-user'),
+      lashioOldest,
+    );
+    expect(
+      preferences.getParcelPullOldestLoadedAt(scope: 'tachileik-user'),
+      isNull,
+    );
+  });
+
   test('stores cached destination towns', () async {
     final preferences = await AppPreferences.create();
 
