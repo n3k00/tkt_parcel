@@ -311,6 +311,7 @@ class ParcelLabelPreview extends StatelessWidget {
                         phone: phone,
                         address: address,
                         quantity: quantity,
+                        trackingId: trackingId,
                       ),
               ),
             ),
@@ -329,6 +330,7 @@ class _LabelPreview75x50 extends StatelessWidget {
     required this.phone,
     required this.address,
     required this.quantity,
+    required this.trackingId,
   });
 
   final LabelSettingsConfig settings;
@@ -337,9 +339,13 @@ class _LabelPreview75x50 extends StatelessWidget {
   final String phone;
   final String address;
   final int quantity;
+  final String trackingId;
 
   @override
   Widget build(BuildContext context) {
+    final qrSize = (settings.labelSize.widthPx * 0.17).clamp(92.0, 108.0);
+    final labelWidth = 124.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -347,25 +353,56 @@ class _LabelPreview75x50 extends StatelessWidget {
         SizedBox(height: settings.rowGap),
         const Divider(height: 1, color: Colors.black45),
         SizedBox(height: settings.rowGap),
-        _LabelPreviewRow(
-          label: 'Name',
-          value: name,
-          fontSize: settings.bodyFontSize,
-          labelWidth: 150,
-        ),
-        SizedBox(height: settings.rowGap),
-        _LabelPreviewRow(
-          label: 'Phone',
-          value: phone,
-          fontSize: settings.bodyFontSize,
-          labelWidth: 150,
-        ),
-        SizedBox(height: settings.rowGap),
-        LabelAddressQuantityRow(
-          address: address,
-          quantity: quantity,
-          fontSize: settings.bodyFontSize,
-          labelWidth: 150,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _LabelPreviewRow(
+                    label: 'Name',
+                    value: name,
+                    fontSize: settings.bodyFontSize,
+                    labelWidth: labelWidth,
+                    valueMaxLines: 1,
+                  ),
+                  SizedBox(height: settings.rowGap * 0.75),
+                  _LabelPreviewRow(
+                    label: 'Phone',
+                    value: phone,
+                    fontSize: settings.bodyFontSize,
+                    labelWidth: labelWidth,
+                    valueMaxLines: 1,
+                  ),
+                  SizedBox(height: settings.rowGap * 0.75),
+                  _LabelPreviewRow(
+                    label: 'Address',
+                    value: address,
+                    fontSize: settings.bodyFontSize,
+                    labelWidth: labelWidth,
+                    valueMaxLines: 1,
+                  ),
+                  SizedBox(height: settings.rowGap * 0.75),
+                  _LabelPreviewRow(
+                    label: 'Qty',
+                    value: quantity.toString(),
+                    fontSize: settings.bodyFontSize,
+                    labelWidth: labelWidth,
+                    valueMaxLines: 1,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            QrImageView(
+              data: trackingId,
+              size: qrSize,
+              padding: EdgeInsets.zero,
+              backgroundColor: Colors.white,
+            ),
+          ],
         ),
       ],
     );

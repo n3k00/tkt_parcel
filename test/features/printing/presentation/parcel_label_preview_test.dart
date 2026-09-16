@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:tkt_parcel/core/constants/label_strings.dart';
 import 'package:tkt_parcel/core/theme/app_theme.dart';
 import 'package:tkt_parcel/features/printing/presentation/widgets/parcel_label_print_widgets.dart';
@@ -10,6 +11,8 @@ void main() {
     tester,
   ) async {
     const configuredPhone = '09999999999, 08888888888';
+
+    const trackingId = 'TGI-260805-0001';
 
     await tester.pumpWidget(
       MaterialApp(
@@ -30,7 +33,7 @@ void main() {
             phone: '09123456789',
             address: 'Tachileik',
             quantity: 3,
-            trackingId: 'TGI-260805-0001',
+            trackingId: trackingId,
           ),
         ),
       ),
@@ -39,6 +42,8 @@ void main() {
     expect(find.text(configuredPhone), findsOneWidget);
     expect(find.text(LabelStrings.businessPhone), findsNothing);
     expect(find.text('09123456789'), findsOneWidget);
+    expect(find.byType(QrImageView), findsOneWidget);
+    expect(find.text(trackingId), findsNothing);
   });
 
   testWidgets('renders 80x60 QR layout with compact details', (tester) async {

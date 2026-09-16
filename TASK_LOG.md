@@ -86,6 +86,7 @@ Latest full product/release status: Unknown / needs confirmation.
 - Pinned Parcel History search above the scrollable list and replaced the QR glyph with a quieter custom scan-frame icon.
 - Bumped production release version to `1.0.14+17` for the Parcel History QR/search polish and split-child display update.
 - Updated voucher terms compensation wording from `၁၀` times transport fee to `၅` times transport fee, and bumped production release version to `1.0.15+18`.
+- Updated the `75 x 50 mm` label layout to include a right-side tracking-ID QR code while keeping the tracking ID text off the label.
 
 ## Known Issues
 - Requested Gradle Groovy files `android/app/build.gradle` and `android/build.gradle` are not present; project appears to use Kotlin DSL Gradle files.

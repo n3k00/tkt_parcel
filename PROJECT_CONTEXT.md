@@ -49,10 +49,11 @@ The project uses `pos_printer_kit` for printer integration and includes Bluetoot
 Label Settings supports selectable parcel label stock sizes: `75 x 50 mm`
 and `80 x 60 mm`. The selected size controls the label preview aspect ratio,
 hidden image capture pixel size, and TSPL print command width/height in mm.
-The `75 x 50 mm` label keeps the compact text layout. The `80 x 60 mm` label
-uses a roomier layout with a right-side tracking-ID QR code, one-line address
-value, two-line phone value, and separate Address / Qty rows to keep the label
-easy to scan.
+The `75 x 50 mm` label uses a compact text plus right-side tracking-ID QR
+layout and intentionally does not print the tracking ID as text on the label.
+The `80 x 60 mm` label uses a roomier layout with a right-side tracking-ID QR
+code, one-line address value, two-line phone value, and separate Address / Qty
+rows to keep the label easy to scan.
 Because label sliders are shared across stock sizes, the `80 x 60 mm` render
 path clamps extreme saved font/spacing values and scales down only if needed to
 avoid print-preview overflow. Label Top, Horizontal, and Row Gap controls start
