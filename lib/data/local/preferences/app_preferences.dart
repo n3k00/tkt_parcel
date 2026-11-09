@@ -29,12 +29,14 @@ class AppPreferences {
   static const _labelTitleFontSizeKey = 'label_title_font_size';
   static const _labelSubtitleFontSizeKey = 'label_subtitle_font_size';
   static const _labelBodyFontSizeKey = 'label_body_font_size';
+  static const _labelFieldLabelFontSizeKey = 'label_field_label_font_size';
   static const _labelPaddingTopKey = 'label_padding_top';
   static const _labelPaddingHorizontalKey = 'label_padding_horizontal';
   static const _labelRowGapKey = 'label_row_gap';
   static const _lastLabelPrinterIdKey = 'last_label_printer_id';
   static const _lastLabelPrinterNameKey = 'last_label_printer_name';
   static const _parcelPullLastSyncedAtKey = 'parcel_pull_last_synced_at';
+  static const _parcelPullLastCompletedAtKey = 'parcel_pull_last_completed_at';
   static const _parcelPullOldestLoadedAtKey = 'parcel_pull_oldest_loaded_at';
   static const _cachedStaffProfileKey = 'cached_staff_profile';
   static const _cachedSourceBranchesKey = 'cached_source_branches';
@@ -135,6 +137,10 @@ class AppPreferences {
     return _preferences.getDouble(_labelBodyFontSizeKey);
   }
 
+  double? getLabelFieldLabelFontSize() {
+    return _preferences.getDouble(_labelFieldLabelFontSizeKey);
+  }
+
   double? getLabelPaddingTop() {
     return _preferences.getDouble(_labelPaddingTopKey);
   }
@@ -165,6 +171,14 @@ class AppPreferences {
 
   DateTime? getParcelPullOldestLoadedAt({required String scope}) {
     final value = _preferences.getString(_parcelPullOldestCursorKey(scope));
+    if (value == null || value.isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse(value);
+  }
+
+  DateTime? getParcelPullLastCompletedAt({required String scope}) {
+    final value = _preferences.getString(_parcelPullCompletedKey(scope));
     if (value == null || value.isEmpty) {
       return null;
     }
@@ -306,6 +320,10 @@ class AppPreferences {
     return _preferences.setDouble(_labelBodyFontSizeKey, value);
   }
 
+  Future<bool> setLabelFieldLabelFontSize(double value) {
+    return _preferences.setDouble(_labelFieldLabelFontSizeKey, value);
+  }
+
   Future<bool> setLabelPaddingTop(double value) {
     return _preferences.setDouble(_labelPaddingTopKey, value);
   }
@@ -350,12 +368,26 @@ class AppPreferences {
     );
   }
 
+  Future<bool> setParcelPullLastCompletedAt({
+    required String scope,
+    required DateTime value,
+  }) {
+    return _preferences.setString(
+      _parcelPullCompletedKey(scope),
+      value.toUtc().toIso8601String(),
+    );
+  }
+
   String _parcelPullCursorKey(String scope) {
     return '${_parcelPullLastSyncedAtKey}_${scope.trim()}';
   }
 
   String _parcelPullOldestCursorKey(String scope) {
     return '${_parcelPullOldestLoadedAtKey}_${scope.trim()}';
+  }
+
+  String _parcelPullCompletedKey(String scope) {
+    return '${_parcelPullLastCompletedAtKey}_${scope.trim()}';
   }
 
   Future<bool> setCachedStaffProfile(Map<String, dynamic> value) {

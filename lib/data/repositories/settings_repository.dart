@@ -149,8 +149,12 @@ class SettingsRepository {
   }
 
   Future<LabelSettingsConfig> getLabelSettings() async {
+    final labelSize = LabelSizePreset.fromId(_preferences.getLabelSize());
+    final defaultFieldLabelFontSize = labelSize.id == LabelSizePreset.mm75x90.id
+        ? 20.0
+        : 42.0;
     return LabelSettingsConfig(
-      labelSize: LabelSizePreset.fromId(_preferences.getLabelSize()),
+      labelSize: labelSize,
       titleFontSize: _normalizeLabelValue(
         _preferences.getLabelTitleFontSize(),
         fallback: _defaultLabelTitleFontSize,
@@ -168,6 +172,12 @@ class SettingsRepository {
         fallback: _defaultLabelBodyFontSize,
         min: 30,
         max: 64,
+      ),
+      fieldLabelFontSize: _normalizeLabelValue(
+        _preferences.getLabelFieldLabelFontSize(),
+        fallback: defaultFieldLabelFontSize,
+        min: 16,
+        max: 56,
       ),
       paddingTop: _normalizeLabelValue(
         _preferences.getLabelPaddingTop(),
@@ -195,6 +205,7 @@ class SettingsRepository {
     await _preferences.setLabelTitleFontSize(config.titleFontSize);
     await _preferences.setLabelSubtitleFontSize(config.subtitleFontSize);
     await _preferences.setLabelBodyFontSize(config.bodyFontSize);
+    await _preferences.setLabelFieldLabelFontSize(config.fieldLabelFontSize);
     await _preferences.setLabelPaddingTop(config.paddingTop);
     await _preferences.setLabelPaddingHorizontal(config.paddingHorizontal);
     await _preferences.setLabelRowGap(config.rowGap);

@@ -26,7 +26,16 @@ class LabelSizePreset {
     heightPx: 480,
   );
 
-  static const values = [mm75x50, mm80x60];
+  static const mm75x90 = LabelSizePreset(
+    id: '75x90',
+    label: '75 x 90 mm',
+    widthMm: 75,
+    heightMm: 90,
+    widthPx: 600,
+    heightPx: 720,
+  );
+
+  static const values = [mm75x50, mm80x60, mm75x90];
 
   final String id;
   final String label;
@@ -54,6 +63,7 @@ class LabelSettingsConfig {
     required this.titleFontSize,
     required this.subtitleFontSize,
     required this.bodyFontSize,
+    this.fieldLabelFontSize = 0,
     required this.paddingTop,
     required this.paddingHorizontal,
     required this.rowGap,
@@ -63,6 +73,7 @@ class LabelSettingsConfig {
   final double titleFontSize;
   final double subtitleFontSize;
   final double bodyFontSize;
+  final double fieldLabelFontSize;
   final double paddingTop;
   final double paddingHorizontal;
   final double rowGap;
@@ -72,6 +83,7 @@ class LabelSettingsConfig {
     double? titleFontSize,
     double? subtitleFontSize,
     double? bodyFontSize,
+    double? fieldLabelFontSize,
     double? paddingTop,
     double? paddingHorizontal,
     double? rowGap,
@@ -81,6 +93,7 @@ class LabelSettingsConfig {
       titleFontSize: titleFontSize ?? this.titleFontSize,
       subtitleFontSize: subtitleFontSize ?? this.subtitleFontSize,
       bodyFontSize: bodyFontSize ?? this.bodyFontSize,
+      fieldLabelFontSize: fieldLabelFontSize ?? this.fieldLabelFontSize,
       paddingTop: paddingTop ?? this.paddingTop,
       paddingHorizontal: paddingHorizontal ?? this.paddingHorizontal,
       rowGap: rowGap ?? this.rowGap,

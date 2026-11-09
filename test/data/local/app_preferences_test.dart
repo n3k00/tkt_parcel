@@ -77,6 +77,25 @@ void main() {
     );
   });
 
+  test('stores last completed pull time per signed-in account', () async {
+    final preferences = await AppPreferences.create();
+    final completedAt = DateTime.parse('2026-11-03T08:30:00+06:30');
+
+    await preferences.setParcelPullLastCompletedAt(
+      scope: 'lashio-user',
+      value: completedAt,
+    );
+
+    expect(
+      preferences.getParcelPullLastCompletedAt(scope: 'lashio-user'),
+      completedAt.toUtc(),
+    );
+    expect(
+      preferences.getParcelPullLastCompletedAt(scope: 'tachileik-user'),
+      isNull,
+    );
+  });
+
   test('stores cached destination towns', () async {
     final preferences = await AppPreferences.create();
 

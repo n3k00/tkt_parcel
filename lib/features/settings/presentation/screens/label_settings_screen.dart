@@ -52,6 +52,54 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
   bool _isCapturingLabel = false;
   bool _shouldRestoreReceiptPrinter = false;
 
+  double _titleFontMin(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm75x90.id
+        ? LabelSettingsDimens.titleFontMin75x90
+        : LabelSettingsDimens.titleFontMin;
+  }
+
+  double _titleFontMax(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm75x90.id
+        ? LabelSettingsDimens.titleFontMax75x90
+        : LabelSettingsDimens.titleFontMax;
+  }
+
+  double _subtitleFontMin(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm75x90.id
+        ? LabelSettingsDimens.subtitleFontMin75x90
+        : LabelSettingsDimens.subtitleFontMin;
+  }
+
+  double _subtitleFontMax(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm75x90.id
+        ? LabelSettingsDimens.subtitleFontMax75x90
+        : LabelSettingsDimens.subtitleFontMax;
+  }
+
+  double _bodyFontMin(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm75x90.id
+        ? LabelSettingsDimens.bodyFontMin75x90
+        : LabelSettingsDimens.bodyFontMin;
+  }
+
+  double _bodyFontMax(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm75x90.id
+        ? LabelSettingsDimens.bodyFontMax75x90
+        : LabelSettingsDimens.bodyFontMax;
+  }
+
+  double _fieldLabelFontMin(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm75x90.id
+        ? LabelSettingsDimens.fieldLabelFontMin75x90
+        : LabelSettingsDimens.fieldLabelFontMin;
+  }
+
+  double _fieldLabelFontMax(LabelSizePreset labelSize) {
+    return labelSize.id == LabelSizePreset.mm75x90.id
+        ? LabelSettingsDimens.fieldLabelFontMax75x90
+        : LabelSettingsDimens.fieldLabelFontMax;
+  }
+
   double _topPaddingMin(LabelSizePreset labelSize) {
     return labelSize.id == LabelSizePreset.mm80x60.id
         ? LabelSettingsDimens.topPaddingMin80x60
@@ -77,19 +125,48 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
   }
 
   double _rowGapMax(LabelSizePreset labelSize) {
-    return labelSize.id == LabelSizePreset.mm80x60.id
-        ? LabelSettingsDimens.rowGapMax80x60
-        : LabelSettingsDimens.rowGapMax;
+    if (labelSize.id == LabelSizePreset.mm80x60.id) {
+      return LabelSettingsDimens.rowGapMax80x60;
+    }
+    if (labelSize.id == LabelSizePreset.mm75x90.id) {
+      return LabelSettingsDimens.rowGapMax75x90;
+    }
+    return LabelSettingsDimens.rowGapMax;
   }
 
   double _rowGapMin(LabelSizePreset labelSize) {
-    return labelSize.id == LabelSizePreset.mm80x60.id
-        ? LabelSettingsDimens.rowGapMin80x60
-        : LabelSettingsDimens.rowGapMin;
+    if (labelSize.id == LabelSizePreset.mm80x60.id) {
+      return LabelSettingsDimens.rowGapMin80x60;
+    }
+    if (labelSize.id == LabelSizePreset.mm75x90.id) {
+      return LabelSettingsDimens.rowGapMin75x90;
+    }
+    return LabelSettingsDimens.rowGapMin;
   }
 
   LabelSettingsConfig _normalizeDraft(LabelSettingsConfig config) {
     return config.copyWith(
+      titleFontSize: config.titleFontSize
+          .clamp(
+            _titleFontMin(config.labelSize),
+            _titleFontMax(config.labelSize),
+          )
+          .toDouble(),
+      subtitleFontSize: config.subtitleFontSize
+          .clamp(
+            _subtitleFontMin(config.labelSize),
+            _subtitleFontMax(config.labelSize),
+          )
+          .toDouble(),
+      bodyFontSize: config.bodyFontSize
+          .clamp(_bodyFontMin(config.labelSize), _bodyFontMax(config.labelSize))
+          .toDouble(),
+      fieldLabelFontSize: config.fieldLabelFontSize
+          .clamp(
+            _fieldLabelFontMin(config.labelSize),
+            _fieldLabelFontMax(config.labelSize),
+          )
+          .toDouble(),
       paddingTop: config.paddingTop
           .clamp(
             _topPaddingMin(config.labelSize),
@@ -413,6 +490,9 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                                       address: LabelStrings.sampleAddress,
                                       quantity: _testQuantity,
                                       trackingId: LabelStrings.sampleTrackingId,
+                                      parcelType: LabelStrings.sampleParcelType,
+                                      note: LabelStrings.sampleNote,
+                                      createdAt: DateTime(2026, 11, 8),
                                       maxWidth: draft.labelSize.widthPx
                                           .toDouble(),
                                     ),
@@ -427,25 +507,33 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                       const SizedBox(height: AppSpacing.md),
                       _SettingsSection(
                         title: AppStrings.labelSizeLabel,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: SegmentedButton<LabelSizePreset>(
-                            segments: [
-                              for (final option in LabelSizePreset.values)
-                                ButtonSegment<LabelSizePreset>(
-                                  value: option,
-                                  label: Text(option.label),
-                                ),
-                            ],
-                            selected: {draft.labelSize},
-                            onSelectionChanged: (selected) {
-                              setState(() {
-                                _draft = _normalizeDraft(
-                                  draft.copyWith(labelSize: selected.first),
-                                );
-                              });
-                            },
+                        child: DropdownButtonFormField<LabelSizePreset>(
+                          initialValue: draft.labelSize,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                              vertical: AppSpacing.sm,
+                            ),
                           ),
+                          items: [
+                            for (final option in LabelSizePreset.values)
+                              DropdownMenuItem<LabelSizePreset>(
+                                value: option,
+                                child: Text(option.label, maxLines: 1),
+                              ),
+                          ],
+                          onChanged: (selected) {
+                            if (selected == null) {
+                              return;
+                            }
+                            setState(() {
+                              _draft = _normalizeDraft(
+                                draft.copyWith(labelSize: selected),
+                              );
+                            });
+                          },
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -456,8 +544,8 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                             _SliderField(
                               label: AppStrings.titleLabel,
                               value: draft.titleFontSize,
-                              min: LabelSettingsDimens.titleFontMin,
-                              max: LabelSettingsDimens.titleFontMax,
+                              min: _titleFontMin(draft.labelSize),
+                              max: _titleFontMax(draft.labelSize),
                               onChanged: (value) => setState(() {
                                 _draft = draft.copyWith(titleFontSize: value);
                               }),
@@ -465,8 +553,8 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                             _SliderField(
                               label: AppStrings.subtitleLabel,
                               value: draft.subtitleFontSize,
-                              min: LabelSettingsDimens.subtitleFontMin,
-                              max: LabelSettingsDimens.subtitleFontMax,
+                              min: _subtitleFontMin(draft.labelSize),
+                              max: _subtitleFontMax(draft.labelSize),
                               onChanged: (value) => setState(() {
                                 _draft = draft.copyWith(
                                   subtitleFontSize: value,
@@ -479,14 +567,29 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                       const SizedBox(height: AppSpacing.md),
                       _SettingsSection(
                         title: AppStrings.bodyFontSizeTitle,
-                        child: _SliderField(
-                          label: AppStrings.bodyLabel,
-                          value: draft.bodyFontSize,
-                          min: LabelSettingsDimens.bodyFontMin,
-                          max: LabelSettingsDimens.bodyFontMax,
-                          onChanged: (value) => setState(() {
-                            _draft = draft.copyWith(bodyFontSize: value);
-                          }),
+                        child: Column(
+                          children: [
+                            _SliderField(
+                              label: AppStrings.bodyLabel,
+                              value: draft.bodyFontSize,
+                              min: _bodyFontMin(draft.labelSize),
+                              max: _bodyFontMax(draft.labelSize),
+                              onChanged: (value) => setState(() {
+                                _draft = draft.copyWith(bodyFontSize: value);
+                              }),
+                            ),
+                            _SliderField(
+                              label: AppStrings.fieldLabelsLabel,
+                              value: draft.fieldLabelFontSize,
+                              min: _fieldLabelFontMin(draft.labelSize),
+                              max: _fieldLabelFontMax(draft.labelSize),
+                              onChanged: (value) => setState(() {
+                                _draft = draft.copyWith(
+                                  fieldLabelFontSize: value,
+                                );
+                              }),
+                            ),
+                          ],
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
@@ -584,6 +687,9 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                         address: LabelStrings.sampleAddress,
                         quantity: _testQuantity,
                         trackingId: LabelStrings.sampleTrackingId,
+                        parcelType: LabelStrings.sampleParcelType,
+                        note: LabelStrings.sampleNote,
+                        createdAt: DateTime(2026, 11, 8),
                         includeShadow: false,
                         includeBorder: false,
                         maxWidth: draft.labelSize.widthPx.toDouble(),

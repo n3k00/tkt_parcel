@@ -572,6 +572,16 @@ class _VoucherReprintPreviewScreenState
                       ),
                     ),
                     DispatchInfoSection(parcel: preview.parcel),
+                    const SizedBox(height: AppSpacing.sm),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: () =>
+                            _copyReceiverPhone(preview.parcel.receiverPhone),
+                        icon: const Icon(Icons.copy_rounded, size: 18),
+                        label: const Text('Copy receiver phone'),
+                      ),
+                    ),
                     if (preview.splitChildren.isNotEmpty) ...[
                       const SizedBox(height: AppSpacing.md),
                       _SplitChildrenSection(
@@ -649,6 +659,9 @@ class _VoucherReprintPreviewScreenState
                       address: preview.parcel.toTown,
                       quantity: preview.parcel.numberOfParcels,
                       trackingId: preview.parcel.trackingId,
+                      parcelType: preview.parcel.parcelType,
+                      note: preview.parcel.remark,
+                      createdAt: preview.parcel.createdAt,
                       includeShadow: false,
                       includeBorder: false,
                       maxWidth: labelSettingsAsync.value!.labelSize.widthPx
@@ -669,6 +682,16 @@ class _VoucherReprintPreviewScreenState
         ),
       ),
     );
+  }
+
+  Future<void> _copyReceiverPhone(String phone) async {
+    await Clipboard.setData(ClipboardData(text: phone));
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Receiver phone copied: $phone')));
   }
 }
 

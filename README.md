@@ -94,8 +94,9 @@ For Android gate workflows, apply Supabase SQL in order: `schema.sql`,
 - Tracking ID prefix is the issuing branch/account city code, not the selected From Town. Example: Lashio account printing Taunggyi From Town uses `LSO-YYMMDD-NNNN`.
 - Do not blind-sync old local-only printed parcels. Old local-only parcels remain local history unless a separate legacy import plan is approved.
 - Printer connection uses the default `pos_printer_kit` connect page. Open it through the app permission helper; do not replace the connect UI without explicit approval.
-- Label Settings supports `75 x 50 mm` and `80 x 60 mm` label stock. The selected size controls label preview, captured image size, and TSPL print width/height.
-- `80 x 60 mm` labels use a right-side tracking-ID QR layout; `75 x 50 mm` labels keep the compact text-only layout.
+- Label Settings supports `75 x 50 mm`, `80 x 60 mm`, and portrait `75 x 90 mm` label stock. The selected size controls label preview, captured image size, and TSPL print width/height.
+- `75 x 50 mm` and `80 x 60 mm` labels use compact layouts with a right-side tracking-ID QR; the 75 x 50 layout omits tracking ID text.
+- `75 x 90 mm` labels use a portrait shipping layout with date, receiver details, parcel type, optional note, QR, and tracking ID. The settings screen uses a full-width size dropdown so all three choices remain readable on phones.
 - `pos_printer_kit` is currently pinned to Git branch `codex/fix-printer-connection-hangs` at package path `packages/pos_printer_kit` so connection retry/disconnect-before-connect behavior stays in the package/core layer.
 
 ## Verification

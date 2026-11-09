@@ -22,14 +22,42 @@ void _logLabelPrint(String message) {
 }
 
 LabelSettingsConfig _effectiveLabelSettings(LabelSettingsConfig settings) {
+  if (settings.labelSize.id == LabelSizePreset.mm75x90.id) {
+    final fallbackFieldLabelSize = (settings.bodyFontSize * 0.68)
+        .clamp(18.0, 20.0)
+        .toDouble();
+    return settings.copyWith(
+      titleFontSize: settings.titleFontSize.clamp(36.0, 58.0).toDouble(),
+      subtitleFontSize: settings.subtitleFontSize.clamp(14.0, 21.0).toDouble(),
+      bodyFontSize: settings.bodyFontSize.clamp(20.0, 31.0).toDouble(),
+      fieldLabelFontSize:
+          (settings.fieldLabelFontSize > 0
+                  ? settings.fieldLabelFontSize
+                  : fallbackFieldLabelSize)
+              .clamp(16.0, 24.0)
+              .toDouble(),
+      paddingTop: settings.paddingTop.clamp(0.0, 48.0).toDouble(),
+      paddingHorizontal: settings.paddingHorizontal.clamp(0.0, 48.0).toDouble(),
+      rowGap: settings.rowGap.clamp(0.0, 12.0).toDouble(),
+    );
+  }
   if (settings.labelSize.id != LabelSizePreset.mm80x60.id) {
-    return settings;
+    return settings.fieldLabelFontSize > 0
+        ? settings
+        : settings.copyWith(fieldLabelFontSize: settings.bodyFontSize);
   }
 
+  final fallbackFieldLabelSize = settings.bodyFontSize;
   return settings.copyWith(
     titleFontSize: settings.titleFontSize.clamp(52.0, 72.0).toDouble(),
     subtitleFontSize: settings.subtitleFontSize.clamp(22.0, 30.0).toDouble(),
     bodyFontSize: settings.bodyFontSize.clamp(30.0, 42.0).toDouble(),
+    fieldLabelFontSize:
+        (settings.fieldLabelFontSize > 0
+                ? settings.fieldLabelFontSize
+                : fallbackFieldLabelSize)
+            .clamp(22.0, 40.0)
+            .toDouble(),
     paddingTop: settings.paddingTop.clamp(0.0, 48.0).toDouble(),
     paddingHorizontal: settings.paddingHorizontal.clamp(0.0, 48.0).toDouble(),
     rowGap: settings.rowGap.clamp(0.0, 48.0).toDouble(),
@@ -229,6 +257,9 @@ class ParcelLabelPreview extends StatelessWidget {
     required this.address,
     required this.quantity,
     required this.trackingId,
+    this.parcelType = '',
+    this.note,
+    this.createdAt,
     this.includeShadow = true,
     this.includeBorder = true,
     this.maxWidth,
@@ -241,6 +272,9 @@ class ParcelLabelPreview extends StatelessWidget {
   final String address;
   final int quantity;
   final String trackingId;
+  final String parcelType;
+  final String? note;
+  final DateTime? createdAt;
   final bool includeShadow;
   final bool includeBorder;
   final double? maxWidth;
@@ -283,7 +317,40 @@ class ParcelLabelPreview extends StatelessWidget {
                   fontFamily: FontFamilies.myanmar,
                 ),
                 child:
-                    effectiveSettings.labelSize.id == LabelSizePreset.mm80x60.id
+                    effectiveSettings.labelSize.id == LabelSizePreset.mm75x90.id
+                    ? LayoutBuilder(
+                        builder: (_, _) {
+                          final designWidth =
+                              effectiveSettings.labelSize.widthPx -
+                              (effectiveSettings.paddingHorizontal * 2);
+                          final designHeight =
+                              effectiveSettings.labelSize.heightPx -
+                              effectiveSettings.paddingTop -
+                              24;
+                          return FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.topLeft,
+                            child: SizedBox(
+                              width: designWidth,
+                              height: designHeight,
+                              child: _LabelPreview75x90(
+                                settings: effectiveSettings,
+                                businessPhone: businessPhone,
+                                name: name,
+                                phone: phone,
+                                destination: address,
+                                parcelType: parcelType,
+                                quantity: quantity,
+                                note: note,
+                                createdAt: createdAt,
+                                trackingId: trackingId,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : effectiveSettings.labelSize.id ==
+                          LabelSizePreset.mm80x60.id
                     ? LayoutBuilder(
                         builder: (context, constraints) {
                           return FittedBox(
@@ -318,6 +385,303 @@ class ParcelLabelPreview extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _LabelPreview75x90 extends StatelessWidget {
+  const _LabelPreview75x90({
+    required this.settings,
+    required this.businessPhone,
+    required this.name,
+    required this.phone,
+    required this.destination,
+    required this.parcelType,
+    required this.quantity,
+    required this.note,
+    required this.createdAt,
+    required this.trackingId,
+  });
+
+  final LabelSettingsConfig settings;
+  final String businessPhone;
+  final String name;
+  final String phone;
+  final String destination;
+  final String parcelType;
+  final int quantity;
+  final String? note;
+  final DateTime? createdAt;
+  final String trackingId;
+
+  @override
+  Widget build(BuildContext context) {
+    final bodySize = settings.bodyFontSize;
+    final captionSize = settings.fieldLabelFontSize;
+    final subtitleSize = settings.subtitleFontSize;
+    final compactGap = settings.rowGap;
+    final displayNote = note?.trim() ?? '';
+    final qrSize = displayNote.isEmpty ? 154.0 : 120.0;
+    final footerHeight = displayNote.isEmpty ? 190.0 : 154.0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 82,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 2),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.center,
+              child: Text(
+                LabelStrings.businessTitle,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                style: TextStyle(
+                  fontFamily: FontFamilies.myanmar,
+                  fontSize: settings.titleFontSize,
+                  fontWeight: FontWeight.w700,
+                  height: 1.25,
+                ),
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: compactGap * 0.35),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              flex: 3,
+              child: SizedBox(
+                height: 30,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    businessPhone,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontFamily: FontFamilies.myanmar,
+                      fontSize: subtitleSize,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              flex: 2,
+              child: SizedBox(
+                height: 30,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    'Date: ${_formatLabelDate(createdAt)}',
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontFamily: FontFamilies.myanmar,
+                      fontSize: subtitleSize,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: compactGap),
+        const Divider(height: 1, thickness: 1.5, color: Colors.black),
+        SizedBox(height: compactGap),
+        _ShippingLabelRow(
+          label: 'Receiver',
+          value: name,
+          captionFontSize: captionSize,
+          valueFontSize: bodySize,
+          valueMaxLines: 1,
+        ),
+        SizedBox(height: compactGap * 0.7),
+        _ShippingLabelRow(
+          label: 'Phone',
+          value: phone,
+          captionFontSize: captionSize,
+          valueFontSize: bodySize,
+          valueMaxLines: 1,
+        ),
+        SizedBox(height: compactGap * 0.7),
+        _ShippingLabelRow(
+          label: 'To',
+          value: destination,
+          captionFontSize: captionSize,
+          valueFontSize: bodySize,
+          valueMaxLines: 1,
+        ),
+        SizedBox(height: compactGap),
+        const Divider(height: 1, thickness: 1.5, color: Colors.black),
+        SizedBox(height: compactGap),
+        _ShippingLabelRow(
+          label: 'Parcel Type',
+          value: _limitedParcelType(parcelType),
+          captionFontSize: captionSize,
+          valueFontSize: bodySize,
+          valueMaxLines: 2,
+        ),
+        SizedBox(height: compactGap * 0.7),
+        _ShippingLabelRow(
+          label: 'QTY',
+          value: quantity.toString(),
+          captionFontSize: captionSize,
+          valueFontSize: bodySize,
+          valueMaxLines: 1,
+        ),
+        if (displayNote.isNotEmpty) ...[
+          SizedBox(height: compactGap),
+          Container(
+            padding: const EdgeInsets.fromLTRB(12, 6, 12, 7),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.black, width: 1.5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'NOTE',
+                  style: TextStyle(
+                    fontFamily: FontFamilies.myanmar,
+                    fontSize: captionSize,
+                    fontWeight: FontWeight.w700,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  displayNote,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: FontFamilies.myanmar,
+                    fontSize: bodySize * 0.82,
+                    fontWeight: FontWeight.w600,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+        SizedBox(height: compactGap),
+        const Spacer(),
+        SizedBox(
+          height: footerHeight,
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                QrImageView(
+                  data: trackingId,
+                  size: qrSize,
+                  padding: EdgeInsets.zero,
+                  backgroundColor: Colors.white,
+                ),
+                const SizedBox(height: 5),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    trackingId,
+                    maxLines: 1,
+                    style: TextStyle(
+                      fontFamily: FontFamilies.myanmar,
+                      fontSize: bodySize * 0.72,
+                      fontWeight: FontWeight.w700,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static String _formatLabelDate(DateTime? value) {
+    if (value == null) {
+      return '-';
+    }
+    final local = value.toLocal();
+    return '${local.day.toString().padLeft(2, '0')}-'
+        '${local.month.toString().padLeft(2, '0')}-'
+        '${local.year}';
+  }
+
+  static String _limitedParcelType(String value) {
+    const limit = 36;
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      return '-';
+    }
+    final visibleCharacters = trimmed.characters;
+    if (visibleCharacters.length <= limit) {
+      return trimmed;
+    }
+    return '${visibleCharacters.take(limit)}…';
+  }
+}
+
+class _ShippingLabelRow extends StatelessWidget {
+  const _ShippingLabelRow({
+    required this.label,
+    required this.value,
+    required this.captionFontSize,
+    required this.valueFontSize,
+    required this.valueMaxLines,
+  });
+
+  final String label;
+  final String value;
+  final double captionFontSize;
+  final double valueFontSize;
+  final int valueMaxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 145,
+          child: Text(
+            label,
+            maxLines: 1,
+            style: TextStyle(
+              fontFamily: FontFamilies.myanmar,
+              fontSize: captionFontSize,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            value.trim().isEmpty ? '-' : value,
+            maxLines: valueMaxLines,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontFamily: FontFamilies.myanmar,
+              fontSize: valueFontSize,
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -365,6 +729,7 @@ class _LabelPreview75x50 extends StatelessWidget {
                     label: 'Name',
                     value: name,
                     fontSize: settings.bodyFontSize,
+                    labelFontSize: settings.fieldLabelFontSize,
                     labelWidth: labelWidth,
                     valueMaxLines: 1,
                   ),
@@ -373,6 +738,7 @@ class _LabelPreview75x50 extends StatelessWidget {
                     label: 'Phone',
                     value: phone,
                     fontSize: settings.bodyFontSize,
+                    labelFontSize: settings.fieldLabelFontSize,
                     labelWidth: labelWidth,
                     valueMaxLines: 1,
                   ),
@@ -381,6 +747,7 @@ class _LabelPreview75x50 extends StatelessWidget {
                     label: 'Address',
                     value: address,
                     fontSize: settings.bodyFontSize,
+                    labelFontSize: settings.fieldLabelFontSize,
                     labelWidth: labelWidth,
                     valueMaxLines: 1,
                   ),
@@ -389,6 +756,7 @@ class _LabelPreview75x50 extends StatelessWidget {
                     label: 'Qty',
                     value: quantity.toString(),
                     fontSize: settings.bodyFontSize,
+                    labelFontSize: settings.fieldLabelFontSize,
                     labelWidth: labelWidth,
                     valueMaxLines: 1,
                   ),
@@ -453,6 +821,7 @@ class _LabelPreview80x60 extends StatelessWidget {
                     label: 'Name',
                     value: name,
                     fontSize: bodyFontSize,
+                    labelFontSize: settings.fieldLabelFontSize,
                     labelWidth: labelWidth,
                   ),
                   SizedBox(height: settings.rowGap * 0.8),
@@ -460,6 +829,7 @@ class _LabelPreview80x60 extends StatelessWidget {
                     label: 'Phone',
                     value: phone,
                     fontSize: bodyFontSize,
+                    labelFontSize: settings.fieldLabelFontSize,
                     labelWidth: labelWidth,
                     valueMaxLines: 2,
                   ),
@@ -468,6 +838,7 @@ class _LabelPreview80x60 extends StatelessWidget {
                     label: 'Address',
                     value: address,
                     fontSize: bodyFontSize,
+                    labelFontSize: settings.fieldLabelFontSize,
                     labelWidth: labelWidth,
                     valueMaxLines: 1,
                   ),
@@ -476,6 +847,7 @@ class _LabelPreview80x60 extends StatelessWidget {
                     label: 'Qty',
                     value: quantity.toString(),
                     fontSize: bodyFontSize,
+                    labelFontSize: settings.fieldLabelFontSize,
                     labelWidth: labelWidth,
                   ),
                 ],
@@ -567,6 +939,7 @@ class _LabelPreviewRow extends StatelessWidget {
     required this.label,
     required this.value,
     required this.fontSize,
+    this.labelFontSize,
     this.labelWidth = 76,
     this.valueMaxLines = 2,
   });
@@ -574,6 +947,7 @@ class _LabelPreviewRow extends StatelessWidget {
   final String label;
   final String value;
   final double fontSize;
+  final double? labelFontSize;
   final double labelWidth;
   final int valueMaxLines;
 
@@ -588,7 +962,7 @@ class _LabelPreviewRow extends StatelessWidget {
             label,
             style: TextStyle(
               fontFamily: FontFamilies.myanmar,
-              fontSize: fontSize,
+              fontSize: labelFontSize ?? fontSize,
               fontWeight: FontWeight.w700,
               height: 1.1,
             ),

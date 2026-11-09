@@ -152,4 +152,283 @@ void main() {
     expect(find.text('Qty'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('renders 75x90 shipping label with parcel details and note', (
+    tester,
+  ) async {
+    final createdAt = DateTime(2026, 11, 7, 18, 10);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: SizedBox(
+            width: 600,
+            child: ParcelLabelPreview(
+              settings: const LabelSettingsConfig(
+                labelSize: LabelSizePreset.mm75x90,
+                titleFontSize: 60,
+                subtitleFontSize: 24,
+                bodyFontSize: 32,
+                paddingTop: 12,
+                paddingHorizontal: 18,
+                rowGap: 10,
+              ),
+              businessPhone: '09666628053, 09679143312',
+              name: 'မိုးကျော်နိုင်',
+              phone: '09899794056',
+              address: 'တောင်ကြီး',
+              parcelType: 'ကျွတ်ခရမ်း',
+              quantity: 1,
+              note: 'အေးသာယာချိန်းရန်',
+              createdAt: createdAt,
+              trackingId: 'LSO-261107-0034',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Date: 07-11-2026'), findsOneWidget);
+    expect(find.text('Parcel Type'), findsOneWidget);
+    expect(find.text('ကျွတ်ခရမ်း'), findsOneWidget);
+    expect(find.text('NOTE'), findsOneWidget);
+    expect(find.text('အေးသာယာချိန်းရန်'), findsOneWidget);
+    expect(find.text('LSO-261107-0034'), findsOneWidget);
+    expect(find.byType(QrImageView), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('hides empty note on 75x90 shipping label', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: const Scaffold(
+          body: SizedBox(
+            width: 600,
+            child: ParcelLabelPreview(
+              settings: LabelSettingsConfig(
+                labelSize: LabelSizePreset.mm75x90,
+                titleFontSize: 60,
+                subtitleFontSize: 24,
+                bodyFontSize: 32,
+                paddingTop: 12,
+                paddingHorizontal: 18,
+                rowGap: 10,
+              ),
+              businessPhone: '09666628053',
+              name: 'Receiver',
+              phone: '09123456789',
+              address: 'Taunggyi',
+              parcelType: 'Box',
+              quantity: 1,
+              trackingId: 'TGI-261108-0001',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('NOTE'), findsNothing);
+    expect(find.byType(QrImageView), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('limits long 75x90 parcel type without changing other data', (
+    tester,
+  ) async {
+    const longParcelType =
+        'အဝတ်အထည်နှင့် လူသုံးကုန်ပစ္စည်းအမျိုးအစားအစုံအလင် ထည့်ထားသောအထုပ်ကြီး';
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: const Scaffold(
+          body: SizedBox(
+            width: 600,
+            child: ParcelLabelPreview(
+              settings: LabelSettingsConfig(
+                labelSize: LabelSizePreset.mm75x90,
+                titleFontSize: 60,
+                subtitleFontSize: 24,
+                bodyFontSize: 32,
+                paddingTop: 12,
+                paddingHorizontal: 18,
+                rowGap: 10,
+              ),
+              businessPhone: '09666628053',
+              name: 'Receiver',
+              phone: '09123456789',
+              address: 'Taunggyi',
+              parcelType: longParcelType,
+              quantity: 1,
+              trackingId: 'TGI-261108-0001',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text(longParcelType), findsNothing);
+    expect(find.textContaining('…'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('applies the selected 75x90 font sizes to rendered text', (
+    tester,
+  ) async {
+    Future<void> pumpWith({
+      required double title,
+      required double subtitle,
+      required double body,
+    }) {
+      return tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: SizedBox(
+              width: 600,
+              child: ParcelLabelPreview(
+                settings: LabelSettingsConfig(
+                  labelSize: LabelSizePreset.mm75x90,
+                  titleFontSize: title,
+                  subtitleFontSize: subtitle,
+                  bodyFontSize: body,
+                  paddingTop: 12,
+                  paddingHorizontal: 18,
+                  rowGap: 8,
+                ),
+                businessPhone: '09666628053',
+                name: 'မိုးကျော်နိုင်',
+                phone: '09123456789',
+                address: 'Taunggyi',
+                parcelType: 'Box',
+                quantity: 1,
+                createdAt: DateTime(2026, 11, 8),
+                trackingId: 'TGI-261108-0001',
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    await pumpWith(title: 36, subtitle: 14, body: 20);
+    expect(
+      tester
+          .widget<Text>(find.text(LabelStrings.businessTitle))
+          .style
+          ?.fontSize,
+      36,
+    );
+    expect(tester.widget<Text>(find.text('09666628053')).style?.fontSize, 14);
+    expect(
+      tester.widget<Text>(find.text('မိုးကျော်နိုင်')).style?.fontSize,
+      20,
+    );
+
+    await pumpWith(title: 58, subtitle: 21, body: 31);
+    expect(
+      tester
+          .widget<Text>(find.text(LabelStrings.businessTitle))
+          .style
+          ?.fontSize,
+      58,
+    );
+    expect(tester.widget<Text>(find.text('09666628053')).style?.fontSize, 21);
+    expect(
+      tester.widget<Text>(find.text('မိုးကျော်နိုင်')).style?.fontSize,
+      31,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('applies field label font independently from body values', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: Scaffold(
+          body: SizedBox(
+            width: 600,
+            child: ParcelLabelPreview(
+              settings: const LabelSettingsConfig(
+                labelSize: LabelSizePreset.mm75x90,
+                titleFontSize: 48,
+                subtitleFontSize: 18,
+                bodyFontSize: 28,
+                fieldLabelFontSize: 17,
+                paddingTop: 12,
+                paddingHorizontal: 18,
+                rowGap: 8,
+              ),
+              businessPhone: '09666628053',
+              name: 'မိုးကျော်နိုင်',
+              phone: '09123456789',
+              address: 'Taunggyi',
+              parcelType: 'Box',
+              quantity: 1,
+              createdAt: DateTime(2026, 11, 8),
+              trackingId: 'TGI-261108-0001',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(tester.widget<Text>(find.text('Receiver')).style?.fontSize, 17);
+    expect(
+      tester.widget<Text>(find.text('မိုးကျော်နိုင်')).style?.fontSize,
+      28,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('applies the selected 75x90 row gap to rendered spacing', (
+    tester,
+  ) async {
+    Future<double> receiverToPhoneDistance(double rowGap) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.light(),
+          home: Scaffold(
+            body: SizedBox(
+              width: 600,
+              child: ParcelLabelPreview(
+                settings: LabelSettingsConfig(
+                  labelSize: LabelSizePreset.mm75x90,
+                  titleFontSize: 48,
+                  subtitleFontSize: 18,
+                  bodyFontSize: 24,
+                  fieldLabelFontSize: 18,
+                  paddingTop: 12,
+                  paddingHorizontal: 18,
+                  rowGap: rowGap,
+                ),
+                businessPhone: '09666628053',
+                name: 'Receiver Name',
+                phone: '09123456789',
+                address: 'Taunggyi',
+                parcelType: 'Box',
+                quantity: 1,
+                createdAt: DateTime(2026, 11, 8),
+                trackingId: 'TGI-261108-0001',
+              ),
+            ),
+          ),
+        ),
+      );
+
+      final receiverTop = tester.getTopLeft(find.text('Receiver')).dy;
+      final phoneTop = tester.getTopLeft(find.text('Phone')).dy;
+      return phoneTop - receiverTop;
+    }
+
+    final zeroGapDistance = await receiverToPhoneDistance(0);
+    final maximumGapDistance = await receiverToPhoneDistance(12);
+
+    expect(maximumGapDistance, greaterThan(zeroGapDistance));
+    expect(tester.takeException(), isNull);
+  });
 }

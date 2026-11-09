@@ -53,7 +53,20 @@ class SyncRepository {
       );
     }
 
+    await _preferences.setParcelPullLastCompletedAt(
+      scope: userId,
+      value: DateTime.now(),
+    );
+
     return result.updatedCount;
+  }
+
+  DateTime? getLastPullCompletedAt() {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null || userId.isEmpty) {
+      return null;
+    }
+    return _preferences.getParcelPullLastCompletedAt(scope: userId);
   }
 
   Future<int> pullOlderParcelsFromServer() async {

@@ -62,6 +62,17 @@ void main() {
     expect(saved.labelSize, LabelSizePreset.mm80x60);
   });
 
+  test('saves 75x90 portrait label size', () async {
+    final initial = await repository.getLabelSettings();
+
+    await repository.saveLabelSettings(
+      initial.copyWith(labelSize: LabelSizePreset.mm75x90),
+    );
+
+    final saved = await repository.getLabelSettings();
+    expect(saved.labelSize, LabelSizePreset.mm75x90);
+  });
+
   test('saves zero label padding values', () async {
     final initial = await repository.getLabelSettings();
 
@@ -73,5 +84,17 @@ void main() {
     expect(saved.paddingTop, 0);
     expect(saved.paddingHorizontal, 0);
     expect(saved.rowGap, 0);
+  });
+
+  test('saves field label font size separately from body font size', () async {
+    final initial = await repository.getLabelSettings();
+
+    await repository.saveLabelSettings(
+      initial.copyWith(bodyFontSize: 40, fieldLabelFontSize: 28),
+    );
+
+    final saved = await repository.getLabelSettings();
+    expect(saved.bodyFontSize, 40);
+    expect(saved.fieldLabelFontSize, 28);
   });
 }

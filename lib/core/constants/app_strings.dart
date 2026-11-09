@@ -49,6 +49,7 @@ abstract final class AppStrings {
   static const bottomLabel = 'Bottom';
   static const rowGapLabel = 'Row Gap';
   static const bodyLabel = 'Body';
+  static const fieldLabelsLabel = 'Field Labels';
 
   static const saveChanges = 'Save Changes';
   static const requiredField = 'Required.';

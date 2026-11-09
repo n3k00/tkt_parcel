@@ -46,14 +46,31 @@ dart run build_runner build --delete-conflicting-outputs
 ## Printer / Hardware Integration
 The project uses `pos_printer_kit` for printer integration and includes Bluetooth/storage permissions. Printer-related code is organized under `lib/features/printer`, `lib/features/printing`, and core printer services. Voucher/label printing appears image-based, which helps preserve Myanmar text rendering on thermal printers.
 
-Label Settings supports selectable parcel label stock sizes: `75 x 50 mm`
-and `80 x 60 mm`. The selected size controls the label preview aspect ratio,
+Label Settings supports selectable parcel label stock sizes: `75 x 50 mm`,
+`80 x 60 mm`, and portrait `75 x 90 mm`. The selected size controls the label preview aspect ratio,
 hidden image capture pixel size, and TSPL print command width/height in mm.
 The `75 x 50 mm` label uses a compact text plus right-side tracking-ID QR
 layout and intentionally does not print the tracking ID as text on the label.
 The `80 x 60 mm` label uses a roomier layout with a right-side tracking-ID QR
 code, one-line address value, two-line phone value, and separate Address / Qty
 rows to keep the label easy to scan.
+The `75 x 90 mm` label uses a portrait shipping-label layout with business
+title, business phone and local `createdAt` date, receiver name/phone, normal
+To and Qty rows, a grapheme-safe 36-character/two-line ellipsized parcel type, an optional two-line Note
+section, and a real tracking QR with tracking ID text. When Note is empty its
+section is hidden and the QR is allowed more space. Existing shorter label
+layouts remain unchanged. The renderer uses the full fixed portrait canvas,
+reserves a readable footer for the QR, and protects Myanmar title glyphs from
+clipping. The three label sizes are selected from a full-width dropdown so the
+labels do not wrap on narrow phone screens. The `75 x 90 mm` font sliders use
+the same safe ranges as the renderer (`Title 36-58`, `Subtitle 14-21`, and
+`Body 20-31`), so every slider step affects preview and print instead of being
+silently overridden by a second clamp.
+Label Settings also exposes a separate `Field Labels` font control for captions
+such as Receiver, Phone, To, Parcel Type, Qty, and Note. Body/value text remains
+independently adjustable, and the setting is stored in SharedPreferences only.
+For `75 x 90 mm`, Row Gap uses the same effective `0-12` range in Settings and
+the renderer, so every slider value changes both preview and printed spacing.
 Because label sliders are shared across stock sizes, the `80 x 60 mm` render
 path clamps extreme saved font/spacing values and scales down only if needed to
 avoid print-preview overflow. Label Top, Horizontal, and Row Gap controls start
@@ -140,6 +157,11 @@ Children section with color status indicators, quantity, charges, and driver
 name when available; child rows tap through to their own reprint/detail screen.
 
 Parcel History, parcel detail, and reprint are offline-capable for parcels already saved in the local Drift database. Creating a new official parcel remains online-only because it must call Supabase for the official tracking ID. If profile/server refresh fails while offline, the app may use the last cached staff profile to keep local branch filtering available.
+
+Parcel History shows account-scoped last successful pull time below search and
+shows visible progress while pull-to-refresh is running. The completed time is
+stored in SharedPreferences separately from the server update cursor. Parcel
+Detail/Reprint also provides a one-tap action to copy the receiver phone number.
 
 Parcel form Total Charges UI accepts `0` as valid. Empty, invalid, or negative values are rejected; database and Supabase constraints allow non-negative total charges.
 

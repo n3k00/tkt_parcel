@@ -88,11 +88,19 @@ Latest full product/release status: Unknown / needs confirmation.
 - Bumped production release version to `1.0.14+17` for the Parcel History QR/search polish and split-child display update.
 - Updated voucher terms compensation wording from `၁၀` times transport fee to `၅` times transport fee, and bumped production release version to `1.0.15+18`.
 - Updated the `75 x 50 mm` label layout to include a right-side tracking-ID QR code while keeping the tracking ID text off the label.
+- Bumped app version to `1.0.16+19` after making Split/Correct Voucher reference text selectable.
+- Strengthened offline Parcel History UX: saved account-scoped last successful pull completion time, displayed last-sync status and refresh progress below search, and added receiver-phone copy on Parcel Detail/Reprint. No Drift schema change was required.
+- Added a third parcel label preset, portrait `75 x 90 mm`, without changing the existing `75 x 50` or `80 x 60` designs. The new shipping-label layout prints business phone plus local voucher date, receiver/phone/To, two-line parcel type, normal Qty, optional two-line Note, QR, and tracking ID; Settings preview/test print and actual reprint use the same data and TSPL dimensions.
+- Reworked the `75 x 90 mm` label after real-device review: it now uses the full fixed canvas, protects the Myanmar title from clipping, keeps business phone/date and all row captions readable, limits Note to two lines, and reserves a balanced QR/tracking footer. Replaced the cramped three-way size segmented control with a full-width dropdown. Verified with the bundled Myanmar font at `600 x 720`, seven focused label tests, `flutter analyze`, and a dev debug APK build. No database schema change.
+- Fixed non-responsive `75 x 90 mm` font controls. Removed the renderer's second, narrower font clamp and made the settings screen expose the exact safe renderer ranges (`Title 36-58`, `Subtitle 14-21`, `Body 20-31`). Added a widget test proving minimum and maximum selections reach the rendered Text styles; all eight focused label tests pass. No database schema change.
+- Added a separate Label Settings `Field Labels` font-size control for Receiver, Phone, To/Address, Parcel Type, Qty, and Note captions across label presets. Body/value text remains independently adjustable; the setting is persisted in SharedPreferences and does not change Drift or Supabase schema.
+- Fixed the `75 x 90 mm` Row Gap control. Removed the hidden renderer clamp that collapsed most slider values into a `6-9` range and aligned Settings/renderer to an effective `0-12` range so every step changes preview and print spacing.
+- Bumped the production app version to `1.0.17+20` after real-device confirmation of the independent Field Labels font control and corrected `75 x 90 mm` Row Gap behavior.
 
 ## Known Issues
 - Requested Gradle Groovy files `android/app/build.gradle` and `android/build.gradle` are not present; project appears to use Kotlin DSL Gradle files.
 - Manual/background sync for existing pending local parcels is not implemented by design; old local-only parcels should not be blind-synced.
-- Current production APK readiness: `1.0.15+18` release APK built / needs final install and real-device smoke confirmation.
+- Current production APK readiness: `1.0.17+20` production APK built successfully after real-device label settings verification. APK manifest reports version name `1.0.17`, version code `20`, and APK Signature Scheme v2 verification passes.
 - Authenticated parcel RPC still needs real-device verification from the Flutter print/save flow.
 - Bluetooth printer connect should be retested on a real Android device after the `pos_printer_kit` branch update; if it still returns native `connect_failed` / `result status connect: false`, next investigation should stay in package/native connection behavior without replacing the package connect UI.
 - `80 x 60 mm` label stock still needs real XP-420B Bluetooth test output verification, including gap alignment and whether calibration is needed.

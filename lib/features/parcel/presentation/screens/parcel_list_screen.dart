@@ -29,12 +29,15 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
   late final TextEditingController _searchController;
   late final FocusNode _searchFocusNode;
   bool _isLoadingOlder = false;
+  bool _isRefreshing = false;
+  DateTime? _lastSyncedAt;
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
     _searchFocusNode = FocusNode();
+    _loadLastSyncedAt();
   }
 
   @override
@@ -140,6 +143,7 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
                   filterNotifier: filterNotifier,
                 ),
               ),
+              _buildSyncStatus(),
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: _refreshParcels,
@@ -261,9 +265,18 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
   }
 
   Future<void> _refreshParcels() async {
+    if (_isRefreshing) {
+      return;
+    }
+    setState(() => _isRefreshing = true);
     try {
       final syncRepository = await ref.read(syncRepositoryProvider.future);
       await syncRepository.pullParcelsFromServer();
+      if (mounted) {
+        setState(() {
+          _lastSyncedAt = syncRepository.getLastPullCompletedAt();
+        });
+      }
     } catch (_) {
       if (!mounted) {
         return;
@@ -273,7 +286,81 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
           content: Text('Parcel refresh failed. Check login and internet.'),
         ),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _isRefreshing = false);
+      }
     }
+  }
+
+  Future<void> _loadLastSyncedAt() async {
+    final syncRepository = await ref.read(syncRepositoryProvider.future);
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _lastSyncedAt = syncRepository.getLastPullCompletedAt();
+    });
+  }
+
+  Widget _buildSyncStatus() {
+    final statusText = _isRefreshing
+        ? 'Syncing parcels...'
+        : _lastSyncedAt == null
+        ? 'Not synced on this account yet'
+        : 'Last synced ${_formatSyncTime(_lastSyncedAt!)}';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.lg,
+        0,
+        AppSpacing.lg,
+        AppSpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _isRefreshing ? Icons.sync_rounded : Icons.cloud_done_outlined,
+                size: 16,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                statusText,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          if (_isRefreshing) ...[
+            const SizedBox(height: AppSpacing.xs),
+            const LinearProgressIndicator(minHeight: 2),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _formatSyncTime(DateTime value) {
+    final local = value.toLocal();
+    final now = DateTime.now();
+    final sameDay =
+        local.year == now.year &&
+        local.month == now.month &&
+        local.day == now.day;
+    final hour = local.hour % 12 == 0 ? 12 : local.hour % 12;
+    final minute = local.minute.toString().padLeft(2, '0');
+    final period = local.hour >= 12 ? 'PM' : 'AM';
+    if (sameDay) {
+      return 'today at $hour:$minute $period';
+    }
+    return '${local.day.toString().padLeft(2, '0')}/'
+        '${local.month.toString().padLeft(2, '0')}/${local.year} '
+        '$hour:$minute $period';
   }
 
   Widget _buildLoadOlderButton() {
