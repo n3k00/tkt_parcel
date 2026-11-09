@@ -11,13 +11,13 @@ class LabelSettingsDimens {
   static const double fieldLabelFontMax = 56;
 
   static const double titleFontMin75x90 = 36;
-  static const double titleFontMax75x90 = 58;
+  static const double titleFontMax75x90 = 72;
   static const double subtitleFontMin75x90 = 14;
-  static const double subtitleFontMax75x90 = 21;
+  static const double subtitleFontMax75x90 = 28;
   static const double bodyFontMin75x90 = 20;
-  static const double bodyFontMax75x90 = 31;
+  static const double bodyFontMax75x90 = 38;
   static const double fieldLabelFontMin75x90 = 16;
-  static const double fieldLabelFontMax75x90 = 24;
+  static const double fieldLabelFontMax75x90 = 30;
 
   static const double topPaddingMin = 0;
   static const double topPaddingMax = 80;

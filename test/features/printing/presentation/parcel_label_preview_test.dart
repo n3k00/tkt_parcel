@@ -281,6 +281,7 @@ void main() {
       required double title,
       required double subtitle,
       required double body,
+      required double fieldLabel,
     }) {
       return tester.pumpWidget(
         MaterialApp(
@@ -294,6 +295,7 @@ void main() {
                   titleFontSize: title,
                   subtitleFontSize: subtitle,
                   bodyFontSize: body,
+                  fieldLabelFontSize: fieldLabel,
                   paddingTop: 12,
                   paddingHorizontal: 18,
                   rowGap: 8,
@@ -313,7 +315,7 @@ void main() {
       );
     }
 
-    await pumpWith(title: 36, subtitle: 14, body: 20);
+    await pumpWith(title: 36, subtitle: 14, body: 20, fieldLabel: 16);
     expect(
       tester
           .widget<Text>(find.text(LabelStrings.businessTitle))
@@ -326,20 +328,22 @@ void main() {
       tester.widget<Text>(find.text('မိုးကျော်နိုင်')).style?.fontSize,
       20,
     );
+    expect(tester.widget<Text>(find.text('Receiver')).style?.fontSize, 16);
 
-    await pumpWith(title: 58, subtitle: 21, body: 31);
+    await pumpWith(title: 72, subtitle: 28, body: 38, fieldLabel: 30);
     expect(
       tester
           .widget<Text>(find.text(LabelStrings.businessTitle))
           .style
           ?.fontSize,
-      58,
+      72,
     );
-    expect(tester.widget<Text>(find.text('09666628053')).style?.fontSize, 21);
+    expect(tester.widget<Text>(find.text('09666628053')).style?.fontSize, 28);
     expect(
       tester.widget<Text>(find.text('မိုးကျော်နိုင်')).style?.fontSize,
-      31,
+      38,
     );
+    expect(tester.widget<Text>(find.text('Receiver')).style?.fontSize, 30);
     expect(tester.takeException(), isNull);
   });
 

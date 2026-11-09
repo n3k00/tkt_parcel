@@ -16,6 +16,7 @@ import '../providers/settings_provider.dart';
 import 'label_settings_screen.dart';
 import 'receipt_settings_screen.dart';
 import 'backup_restore_screen.dart';
+import 'diagnostic_logs_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -108,6 +109,17 @@ class SettingsScreen extends ConsumerWidget {
                       Navigator.of(
                         context,
                       ).pushNamed(BackupRestoreScreen.routeName);
+                    },
+                  ),
+                  const Divider(height: 1, indent: AppSpacing.xl),
+                  _SettingsListTile(
+                    icon: Icons.monitor_heart_outlined,
+                    title: 'Diagnostic Logs',
+                    subtitle: 'View printer, server, and sync errors.',
+                    onTap: () {
+                      Navigator.of(
+                        context,
+                      ).pushNamed(DiagnosticLogsScreen.routeName);
                     },
                   ),
                   const Divider(height: 1, indent: AppSpacing.xl),

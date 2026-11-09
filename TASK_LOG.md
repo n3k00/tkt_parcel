@@ -96,6 +96,10 @@ Latest full product/release status: Unknown / needs confirmation.
 - Added a separate Label Settings `Field Labels` font-size control for Receiver, Phone, To/Address, Parcel Type, Qty, and Note captions across label presets. Body/value text remains independently adjustable; the setting is persisted in SharedPreferences and does not change Drift or Supabase schema.
 - Fixed the `75 x 90 mm` Row Gap control. Removed the hidden renderer clamp that collapsed most slider values into a `6-9` range and aligned Settings/renderer to an effective `0-12` range so every step changes preview and print spacing.
 - Bumped the production app version to `1.0.17+20` after real-device confirmation of the independent Field Labels font control and corrected `75 x 90 mm` Row Gap behavior.
+- Added independent SharedPreferences label profiles for `75 x 50`, `80 x 60`, and `75 x 90`. Changing the size dropdown loads that size's saved font, padding, and row-gap values; legacy shared values remain a non-destructive fallback for profiles that have not been saved yet.
+- Increased the adjustable `75 x 90 mm` font maxima for larger tablet/print tuning: Title `72`, Subtitle `28`, Body `38`, and Field Labels `30`. Settings, persistence normalization, and renderer clamps use the same ranges.
+- Added local categorized diagnostic logging for printer, Supabase parcel operations, and sync failures. Logs retain the newest 200 JSONL entries, redact key/JWT-shaped secrets, expose user-friendly error messages, and can be filtered, copied, or cleared from Settings -> Diagnostic Logs.
+- Verified diagnostics and the existing label-settings changes with 25 focused tests, `flutter analyze`, and `git diff --check`; all passed. No database or schema changes were made.
 
 ## Known Issues
 - Requested Gradle Groovy files `android/app/build.gradle` and `android/build.gradle` are not present; project appears to use Kotlin DSL Gradle files.

@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/services/diagnostic_log_service.dart';
 import '../local/preferences/app_preferences.dart';
 import '../models/enums/parcel_status.dart';
 import '../models/enums/payment_status.dart';
@@ -8,13 +9,19 @@ import '../models/parcel.dart';
 import 'parcel_repository.dart';
 
 class SyncRepository {
-  const SyncRepository(this._client, this._parcelRepository, this._preferences);
+  const SyncRepository(
+    this._client,
+    this._parcelRepository,
+    this._preferences,
+    this._diagnostics,
+  );
 
   static const serverParcelPageSize = 100;
 
   final SupabaseClient _client;
   final ParcelRepository _parcelRepository;
   final AppPreferences _preferences;
+  final DiagnosticLogService _diagnostics;
 
   Future<String> syncNow() async {
     final count = await pullParcelsFromServer();
@@ -22,6 +29,14 @@ class SyncRepository {
   }
 
   Future<int> pullParcelsFromServer() async {
+    return _diagnostics.capture(
+      category: DiagnosticCategory.sync,
+      operation: 'pull_parcels',
+      action: _pullParcelsFromServer,
+    );
+  }
+
+  Future<int> _pullParcelsFromServer() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null || userId.isEmpty) {
       throw StateError('Please sign in before refreshing parcels.');
@@ -70,6 +85,14 @@ class SyncRepository {
   }
 
   Future<int> pullOlderParcelsFromServer() async {
+    return _diagnostics.capture(
+      category: DiagnosticCategory.sync,
+      operation: 'pull_older_parcels',
+      action: _pullOlderParcelsFromServer,
+    );
+  }
+
+  Future<int> _pullOlderParcelsFromServer() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null || userId.isEmpty) {
       throw StateError('Please sign in before loading older parcels.');
@@ -108,6 +131,14 @@ class SyncRepository {
   }
 
   Future<ParcelModel> createParcelWithServerCounter(ParcelModel parcel) async {
+    return _diagnostics.capture(
+      category: DiagnosticCategory.supabase,
+      operation: 'create_parcel',
+      action: () => _createParcelWithServerCounter(parcel),
+    );
+  }
+
+  Future<ParcelModel> _createParcelWithServerCounter(ParcelModel parcel) async {
     if (_client.auth.currentSession == null) {
       throw StateError('Please sign in before printing official vouchers.');
     }
@@ -167,6 +198,17 @@ class SyncRepository {
     required ParcelModel parent,
     required List<SplitParcelInput> splits,
   }) async {
+    return _diagnostics.capture(
+      category: DiagnosticCategory.supabase,
+      operation: 'split_parcel',
+      action: () => _splitParcel(parent: parent, splits: splits),
+    );
+  }
+
+  Future<List<ParcelModel>> _splitParcel({
+    required ParcelModel parent,
+    required List<SplitParcelInput> splits,
+  }) async {
     if (_client.auth.currentSession == null) {
       throw StateError('Please sign in before splitting vouchers.');
     }
@@ -182,7 +224,7 @@ class SyncRepository {
       );
     }
 
-    final summary = await getSplitParcelSummary(parent);
+    final summary = await _getSplitParcelSummary(parent);
 
     final response = await _client.rpc(
       'split_parcel',
@@ -221,6 +263,14 @@ class SyncRepository {
   }
 
   Future<SplitParcelSummary> getSplitParcelSummary(ParcelModel parent) async {
+    return _diagnostics.capture(
+      category: DiagnosticCategory.supabase,
+      operation: 'get_split_summary',
+      action: () => _getSplitParcelSummary(parent),
+    );
+  }
+
+  Future<SplitParcelSummary> _getSplitParcelSummary(ParcelModel parent) async {
     if (_client.auth.currentSession == null) {
       throw StateError('Please sign in before splitting vouchers.');
     }

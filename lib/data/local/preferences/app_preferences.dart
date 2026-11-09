@@ -125,32 +125,41 @@ class AppPreferences {
 
   String? getLabelSize() => _preferences.getString(_labelSizeKey);
 
-  double? getLabelTitleFontSize() {
-    return _preferences.getDouble(_labelTitleFontSizeKey);
+  double? getLabelTitleFontSize({required String labelSizeId}) {
+    return _getLabelProfileDouble(_labelTitleFontSizeKey, labelSizeId);
   }
 
-  double? getLabelSubtitleFontSize() {
-    return _preferences.getDouble(_labelSubtitleFontSizeKey);
+  double? getLabelSubtitleFontSize({required String labelSizeId}) {
+    return _getLabelProfileDouble(_labelSubtitleFontSizeKey, labelSizeId);
   }
 
-  double? getLabelBodyFontSize() {
-    return _preferences.getDouble(_labelBodyFontSizeKey);
+  double? getLabelBodyFontSize({required String labelSizeId}) {
+    return _getLabelProfileDouble(_labelBodyFontSizeKey, labelSizeId);
   }
 
-  double? getLabelFieldLabelFontSize() {
-    return _preferences.getDouble(_labelFieldLabelFontSizeKey);
+  double? getLabelFieldLabelFontSize({required String labelSizeId}) {
+    return _getLabelProfileDouble(_labelFieldLabelFontSizeKey, labelSizeId);
   }
 
-  double? getLabelPaddingTop() {
-    return _preferences.getDouble(_labelPaddingTopKey);
+  double? getLabelPaddingTop({required String labelSizeId}) {
+    return _getLabelProfileDouble(_labelPaddingTopKey, labelSizeId);
   }
 
-  double? getLabelPaddingHorizontal() {
-    return _preferences.getDouble(_labelPaddingHorizontalKey);
+  double? getLabelPaddingHorizontal({required String labelSizeId}) {
+    return _getLabelProfileDouble(_labelPaddingHorizontalKey, labelSizeId);
   }
 
-  double? getLabelRowGap() {
-    return _preferences.getDouble(_labelRowGapKey);
+  double? getLabelRowGap({required String labelSizeId}) {
+    return _getLabelProfileDouble(_labelRowGapKey, labelSizeId);
+  }
+
+  double? _getLabelProfileDouble(String baseKey, String labelSizeId) {
+    return _preferences.getDouble(_labelProfileKey(baseKey, labelSizeId)) ??
+        _preferences.getDouble(baseKey);
+  }
+
+  String _labelProfileKey(String baseKey, String labelSizeId) {
+    return '${baseKey}_${labelSizeId.trim().toLowerCase()}';
   }
 
   String? getLastLabelPrinterId() {
@@ -308,32 +317,74 @@ class AppPreferences {
     return _preferences.setString(_labelSizeKey, value);
   }
 
-  Future<bool> setLabelTitleFontSize(double value) {
-    return _preferences.setDouble(_labelTitleFontSizeKey, value);
+  Future<bool> setLabelTitleFontSize({
+    required String labelSizeId,
+    required double value,
+  }) {
+    return _preferences.setDouble(
+      _labelProfileKey(_labelTitleFontSizeKey, labelSizeId),
+      value,
+    );
   }
 
-  Future<bool> setLabelSubtitleFontSize(double value) {
-    return _preferences.setDouble(_labelSubtitleFontSizeKey, value);
+  Future<bool> setLabelSubtitleFontSize({
+    required String labelSizeId,
+    required double value,
+  }) {
+    return _preferences.setDouble(
+      _labelProfileKey(_labelSubtitleFontSizeKey, labelSizeId),
+      value,
+    );
   }
 
-  Future<bool> setLabelBodyFontSize(double value) {
-    return _preferences.setDouble(_labelBodyFontSizeKey, value);
+  Future<bool> setLabelBodyFontSize({
+    required String labelSizeId,
+    required double value,
+  }) {
+    return _preferences.setDouble(
+      _labelProfileKey(_labelBodyFontSizeKey, labelSizeId),
+      value,
+    );
   }
 
-  Future<bool> setLabelFieldLabelFontSize(double value) {
-    return _preferences.setDouble(_labelFieldLabelFontSizeKey, value);
+  Future<bool> setLabelFieldLabelFontSize({
+    required String labelSizeId,
+    required double value,
+  }) {
+    return _preferences.setDouble(
+      _labelProfileKey(_labelFieldLabelFontSizeKey, labelSizeId),
+      value,
+    );
   }
 
-  Future<bool> setLabelPaddingTop(double value) {
-    return _preferences.setDouble(_labelPaddingTopKey, value);
+  Future<bool> setLabelPaddingTop({
+    required String labelSizeId,
+    required double value,
+  }) {
+    return _preferences.setDouble(
+      _labelProfileKey(_labelPaddingTopKey, labelSizeId),
+      value,
+    );
   }
 
-  Future<bool> setLabelPaddingHorizontal(double value) {
-    return _preferences.setDouble(_labelPaddingHorizontalKey, value);
+  Future<bool> setLabelPaddingHorizontal({
+    required String labelSizeId,
+    required double value,
+  }) {
+    return _preferences.setDouble(
+      _labelProfileKey(_labelPaddingHorizontalKey, labelSizeId),
+      value,
+    );
   }
 
-  Future<bool> setLabelRowGap(double value) {
-    return _preferences.setDouble(_labelRowGapKey, value);
+  Future<bool> setLabelRowGap({
+    required String labelSizeId,
+    required double value,
+  }) {
+    return _preferences.setDouble(
+      _labelProfileKey(_labelRowGapKey, labelSizeId),
+      value,
+    );
   }
 
   Future<bool> setLastLabelPrinter({

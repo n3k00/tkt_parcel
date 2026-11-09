@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/services/qr_service.dart';
+import 'diagnostic_provider.dart';
 import '../data/local/preferences/app_preferences.dart';
 import '../data/repositories/parcel_repository.dart';
 import '../data/repositories/server_branch_repository.dart';
@@ -57,5 +58,6 @@ final syncRepositoryProvider = FutureProvider<SyncRepository>((ref) async {
     ref.watch(supabaseClientProvider),
     ref.watch(parcelRepositoryProvider),
     preferences,
+    ref.watch(diagnosticLogServiceProvider),
   );
 });

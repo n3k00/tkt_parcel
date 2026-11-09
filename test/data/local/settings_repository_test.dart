@@ -97,4 +97,71 @@ void main() {
     expect(saved.bodyFontSize, 40);
     expect(saved.fieldLabelFontSize, 28);
   });
+
+  test('keeps independent settings for each label size', () async {
+    final compact = await repository.getLabelSettings(
+      forSize: LabelSizePreset.mm75x50,
+    );
+    final portrait = await repository.getLabelSettings(
+      forSize: LabelSizePreset.mm75x90,
+    );
+
+    await repository.saveLabelSettings(
+      compact.copyWith(
+        titleFontSize: 70,
+        bodyFontSize: 38,
+        fieldLabelFontSize: 30,
+        paddingTop: 10,
+        rowGap: 6,
+      ),
+    );
+    await repository.saveLabelSettings(
+      portrait.copyWith(
+        titleFontSize: 48,
+        bodyFontSize: 24,
+        fieldLabelFontSize: 18,
+        paddingTop: 4,
+        rowGap: 12,
+      ),
+    );
+
+    final savedCompact = await repository.getLabelSettings(
+      forSize: LabelSizePreset.mm75x50,
+    );
+    final savedPortrait = await repository.getLabelSettings(
+      forSize: LabelSizePreset.mm75x90,
+    );
+
+    expect(savedCompact.titleFontSize, 70);
+    expect(savedCompact.bodyFontSize, 38);
+    expect(savedCompact.fieldLabelFontSize, 30);
+    expect(savedCompact.paddingTop, 10);
+    expect(savedCompact.rowGap, 6);
+    expect(savedPortrait.titleFontSize, 48);
+    expect(savedPortrait.bodyFontSize, 24);
+    expect(savedPortrait.fieldLabelFontSize, 18);
+    expect(savedPortrait.paddingTop, 4);
+    expect(savedPortrait.rowGap, 12);
+  });
+
+  test(
+    'uses legacy shared label values when a size profile is missing',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'label_title_font_size': 66.0,
+        'label_body_font_size': 36.0,
+        'label_padding_top': 14.0,
+      });
+      final preferences = await AppPreferences.create();
+      final legacyRepository = SettingsRepository(preferences);
+
+      final settings = await legacyRepository.getLabelSettings(
+        forSize: LabelSizePreset.mm80x60,
+      );
+
+      expect(settings.titleFontSize, 66);
+      expect(settings.bodyFontSize, 36);
+      expect(settings.paddingTop, 14);
+    },
+  );
 }

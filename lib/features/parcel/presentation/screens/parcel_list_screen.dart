@@ -7,6 +7,7 @@ import '../../../../providers/parcel_repository_provider.dart';
 import '../../../../shared/widgets/app_drawer.dart';
 import '../../../../shared/widgets/app_empty_state.dart';
 import '../../../../shared/widgets/app_error_view.dart';
+import '../../../../core/services/diagnostic_log_service.dart';
 import '../../../../shared/widgets/app_loading.dart';
 import '../../../../shared/widgets/app_scaffold.dart';
 import '../../../../shared/widgets/section_card.dart';
@@ -277,13 +278,15 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
           _lastSyncedAt = syncRepository.getLastPullCompletedAt();
         });
       }
-    } catch (_) {
+    } catch (error) {
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Parcel refresh failed. Check login and internet.'),
+        SnackBar(
+          content: Text(
+            AppErrorMessages.forError(error, DiagnosticCategory.sync),
+          ),
         ),
       );
     } finally {
@@ -399,13 +402,15 @@ class _ParcelListScreenState extends ConsumerState<ParcelListScreen> {
           const SnackBar(content: Text('No older parcels found.')),
         );
       }
-    } catch (_) {
+    } catch (error) {
       if (!mounted) {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Loading older parcels failed. Check internet.'),
+        SnackBar(
+          content: Text(
+            AppErrorMessages.forError(error, DiagnosticCategory.sync),
+          ),
         ),
       );
     } finally {

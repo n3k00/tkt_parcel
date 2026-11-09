@@ -15,6 +15,7 @@ import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/settings/presentation/screens/receipt_settings_screen.dart';
 import '../../features/settings/presentation/screens/label_settings_screen.dart';
 import '../../features/settings/presentation/screens/backup_restore_screen.dart';
+import '../../features/settings/presentation/screens/diagnostic_logs_screen.dart';
 import '../../features/voucher/presentation/models/voucher_preview_args.dart';
 import '../../features/voucher/presentation/screens/voucher_preview_screen.dart';
 import '../../features/voucher/presentation/screens/voucher_reprint_preview_screen.dart';
@@ -115,6 +116,11 @@ class AppRouter {
       case LabelSettingsScreen.routeName:
         return MaterialPageRoute(
           builder: (_) => const LabelSettingsScreen(),
+          settings: settings,
+        );
+      case DiagnosticLogsScreen.routeName:
+        return MaterialPageRoute(
+          builder: (_) => const DiagnosticLogsScreen(),
           settings: settings,
         );
       case ParcelListScreen.routeName:

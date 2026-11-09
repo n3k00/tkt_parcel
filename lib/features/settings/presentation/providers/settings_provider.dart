@@ -42,6 +42,11 @@ class LabelSettingsNotifier extends AsyncNotifier<LabelSettingsConfig> {
     await repository.saveLabelSettings(config);
     state = AsyncData(await repository.getLabelSettings());
   }
+
+  Future<LabelSettingsConfig> loadProfile(LabelSizePreset labelSize) async {
+    final repository = await ref.read(settingsRepositoryProvider.future);
+    return repository.getLabelSettings(forSize: labelSize);
+  }
 }
 
 final appInfoServiceProvider = Provider<AppInfoService>((ref) {

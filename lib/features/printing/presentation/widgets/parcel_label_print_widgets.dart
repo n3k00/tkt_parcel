@@ -27,14 +27,14 @@ LabelSettingsConfig _effectiveLabelSettings(LabelSettingsConfig settings) {
         .clamp(18.0, 20.0)
         .toDouble();
     return settings.copyWith(
-      titleFontSize: settings.titleFontSize.clamp(36.0, 58.0).toDouble(),
-      subtitleFontSize: settings.subtitleFontSize.clamp(14.0, 21.0).toDouble(),
-      bodyFontSize: settings.bodyFontSize.clamp(20.0, 31.0).toDouble(),
+      titleFontSize: settings.titleFontSize.clamp(36.0, 72.0).toDouble(),
+      subtitleFontSize: settings.subtitleFontSize.clamp(14.0, 28.0).toDouble(),
+      bodyFontSize: settings.bodyFontSize.clamp(20.0, 38.0).toDouble(),
       fieldLabelFontSize:
           (settings.fieldLabelFontSize > 0
                   ? settings.fieldLabelFontSize
                   : fallbackFieldLabelSize)
-              .clamp(16.0, 24.0)
+              .clamp(16.0, 30.0)
               .toDouble(),
       paddingTop: settings.paddingTop.clamp(0.0, 48.0).toDouble(),
       paddingHorizontal: settings.paddingHorizontal.clamp(0.0, 48.0).toDouble(),
@@ -422,7 +422,8 @@ class _LabelPreview75x90 extends StatelessWidget {
     final compactGap = settings.rowGap;
     final displayNote = note?.trim() ?? '';
     final qrSize = displayNote.isEmpty ? 154.0 : 120.0;
-    final footerHeight = displayNote.isEmpty ? 190.0 : 154.0;
+    final trackingTextHeight = bodySize * 0.72 * 1.2;
+    final footerHeight = qrSize + 5 + trackingTextHeight + 4;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

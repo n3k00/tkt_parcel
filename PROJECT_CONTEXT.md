@@ -63,14 +63,19 @@ layouts remain unchanged. The renderer uses the full fixed portrait canvas,
 reserves a readable footer for the QR, and protects Myanmar title glyphs from
 clipping. The three label sizes are selected from a full-width dropdown so the
 labels do not wrap on narrow phone screens. The `75 x 90 mm` font sliders use
-the same safe ranges as the renderer (`Title 36-58`, `Subtitle 14-21`, and
-`Body 20-31`), so every slider step affects preview and print instead of being
+the same ranges as the renderer (`Title 36-72`, `Subtitle 14-28`,
+`Body 20-38`, and `Field Labels 16-30`), so every slider step affects preview and print instead of being
 silently overridden by a second clamp.
 Label Settings also exposes a separate `Field Labels` font control for captions
 such as Receiver, Phone, To, Parcel Type, Qty, and Note. Body/value text remains
 independently adjustable, and the setting is stored in SharedPreferences only.
 For `75 x 90 mm`, Row Gap uses the same effective `0-12` range in Settings and
 the renderer, so every slider value changes both preview and printed spacing.
+Each label size stores its own title, subtitle, body, field-label, padding, and
+row-gap profile in SharedPreferences. Switching between `75 x 50`, `80 x 60`,
+and `75 x 90` reloads that size's saved profile. Legacy shared label values are
+retained as fallback when a size has not yet been saved, so upgrades do not
+discard existing operator settings.
 Because label sliders are shared across stock sizes, the `80 x 60 mm` render
 path clamps extreme saved font/spacing values and scales down only if needed to
 avoid print-preview overflow. Label Top, Horizontal, and Row Gap controls start
@@ -220,6 +225,15 @@ schema app_private` without a deliberate security review.
 ## Current Known Issues
 - Requested Gradle paths `android/app/build.gradle` and `android/build.gradle` do not exist; this project appears to use Kotlin DSL Gradle files instead.
 - Real-device release verification is still required before production: staff login, branch visibility, two-device tracking ID uniqueness, printer connection/printing, and Parcel History reprint recovery.
+
+## Diagnostics
+Printer, Supabase parcel operations, and server-to-local sync failures are
+recorded in a rolling local JSONL diagnostic log under the app support
+directory. The log retains the latest 200 entries, separates printer,
+Supabase, and sync categories, and redacts Supabase key/JWT-shaped values.
+Settings -> Diagnostic Logs allows operators/support staff to filter, copy, or
+clear the local records. User-facing errors use operator-friendly messages;
+technical exception details remain in the diagnostic screen for support.
 
 ## Coding Rules for Codex
 - Do not refactor unrelated files.

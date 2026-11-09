@@ -5,9 +5,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pos_printer_kit/pos_printer_kit.dart';
 
 import '../core/services/print_service.dart';
+import '../core/services/diagnostic_log_service.dart';
 import '../core/services/printer_observer_service.dart';
 import '../core/services/printer_service.dart';
 import '../data/repositories/printer_repository.dart';
+import 'diagnostic_provider.dart';
 
 final printerCoreProvider = Provider<PrinterCore>((ref) {
   final observer = ref.watch(printerObserverServiceProvider);
@@ -134,10 +136,12 @@ class PrinterState {
 class PrinterNotifier extends Notifier<PrinterState> {
   late final PrinterCore _core;
   late final PrinterObserverService _observer;
+  late final DiagnosticLogService _diagnostics;
 
   @override
   PrinterState build() {
     _observer = ref.watch(printerObserverServiceProvider);
+    _diagnostics = ref.watch(diagnosticLogServiceProvider);
     _core = ref.watch(printerCoreProvider);
 
     void syncCoreState() {
@@ -151,9 +155,19 @@ class PrinterNotifier extends Notifier<PrinterState> {
       state = _fromCore(previous: state, printProgress: progress);
     });
     final errorSub = _core.onError.listen((error) {
+      unawaited(
+        _diagnostics.recordError(
+          category: DiagnosticCategory.printer,
+          operation: 'printer_core',
+          error: error,
+        ),
+      );
       state = _fromCore(
         previous: state,
-        errorMessage: error.message,
+        errorMessage: AppErrorMessages.forError(
+          error,
+          DiagnosticCategory.printer,
+        ),
         lastPrintSucceeded: false,
       );
     });
@@ -239,7 +253,7 @@ class PrinterNotifier extends Notifier<PrinterState> {
     );
     state = _fromCore(
       previous: state,
-      errorMessage: success ? null : _core.lastError?.message,
+      errorMessage: success ? null : _friendlyPrinterError(_core.lastError),
       clearErrorMessage: success,
       lastPrintableImageBytes: imageBytes,
       lastPrintSucceeded: success,
@@ -266,16 +280,26 @@ class PrinterNotifier extends Notifier<PrinterState> {
       );
       state = _fromCore(
         previous: state,
-        errorMessage: success ? null : _core.lastError?.message,
+        errorMessage: success ? null : _friendlyPrinterError(_core.lastError),
         clearErrorMessage: success,
         lastPrintableImageBytes: imageBytes,
         lastPrintSucceeded: success,
       );
       return success;
     } catch (error) {
+      unawaited(
+        _diagnostics.recordError(
+          category: DiagnosticCategory.printer,
+          operation: 'print_label',
+          error: error,
+        ),
+      );
       state = _fromCore(
         previous: state,
-        errorMessage: 'Label print failed: $error',
+        errorMessage: AppErrorMessages.forError(
+          error,
+          DiagnosticCategory.printer,
+        ),
         lastPrintableImageBytes: imageBytes,
         lastPrintSucceeded: false,
       );
@@ -304,7 +328,7 @@ class PrinterNotifier extends Notifier<PrinterState> {
     final success = await _repository.testPrint();
     state = _fromCore(
       previous: state,
-      errorMessage: success ? null : _core.lastError?.message,
+      errorMessage: success ? null : _friendlyPrinterError(_core.lastError),
       clearErrorMessage: success,
       lastPrintSucceeded: success,
     );
@@ -314,6 +338,13 @@ class PrinterNotifier extends Notifier<PrinterState> {
   PrinterState clearError() {
     _core.clearError();
     return state.copyWith(clearErrorMessage: true);
+  }
+
+  String _friendlyPrinterError(Object? error) {
+    return AppErrorMessages.forError(
+      error ?? StateError('Printer operation failed.'),
+      DiagnosticCategory.printer,
+    );
   }
 }
 

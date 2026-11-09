@@ -148,67 +148,96 @@ class SettingsRepository {
     await _preferences.setPrinterPreset(preset.trim().toLowerCase());
   }
 
-  Future<LabelSettingsConfig> getLabelSettings() async {
-    final labelSize = LabelSizePreset.fromId(_preferences.getLabelSize());
+  Future<LabelSettingsConfig> getLabelSettings({
+    LabelSizePreset? forSize,
+  }) async {
+    final labelSize =
+        forSize ?? LabelSizePreset.fromId(_preferences.getLabelSize());
     final defaultFieldLabelFontSize = labelSize.id == LabelSizePreset.mm75x90.id
         ? 20.0
         : 42.0;
     return LabelSettingsConfig(
       labelSize: labelSize,
       titleFontSize: _normalizeLabelValue(
-        _preferences.getLabelTitleFontSize(),
+        _preferences.getLabelTitleFontSize(labelSizeId: labelSize.id),
         fallback: _defaultLabelTitleFontSize,
-        min: 52,
-        max: 110,
+        min: labelSize.id == LabelSizePreset.mm75x90.id ? 36 : 52,
+        max: labelSize.id == LabelSizePreset.mm75x90.id ? 72 : 110,
       ),
       subtitleFontSize: _normalizeLabelValue(
-        _preferences.getLabelSubtitleFontSize(),
+        _preferences.getLabelSubtitleFontSize(labelSizeId: labelSize.id),
         fallback: _defaultLabelSubtitleFontSize,
-        min: 22,
-        max: 52,
+        min: labelSize.id == LabelSizePreset.mm75x90.id ? 14 : 22,
+        max: labelSize.id == LabelSizePreset.mm75x90.id ? 28 : 52,
       ),
       bodyFontSize: _normalizeLabelValue(
-        _preferences.getLabelBodyFontSize(),
+        _preferences.getLabelBodyFontSize(labelSizeId: labelSize.id),
         fallback: _defaultLabelBodyFontSize,
-        min: 30,
-        max: 64,
+        min: labelSize.id == LabelSizePreset.mm75x90.id ? 20 : 30,
+        max: labelSize.id == LabelSizePreset.mm75x90.id ? 38 : 64,
       ),
       fieldLabelFontSize: _normalizeLabelValue(
-        _preferences.getLabelFieldLabelFontSize(),
+        _preferences.getLabelFieldLabelFontSize(labelSizeId: labelSize.id),
         fallback: defaultFieldLabelFontSize,
-        min: 16,
-        max: 56,
+        min: labelSize.id == LabelSizePreset.mm75x90.id ? 16 : 22,
+        max: labelSize.id == LabelSizePreset.mm75x90.id ? 30 : 56,
       ),
       paddingTop: _normalizeLabelValue(
-        _preferences.getLabelPaddingTop(),
+        _preferences.getLabelPaddingTop(labelSizeId: labelSize.id),
         fallback: _defaultLabelPaddingTop,
         min: 0,
-        max: 80,
+        max: labelSize.id == LabelSizePreset.mm75x50.id ? 80 : 48,
       ),
       paddingHorizontal: _normalizeLabelValue(
-        _preferences.getLabelPaddingHorizontal(),
+        _preferences.getLabelPaddingHorizontal(labelSizeId: labelSize.id),
         fallback: _defaultLabelPaddingHorizontal,
         min: 0,
-        max: 80,
+        max: labelSize.id == LabelSizePreset.mm75x50.id ? 80 : 48,
       ),
       rowGap: _normalizeLabelValue(
-        _preferences.getLabelRowGap(),
+        _preferences.getLabelRowGap(labelSizeId: labelSize.id),
         fallback: _defaultLabelRowGap,
         min: 0,
-        max: 40,
+        max: labelSize.id == LabelSizePreset.mm75x90.id
+            ? 12
+            : labelSize.id == LabelSizePreset.mm80x60.id
+            ? 48
+            : 40,
       ),
     );
   }
 
   Future<void> saveLabelSettings(LabelSettingsConfig config) async {
-    await _preferences.setLabelSize(config.labelSize.id);
-    await _preferences.setLabelTitleFontSize(config.titleFontSize);
-    await _preferences.setLabelSubtitleFontSize(config.subtitleFontSize);
-    await _preferences.setLabelBodyFontSize(config.bodyFontSize);
-    await _preferences.setLabelFieldLabelFontSize(config.fieldLabelFontSize);
-    await _preferences.setLabelPaddingTop(config.paddingTop);
-    await _preferences.setLabelPaddingHorizontal(config.paddingHorizontal);
-    await _preferences.setLabelRowGap(config.rowGap);
+    final labelSizeId = config.labelSize.id;
+    await _preferences.setLabelSize(labelSizeId);
+    await _preferences.setLabelTitleFontSize(
+      labelSizeId: labelSizeId,
+      value: config.titleFontSize,
+    );
+    await _preferences.setLabelSubtitleFontSize(
+      labelSizeId: labelSizeId,
+      value: config.subtitleFontSize,
+    );
+    await _preferences.setLabelBodyFontSize(
+      labelSizeId: labelSizeId,
+      value: config.bodyFontSize,
+    );
+    await _preferences.setLabelFieldLabelFontSize(
+      labelSizeId: labelSizeId,
+      value: config.fieldLabelFontSize,
+    );
+    await _preferences.setLabelPaddingTop(
+      labelSizeId: labelSizeId,
+      value: config.paddingTop,
+    );
+    await _preferences.setLabelPaddingHorizontal(
+      labelSizeId: labelSizeId,
+      value: config.paddingHorizontal,
+    );
+    await _preferences.setLabelRowGap(
+      labelSizeId: labelSizeId,
+      value: config.rowGap,
+    );
   }
 
   Future<LabelPrinterSelection?> getLastLabelPrinter() async {

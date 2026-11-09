@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pos_printer_kit/pos_printer_kit.dart';
 
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/services/diagnostic_log_service.dart';
 import '../../../../core/constants/label_strings.dart';
 import '../../../../core/layout/app_responsive.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -47,6 +48,7 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
 
   final GlobalKey _labelPrintKey = GlobalKey();
   LabelSettingsConfig? _draft;
+  int _profileLoadId = 0;
   int _testQuantity = 3;
   bool _isTestPrinting = false;
   bool _isCapturingLabel = false;
@@ -303,7 +305,11 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Test label print failed: $error')),
+          SnackBar(
+            content: Text(
+              AppErrorMessages.forError(error, DiagnosticCategory.printer),
+            ),
+          ),
         );
       }
     } finally {
@@ -508,6 +514,7 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                       _SettingsSection(
                         title: AppStrings.labelSizeLabel,
                         child: DropdownButtonFormField<LabelSizePreset>(
+                          key: ValueKey(draft.labelSize.id),
                           initialValue: draft.labelSize,
                           isExpanded: true,
                           decoration: const InputDecoration(
@@ -524,14 +531,19 @@ class _LabelSettingsScreenState extends ConsumerState<LabelSettingsScreen> {
                                 child: Text(option.label, maxLines: 1),
                               ),
                           ],
-                          onChanged: (selected) {
+                          onChanged: (selected) async {
                             if (selected == null) {
                               return;
                             }
+                            final loadId = ++_profileLoadId;
+                            final profile = await ref
+                                .read(labelSettingsProvider.notifier)
+                                .loadProfile(selected);
+                            if (!mounted || loadId != _profileLoadId) {
+                              return;
+                            }
                             setState(() {
-                              _draft = _normalizeDraft(
-                                draft.copyWith(labelSize: selected),
-                              );
+                              _draft = _normalizeDraft(profile);
                             });
                           },
                         ),
